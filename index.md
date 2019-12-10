@@ -2,7 +2,7 @@
 
 Currently our [CS Resource Table](https://www.whitemountainscience.org/resource-table) is hosted on Squarespace, which comes with a consistent theme but clunky handling of site files (ie javascript).
 
-[Click here](resource_datatable.html) to see the same site hosted on our github.io.
+<a href="resource_datatable.html">Click here</a> to see the same site hosted on our github.io.
 
 ### Jekyll Themes
 
