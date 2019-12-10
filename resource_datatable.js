@@ -82,6 +82,7 @@ function renderTable(search=false) {
     features from this list based on keywords
 */
 function renderFeatures(render_data) {
+    console.log('rendering features');
     var feature_list = [];
     $.map(render_data, function(item) {
         if(item["Img URL"] != "") {
@@ -91,6 +92,7 @@ function renderFeatures(render_data) {
 
 
     var features = _buildFeatures(feature_list);
+    console.log('built ' + features.length + ' features');
     $('#feature-container').show();
     if(features.length < 3) {
         $('#feature-container').hide();
