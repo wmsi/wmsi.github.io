@@ -29,6 +29,10 @@ table.display th {
   max-height: 30vw;
 }*/
   
+.feature-container {
+  padding-left: 80px; 
+}
+
 .featured-activity {
   float: left;
   display: inline-block;
