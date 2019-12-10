@@ -43,6 +43,7 @@ table.display th {
 
 .feature img {
   max-height: 20vw;
+  max-width: 30vw;
   object-fit: contain;
 }
 
