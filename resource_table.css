@@ -1,0 +1,132 @@
+table.display,
+table.display th {
+/*#resource-table {*/
+  /*margin-left: 20px; */
+  margin: 20px;
+  text-align: left;
+  border-spacing: 10px;
+  /*background: rgba(0, 0, 0, 0.75);*/
+  padding: 20px;
+  /* opacity: 0.5;
+  filter: alpha(opacity=50); /* For IE8 and earlier */
+}
+
+#resource-table th,
+#resource-table td {
+  padding: 10px;
+  border: 1px solid black;
+}
+
+/*#resource-table {
+  margin: 50px;
+  width: 90%;
+}*/
+
+/*.features {
+  margin-left: 10vw;
+  margin-right: 10vw;
+  width: 80vw;
+  max-height: 30vw;
+}*/
+  
+.featured-activity {
+  float: left;
+  display: inline-block;
+  text-align: center;
+}
+  
+.feature {
+  /*width: 20vw;*/
+  height: 15vw;
+  padding: 5px 7px;
+}
+
+.feature img {
+  max-height: 20vw;
+  object-fit: contain;
+}
+
+.filters {
+  float: left;
+  width: 20%;
+  padding: 20px;
+  margin-left: 20px;
+  display: inline-block;
+}
+
+.filter-button {
+  margin-top: 20px;
+}
+
+hr {
+    display: block;
+    height: 1px;
+    border: 0;
+    border-top: 1px solid #ccc;
+    margin: 1em 0;
+    padding: 0;
+}
+
+.header img {
+  float: left;
+  height: 100px;
+}
+
+.header h3 {
+  position: relative;
+  left: 20px;
+  top: 40px;
+}
+
+.header {
+  padding-bottom: 4em;
+}
+
+.section-header {
+  margin-left: auto;
+  margin-right: auto;
+  font-size: 16;
+}
+
+/* move the datatable search bar to the left and add margin to length control*/
+.pull-left{
+  float: left !important;
+  margin-left: 40px;
+}
+
+/* for select menu checkbox rendering
+Reference: https://stackoverflow.com/questions/17714705/how-to-use-checkbox-inside-select-option */
+.multiselect {
+  width: 250px;
+  /*width: 100%;*/
+}
+
+.selectBox {
+  position: relative;
+}
+
+.selectBox select {
+  width: 100%;
+  font-weight: bold;
+}
+
+.overSelect {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+}
+
+#tech-required {
+  display: none;
+  border: 1px #dadada solid;
+}
+
+#tech-required label {
+  display: block;
+}
+
+#tech-required label:hover {
+  background-color: #1e90ff;
+}
