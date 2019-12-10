@@ -4,8 +4,15 @@ var datatable;
 // var resource_table = {"Activities": []};
 var table_ref;                      // reference variable for accessing the data table
 var select_expanded = false;        // used to dynamically render the dropdown- checkbox menu
-const columns = [{ title: "Resource Name" }, { title: "Description" }, { title: "Duration" }, { title: "Grade Level "},
-                    { title: "Subject" }, { title: "Tech Required "}, { title: "Author" }];
+// const columns = [{ title: "Resource Name" }, { title: "Description" }, { title: "Duration" }, { title: "Grade Level "},
+//                     { title: "Subject" }, { title: "Tech Required "}, { title: "Author" }];
+
+var Airtable = require('airtable');
+Airtable.configure({
+    endpointUrl: 'https://api.airtable.com',
+    apiKey: 'YOUR_API_KEY'
+});
+var base = Airtable.base('app8zbGAEtTIpMBNH');
 
 // When the page loads populate the table with activities and render the dropdown menus.
 // Add a graderange to each activity that JS can interpret
