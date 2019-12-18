@@ -38,6 +38,12 @@ $(document).ready(function(){
     // });
     $('.dataTables_filter').addClass('pull-left');
     $('.dataTables_length').addClass('pull-left');
+
+    //work around to putting the text search with other filters and initially hiding the table
+    $('#tech-filters').prepend($("#resource-table_filter"));
+    $("#resource-table_filter").css('margin', '0');
+    $('#resource-table_wrapper').hide();
+
 });
 
 /*
@@ -280,7 +286,7 @@ function _setupDataTable(table_source) {
 }
 
 function _setupFeatures() {
-    $('#resource-table_filter').after(`
+    $('#resource-table_wrapper').before(`
     <span id="content"> </span>
     <section id="feature-container">
       <br /><h3>Featured Activities:</h3><br />
