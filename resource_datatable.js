@@ -56,7 +56,6 @@ function renderTable(search=false) {
     var search_string = _getSearchString();//$('input[type="search"]').val();
     // var resource_link;
     
-    $('#resource-table_wrapper').show();
     if(render_data.length == 0) {
         alert('This Search returned no activities.');
         return;   
@@ -82,6 +81,7 @@ function renderTable(search=false) {
     if(table_ref)
         _refreshTable(table_source, search_string);
     if(search) {
+        $('#resource-table_wrapper').hide();
         document.querySelector('#content').scrollIntoView({ 
           behavior: 'smooth' 
         });
