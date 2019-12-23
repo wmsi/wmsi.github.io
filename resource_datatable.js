@@ -81,7 +81,7 @@ function renderTable(search=false) {
     if(table_ref)
         _refreshTable(table_source, search_string);
     if(search) {
-        $('#resource-table_wrapper').hide();
+        $('#resource-table_wrapper').show();
         document.querySelector('#content').scrollIntoView({ 
           behavior: 'smooth' 
         });
