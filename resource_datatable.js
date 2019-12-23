@@ -43,7 +43,6 @@ $(document).ready(function(){
     $('#tech-filters').prepend($("#resource-table_filter"));
     $("#resource-table_filter").css('margin', '0');
     $('#resource-table_wrapper').hide();
-
 });
 
 /*
@@ -56,6 +55,8 @@ function renderTable(search=false) {
     var table_source = [];
     var search_string = _getSearchString();//$('input[type="search"]').val();
     // var resource_link;
+    
+    $('#resource-table_wrapper').show();
     if(render_data.length == 0) {
         alert('This Search returned no activities.');
         return;   
