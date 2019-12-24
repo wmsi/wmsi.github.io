@@ -10,16 +10,18 @@ var select_expanded = false;        // used to dynamically render the dropdown- 
 var Airtable = require('airtable');
 Airtable.configure({
     endpointUrl: 'https://api.airtable.com',
-    apiKey: 'YOUR_API_KEY'
+    apiKey: API_KEY
 });
-var base = Airtable.base('app8zbGAEtTIpMBNH');
+var base = Airtable.base('app2FkHOwb0jN0G8v');
 
 // When the page loads populate the table with activities and render the dropdown menus.
 // Add a graderange to each activity that JS can interpret
 $(document).ready(function(){
     console.log('table length ' + resource_table.Activities.length);
-    _buildTable();
+    // _buildTable();
+    _renderSelects();
     _setupFeatures();
+    renderFeatures();
     _handleSearch();
 
     // switch between activity and curriculum views
@@ -36,22 +38,152 @@ $(document).ready(function(){
     //   renderTable();
     //   renderFeatures();
     // });
-    $('.dataTables_filter').addClass('pull-left');
-    $('.dataTables_length').addClass('pull-left');
+    // $('.dataTables_filter').addClass('pull-left');
+    // $('.dataTables_length').addClass('pull-left');
 
     //work around to putting the text search with other filters and initially hiding the table
     $('#tech-filters').prepend($("#resource-table_filter"));
     $("#resource-table_filter").css('margin', '0');
     $('#resource-table_wrapper').hide();
+    $('#resource-table').hide();
 });
 
 /*
     Render the datatable with activities filtered by user
     @param {boolean} search - 'true' if user has filtered activities. 
         'false' if the whole table should be rendered
+    search is becoming a default condition for rendering the table, which means we could remove it as an argument
 */
-function renderTable(search=false) {
-    var render_data = _filterResources(resource_table[table_state]);
+function renderTable(search=true) {
+    var query_string = _getQueryString();
+    search_results = [];
+    base('Activities').select({
+        view: 'Grid view',
+        filterByFormula: query_string
+    }).firstPage(function(err, records) {
+        if (err) { console.error(err); return; }
+        records.forEach(function(record) {
+            search_results.push(record.fields);
+        });
+    });
+}
+
+/*
+    Render 3 Featured Activities at the top of the page. Collect a list of all
+    activities with img urls that match the set of filters chosen. Then pick
+    features from this list based on keywords
+*/
+function renderFeatures() {
+    console.log('rendering features');
+    var feature_list = [];
+    base('Activities').select({
+        view: 'Grid view',
+        filterByFormula: "NOT({Thumbnail} = '')"
+    }).firstPage(function(err, records) {
+        if (err) { console.error(err); return; }
+        records = records.slice(0,3);
+        records.forEach(function(record) {
+            feature_list.push(record.fields);
+        });
+        console.log('building from ' + feature_list.length + ' features');
+        _buildFeatures(feature_list);
+    });
+}
+
+/* 
+    Reset all filters to their default values
+*/
+function resetFilters() {
+    _resetFilters();
+    $('input[type="search"]').val("");
+    renderTable();
+}
+/*
+    Create a search string from the chosen filter options. 
+*/
+function _getSearchString() {
+    var search_params = [];
+
+    // if($('input[type="search"]').val() != "")
+    //     search_params.push($('input[type="search"]').val());
+    
+    if($('#subject').val() != "") 
+        search_params.push("Subject=" + $('#subject').val());
+
+    if($('#grade').val() != "")
+        search_params.push("Grade=" + $('#grade').val());
+
+    if($('#no-tech').is(':checked'))
+        search_params.push('unplugged');
+
+    if($('#tech').is(':checked'))
+        search_params.push('tech');
+
+    return "q=" + search_params.join('&');
+}
+
+/*
+    Build a query string for the Airtable API. This query will take into account all filters 
+    and the text-based search.
+*/
+function _getQueryString() {
+    var query = "AND(";
+    if($('#subject').val() != "") 
+        query += "Find('" + $('#subject').val() + "', Subject), ";
+        // search_params.push("Subject=" + $('#subject').val());
+
+    if($('#experience').val() != "") 
+        query += "Find('" + $('#experience').val() + "', Experience), ";
+
+    if($('#no-tech').is(':checked') && !$('#tech').is(':checked'))
+        query += "Find('None', Materials), ";
+    else if(!$('#no-tech').is(':checked') && $('#tech').is(':checked'))
+        query += "NOT(Find('None', Materials)), ";
+
+    if($('input[type="search"]').val() != '')
+        query += "Find('" + $('input[type="search"]').val() + "', Tags), ";
+
+    var split_index = query.lastIndexOf(',');
+    query = query.slice(0, split_index) + ")";
+    console.log('query string: ' + query);
+    return query;
+}
+
+
+
+/*
+    Start a new search if the user presses "Enter" after typing in the search box.
+    With the new (non-datatables) implementation this could also be handled by
+    making the search bar part of a form with a Submit button
+*/
+function _handleSearch() {
+    $('input[type="search"]').on('keydown', function(e) {
+        if (e.which == 13) {
+            renderTable(true);
+        }
+    });
+}
+
+/*
+    Display some text or graphic to show that the resources are still loading.
+    More testing will be needed to see if this is necessary with the Airtable API
+*/
+function _displayLoading(loading) {
+    if(loading)
+        $('#load-div').show();
+    else
+        $('#load-div').hide();
+}
+
+//////////      DEPRECATED          /////////////
+/*
+    The following functions were used with the CS Resource table but are not a part 
+    of the current build. They may involve the datatables plugin and/ or the Google Sheets API
+*/
+
+
+function renderTableDEPRECATED(search=false) {
+    // var render_data = _filterResources(resource_table[table_state]);
     var table_source = [];
     var search_string = _getSearchString();//$('input[type="search"]').val();
     // var resource_link;
@@ -91,81 +223,6 @@ function renderTable(search=false) {
 }
 
 /*
-    Render 3 Featured Activities at the top of the page. Collect a list of all
-    activities with img urls that match the set of filters chosen. Then pick
-    features from this list based on keywords
-*/
-function renderFeatures(render_data) {
-    console.log('rendering features');
-    var feature_list = [];
-    $.map(render_data, function(item) {
-        if(item["Img URL"] != "") {
-            feature_list.push(item);
-        }
-    });
-
-
-    var features = _buildFeatures(feature_list);
-    console.log('built ' + features.length + ' features');
-    $('#feature-container').show();
-    if(features.length < 3) {
-        $('#feature-container').hide();
-        return;
-    }
-    
-    $(".featured-activity").each(function(i) {
-        $(this).empty();
-        var feature_id = 'feature' + (i + 1);
-        var subjects = Array.isArray(features[i]["Subject"]) ? features[i]["Subject"].join(", ") : features[i]["Subject"];
-        var feature_div = `
-            <a href="#" data-featherlight="#`+ feature_id +`"><div class="feature"><img class="feature" src="`+ features[i]["Img URL"] +`" /></div><br />
-            <span>`+ features[i]["Resource Name"] +`</span></a>
-                <div style="display: none"><div id="`+ feature_id +`" style="padding: 10px;">
-                    <h3>Activity Page: <a target="_blank" href="`+ features[i]["Resource Link"] +`">`+ features[i]["Resource Name"] +`</a></h3>
-                    <br />`+ features[i]["Description"] +`<br /><br />
-                    <b>Grade Level: </b>`+ features[i]["Grade Level"] +`<br />
-                    <b>Subject: </b>`+ subjects +`<br />
-                    <b>Tech Required: </b>`+ features[i]["Tech Required"] +`<br />
-                    <b>Author: </b><a href="`+ features[i]["Author Link"] +`">`+ features[i]["Author"] +`</a>
-                </div>`;
-        $(this).append(feature_div);
-    });
-
-}
-
-/* 
-    Reset all filters to their default values
-*/
-function resetFilters() {
-    _resetFilters();
-    $('input[type="search"]').val("");
-    renderTable();
-}
-/*
-    Create a search string from the chosen filter options.
-*/
-function _getSearchString() {
-    var search_params = [];
-
-    // if($('input[type="search"]').val() != "")
-    //     search_params.push($('input[type="search"]').val());
-    
-    if($('#subject').val() != "") 
-        search_params.push("Subject=" + $('#subject').val());
-
-    if($('#grade').val() != "")
-        search_params.push("Grade=" + $('#grade').val());
-
-    if($('#no-tech').is(':checked'))
-        search_params.push('unplugged');
-
-    if($('#tech').is(':checked'))
-        search_params.push('tech');
-
-    return "q=" + search_params.join('&');
-}
-
-/*
     Get the "Resource Table" Google sheet from https://docs.google.com/spreadsheets/d/1EdmNxW0F5jTdkemGx95QB_WbasvWVGEfVXuCAZ19cXU/
     Once the HTTP Request is complete, call helper functions to populate the array and build
     page features. This function makes use of the Google Sheets API
@@ -179,7 +236,7 @@ function _buildTable() {
     // var table = _setupDataTable(renderTable());
     _setupDataTable(renderTable());
     // renderFeatures();
-    // return;
+    return;
     
     $.ajax({
         url: "https://content-sheets.googleapis.com/v4/spreadsheets/1EdmNxW0F5jTdkemGx95QB_WbasvWVGEfVXuCAZ19cXU/values/A2%3AM",
@@ -286,8 +343,11 @@ function _setupDataTable(table_source) {
     // return table_ref;
 }
 
+/*
+    Create DOM elements for the features to live in
+*/
 function _setupFeatures() {
-    $('#resource-table_wrapper').before(`
+    $('#content').after(`
     <span id="content"> </span>
     <section id="feature-container">
       <br /><h3>Featured Activities:</h3><br />
@@ -297,12 +357,4 @@ function _setupFeatures() {
         <div class="featured-activity" id="featurediv3"></div>
       </div>
     </section>`);
-}
-
-function _handleSearch() {
-    $('input[type="search"]').on('keydown', function(e) {
-        if (e.which == 13) {
-            renderTable(true);
-        }
-});
 }

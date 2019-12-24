@@ -177,7 +177,7 @@ function _applyGradeFilter(activities) {
 */
 function _displayError(xhr, text_status, error) {
     console.log('jqXHR:');
-    console.log(jqXHR);
+    console.log(xhr);
     console.log('textStatus:');
     console.log(textStatus);
     console.log('errorThrown:');
@@ -193,10 +193,11 @@ function _displayError(xhr, text_status, error) {
     Populate each menu with the options available in the activities array
     @private
 */
-function _renderSelects(data=resource_table.Activities) {
-    // _renderCheckboxes('#tech-required',"Tech Required", data);
-    _renderSelect("#subject","Subject", data);
-    _renderGradeSelect();
+function _renderSelects() {
+    subjects = ["Computer Science", "Social Studies", "Language Arts", "Music", "Visual Arts", "Physical Education", "Science", "STEM"];
+    _renderSelect("#subject","Subject", subjects);
+    // _renderGradeSelect();
+    _renderExperienceSelect();
 }
 
 function _updateSelects(data=resource_table.Activities) {
@@ -211,6 +212,17 @@ function _updateSelects(data=resource_table.Activities) {
     @private
 */
 function _renderSelect(id, key, data) {
+    var select_options = $(id).children().toArray().map(i => i.innerHTML);
+    var new_options = [];
+    data.forEach(item => new_options.push(item));
+
+    $(id).append(
+        $.map(new_options, function(item) {
+            return '<option value="' + item + '">' + item + '</option>';
+        }).join());
+}
+
+function _renderSelectComplex(id, key, data) {
     var select_options = $(id).children().toArray().map(i => i.innerHTML);
     var new_options = [];
 
@@ -264,6 +276,19 @@ function _renderCheckboxes(id, key, data) {
         $('<input />', { type: 'checkbox', id: (tag_id + index), class: 'tech-check', value: item, checked: 'true', name: tag_id }).appendTo(check_label);
         // $('<br />').appendTo(container);
     });
+}
+
+/*
+    Add options to the experience level dropdown menu
+    Give users optiosn for beginner, intermediate, advanced
+    @private
+*/
+function _renderExperienceSelect() {
+    var grade_options = ['Beginner','Intermediate','Advanced'];
+    $('#experience').append(
+        $.map(grade_options, function(item) {
+            return '<option value="' + item + '">' + item + '</option>';
+        }).join());
 }
 
 /*
@@ -340,6 +365,7 @@ function _buildRow(row, index_offset) {
     });  
 }
 
+
 /*
     Create three features to appear above the table. Features can fit whatever criteria we want-
     Right now the first one always comes from a list of 'best authors' and the other two are random
@@ -348,31 +374,25 @@ function _buildRow(row, index_offset) {
     @returns {array} features - featured activities to display above the table
     @private
 */
-function _buildFeatures(feature_list) {
-    features = [];
-    num_features = 3;
-    var counter = 0;
-    const BEST_AUTHORS = ["Code.org Unplugged","code.org","Scratch","CSFirst with Google"];
-
-    while(features.length < num_features) {
-        var new_id = Math.floor(Math.random()*feature_list.length);
-
-        // get the first feature from a top-tier source
-        // if(features.length == 0) {
-        //     if(BEST_AUTHORS.includes(feature_list[new_id]["Author"]))
-        //         features.push(feature_list[new_id]);
-
-        // } else 
-        if(!features.includes(feature_list[new_id]) && !feature_list[new_id]["Tags"].includes("incomplete"))
-            features.push(feature_list[new_id]);
-        counter++;
-        if(counter > feature_list.length)
-            return features;
-    }
-
-    // console.log('built ' + features.length + ' features with first author ' + features[0]["Author"]);
-    return features;
-}
+function _buildFeatures(features) {
+    
+    $(".featured-activity").each(function(i) {
+        $(this).empty();
+        var feature_id = 'feature' + (i + 1);
+        var subjects = Array.isArray(features[i]["Subject"]) ? features[i]["Subject"].join(", ") : features[i]["Subject"];
+        var feature_div = `
+            <a href="#" data-featherlight="#`+ feature_id +`"><div class="feature"><img class="feature" src="`+ features[i]["Thumbnail"][0].url +`" /></div><br />
+            <span>`+ features[i]["Resource Name"] +`</span></a>
+                <div style="display: none"><div id="`+ feature_id +`" style="padding: 10px;">
+                    <h3>Activity Page: <a target="_blank" href="`+ features[i]["Resource Link"] +`">`+ features[i]["Resource Name"] +`</a></h3>
+                    <br />`+ features[i]["Description"] +`<br /><br />
+                    <b>Grade Level: </b>`+ features[i]["Grade Level"] +`<br />
+                    <b>Subject: </b>`+ subjects +`<br />
+                    <b>Tech Required: </b>`+ features[i]["Tech Required"] +`<br />
+                    <b>Author: </b><a href="`+ features[i]["Source Link"] +`">`+ features[i]["Source"] +`</a>
+                </div>`;
+        $(this).append(feature_div);
+    });}
 
 /*
     Refresh the data table based on a new lsit of activities
@@ -445,3 +465,40 @@ function _displayLoading(loading) {
     else
         $('#load-div').hide();
 }
+
+
+/////////////////   Deprecated  /////////////////////////
+
+/*
+    Create three features to appear above the table. Features can fit whatever criteria we want-
+    Right now the first one always comes from a list of 'best authors' and the other two are random
+    @param {array} feature_list - a list of activities that could be used as features. Currently this
+        is all activities with an "Img URL" field
+    @returns {array} features - featured activities to display above the table
+    @private
+*/
+// function _buildFeaturesDEPRECATED(feature_list) {
+//     features = [];
+//     num_features = 3;
+//     var counter = 0;
+//     const BEST_AUTHORS = ["Code.org Unplugged","code.org","Scratch","CSFirst with Google"];
+
+//     while(features.length < num_features) {
+//         var new_id = Math.floor(Math.random()*feature_list.length);
+
+//         // get the first feature from a top-tier source
+//         // if(features.length == 0) {
+//         //     if(BEST_AUTHORS.includes(feature_list[new_id]["Author"]))
+//         //         features.push(feature_list[new_id]);
+
+//         // } else 
+//         if(!features.includes(feature_list[new_id]) && !feature_list[new_id]["Tags"].includes("incomplete"))
+//             features.push(feature_list[new_id]);
+//         counter++;
+//         if(counter > feature_list.length)
+//             return features;
+//     }
+
+//     // console.log('built ' + features.length + ' features with first author ' + features[0]["Author"]);
+//     return features;
+// }
