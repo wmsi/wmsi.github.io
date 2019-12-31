@@ -51,18 +51,6 @@ table.display th {
   object-fit: contain;
 }
 
-.filters {
-  float: left;
-  width: 20%;
-  padding: 20px;
-  margin-left: 20px;
-  display: inline-block;
-}
-
-.filter-button {
-  margin-top: 20px;
-}
-
 hr {
     display: block;
     height: 1px;

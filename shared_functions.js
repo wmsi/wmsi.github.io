@@ -284,7 +284,7 @@ function _renderCheckboxes(id, key, data) {
     @private
 */
 function _renderExperienceSelect() {
-    var grade_options = ['Beginner','Intermediate','Advanced'];
+    var grade_options = ['Early Learner','Beginner','Intermediate','Advanced'];
     $('#experience').append(
         $.map(grade_options, function(item) {
             return '<option value="' + item + '">' + item + '</option>';

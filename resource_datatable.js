@@ -55,11 +55,11 @@ $(document).ready(function(){
     search is becoming a default condition for rendering the table, which means we could remove it as an argument
 */
 function renderTable(search=true) {
-    $('.item').remove();
-    $('.grid-container').show();
+    _clearTable();
     var query_string = _getQueryString();
-    if(query_string == 'AND(')
+    if(query_string == 'AND)')
         return;
+    $('.grid-container').show();
     search_results = [];
     base('Activities').select({
         view: 'Grid view',
@@ -70,7 +70,7 @@ function renderTable(search=true) {
             search_results.push(record.fields);
         });
         _buildTable(search_results);
-        document.querySelector('#content').scrollIntoView({ 
+        document.querySelector('.features').scrollIntoView({ 
           behavior: 'smooth' 
         });
     });
@@ -164,6 +164,8 @@ function _getQueryString() {
     var split_index = query.lastIndexOf(',');
     query = query.slice(0, split_index) + ")";
     console.log('query string: ' + query);
+    if(query == "AND)")
+        alert('Please use at least one search option to find resources.');
     return query;
 }
 
@@ -182,7 +184,9 @@ function _buildTable(search_results) {
         new_elements = grid_item.replace('*', '<a target="_blank" href="'+ resource["Resource Link"] +'">'+ resource["Resource Name"] +'</a>');
         // if(item['Tags'].includes('incomplete')) 
         //     resource_link = _adaptActivity(resource_link, i, item["Resource Name"]);
-        new_elements += grid_item.replace('*', resource["Description"]);
+        // new_elements += grid_item.replace('*', resource["Description"]);
+        author_link = 'Created by <a target="_blank" href="' + resource["Source Link"] + '">' + resource["Source"] + '</a>'
+        new_elements += grid_item.replace('*', author_link);
         new_elements += grid_item.replace('*', resource["Duration"]);
         new_elements += grid_item.replace('*', resource["Experience"]);
         new_elements += grid_item.replace('*', resource["Subject"]);
@@ -196,14 +200,38 @@ function _buildTable(search_results) {
 /*
     Create a lightbox to house the "More Info" text for an activity
     This includes a thumbnail if the activity has one, link to the activity,
-    information about the source, and activity tags.
+    activity description, and activity tags.
     @param {object} resource - resource object as returned from Airtable
     @param {int} index - number of the activity in the search results. 
         also the html id number for this element
     @private
+
+    TODO: create lightbox with generic thumbnail image if no thumbnail exists. 
+        continue to evaluate what content fits best here
 */
 function _addLightbox(resource, index) {
-    html_template = `<div class='ligthbox' id='*id' hidden>
+    var html_template = `<div class='ligthbox-grid' id='*id' hidden>
+            <a target='_blank' href='*link'>*img<span align='center'><h3>*title</h3><span></a>
+            <span>*description</span>
+            <span>*tags</span>
+        </div>`;
+    var author_info = "<a target='_blank' href='" + resource["Source Link"] + "'>" + resource.Source + "</a>";
+
+    html_template = html_template.replace('*id', 'resource' + index);
+    // console.log('building img with ' + resource.Thumbnail[0].url);
+    if(resource.Thumbnail != undefined) 
+        html_template = html_template.replace('*img',"<img class='lightbox' src='" + resource.Thumbnail[0].url + "'>");
+    html_template = html_template.replace('*title', resource["Resource Name"]);
+    html_template = html_template.replace('*description', resource["Description"]);
+    html_template = html_template.replace('*tags', "This resource has the following keyword tags: " + resource.Tags);
+    $('.grid-container').append(html_template);
+}
+
+/*
+    Create a ligthbox similar to the 
+*/
+function _addLightboxAUTHOR(resource, index) {
+    var html_template = `<div class='ligthbox-grid' id='*id' hidden>
             <a target='_blank' href='*link'>*img<span align='center'><h3>*title</h3><span></a>
             *info
         </div>`;
@@ -212,10 +240,18 @@ function _addLightbox(resource, index) {
     html_template = html_template.replace('*id', 'resource' + index);
     // console.log('building img with ' + resource.Thumbnail[0].url);
     if(resource.Thumbnail != undefined) 
-        html_template = html_template.replace('*img',"<img style='margin-left: 25%' src='" + resource.Thumbnail[0].url + "'>");
+        html_template = html_template.replace('*img',"<img class='lightbox' src='" + resource.Thumbnail[0].url + "'>");
     html_template = html_template.replace('*title', resource["Resource Name"]);
     html_template = html_template.replace('*info', "This resource was created by " + author_info + " and has the following keyword tags: " + resource.Tags);
     $('.grid-container').append(html_template);
+}
+
+/*
+    Clear the table from previous search results
+*/
+function _clearTable() {
+    $('.item').remove();
+    $('.lightbox').remove();
 }
 
 /*

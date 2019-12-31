@@ -32,15 +32,16 @@
         </div>
       </div>
       <div class="filters" id="tech-filters">
-        <label>Search:<input type="search" class="" placeholder="" aria-controls="resource-table"></label>
         <b>Tech Required: </b><br>
         <input type="checkbox" id="no-tech" checked> Unplugged<br>
         <input type="checkbox" id="tech" checked> Some Technology<br>
       </div>
       <div class="filters">
-        <button onClick="renderTable(true)">Search for Activities</button><br>
-        <button onClick="resetFilters()">Reset All Filters</button>
+        <label>Keyword Search:<br /><input type="search" class="" placeholder="" aria-controls="resource-table"></label><br />
+        <button onClick="renderTable(true)" class='filter-button'>Search for Activities</button><br>
+        <button onClick="resetFilters()" class='filter-button'>Reset All Filters</button>
       </div>
+      <span class='filter-instructions'>Choose at least one of the options above and then click 'Search for Activities' to load resources.</span>
     </div>
     <br>
     <hr>
@@ -51,7 +52,8 @@
     <span class="spacer"></span>
     <div id="content" class="grid-container">
       <span class="item-header">Activity</span> 
-      <span class="item-header">Description</span> 
+      <!-- <span class="item-header">Description</span>  -->
+      <span class="item-header">Author</span>
       <span class="item-header">Time</span> 
       <span class="item-header">Experience</span> 
       <span class="item-header">Subject</span> 
