@@ -9,70 +9,13 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <link href='https://fonts.googleapis.com/css?family=Roboto:400,300,100,500,700,900' rel='stylesheet' type='text/css'>
     <link href="resource_table.css" rel="stylesheet" id="demo-css" type="text/css">
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/dt-1.10.18/b-1.5.4/fh-3.1.4/r-2.2.2/datatables.min.css"/>
-    <link href="https://cdn.rawgit.com/noelboss/featherlight/1.7.13/release/featherlight.min.css" type="text/css" rel="stylesheet" />
-    <style>
-      .col-md-4 {
-        padding: 10px;
-      }
-
-      img {
-        width: 100%;
-        /*height: 70%;*/
-      }
-
-      .filter-form {
-        background-color: #f7f7f7;
-        padding: 20px 20px 0px 0px;
-        margin: 10px;
-        overflow: hidden;
-      }
-
-      /*#feature-container {
-        height: 200px;
-      }
-
-      .featured-activity {
-        height: 200px;
-        width: 30%;
-      }*/
-
-  </style>
+    <!-- <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/dt-1.10.18/b-1.5.4/fh-3.1.4/r-2.2.2/datatables.min.css"/> -->
+    <!-- <link href="https://cdn.rawgit.com/noelboss/featherlight/1.7.13/release/featherlight.min.css" type="text/css" rel="stylesheet" /> -->
+    <link rel="stylesheet" type="text/css" href="featherlight.css">
+    <link rel="stylesheet" type="text/css" href="style.css">
 </head>
 
 <body>
-    <!-- <table id="sort-options" class="display">
-      <thead>
-        <th>
-            <b>Filter by: </b>
-        </th>
-        <th>
-          <div class="multiselect">
-            <div class="selectBox" onclick="showCheckboxes()">
-              <select>
-                <option>Tech Required</option>
-              </select>
-              <div class="overSelect"></div>
-            </div>
-            <div id="tech-required">
-            </div>
-          </div>
-        </th>
-        <th>
-            <select class="form-control form-control-lg" id="subject" onchange="renderTable()">
-                <option value="">Subject</option>
-            </select>
-        </th>
-        <th>
-            <select class="form-control form-control-lg" id="grade" onchange="renderTable()">
-                <option value="">Grade Level</option>
-            </select>
-        </th>
-        <th>
-      </thead>
-    </table> -->
-    <!-- <button type="button" class="form-control" id="print-stats" onClick="printStats()" style="width: 12em">Print Table Stats</button>
-    <div id="stats"/> -->
     <div class="filter-form">
       <div class="filters">
         <h3 style="text-align: center">Filter Activities By:</h3>
@@ -84,24 +27,15 @@
         <select class="form-control form-control-lg" id="experience">
             <option value="">Experience Level</option>
         </select>
+        <div class="tooltip">More info on Experience Level
+          <span class="tooltiptext">Experience level is determined by school grade and STEM experience. In general students with no STEM experience are Beginners for grades K-4, Intermediate for grades 5-8, and Advanced for grades 9+</span>
+        </div>
       </div>
       <div class="filters" id="tech-filters">
         <label>Search:<input type="search" class="" placeholder="" aria-controls="resource-table"></label>
         <b>Tech Required: </b><br>
         <input type="checkbox" id="no-tech" checked> Unplugged<br>
         <input type="checkbox" id="tech" checked> Some Technology<br>
-
-        <!-- <div class="multiselect">
-          <div class="selectBox" onclick="showCheckboxes()">
-            <select>
-              <option>Tech Required</option>
-            </select>
-            <div class="overSelect"></div>
-          </div>
-          <div id="tech-required">
-          </div>
-        </div>
-        <button class="filter-button" onClick="uncheckTech()">Uncheck All</button> -->
       </div>
       <div class="filters">
         <button onClick="renderTable(true)">Search for Activities</button><br>
@@ -114,92 +48,23 @@
       Activities will appear here when they load. If nothing happens please wait a minute before refreshing the page.
       If a problem persists please notify us by clicking on the form link above.
     </div>
-    <!-- <section id="feature-container">
-      <div class="features">
-        <div class="featured-activity" id="feature1"></div>
-        <div class="featured-activity" id="feature2"></div>
-        <div class="featured-activity" id="feature3"></div>
-      </div>
-    </section> -->
-
-    <!-- <h2 style="text-align: center">Featured Activities</h2> -->
-    <!-- <div class="row" style="margin-left: 120px; margin-right: 120px;">
-      <div class="col-md-4">
-        <a href='#' data-featherlight="#mylightbox">
-          <img src="https://code.org/images/fill-480x360/tutorials/hoc2018/danceparty-characters.jpg">
-        </a>
-        <div  style="display: none">
-          <div id="mylightbox" style="padding: 10px;">
-            <a href="#"><h3>Dance Party</h3></a>
-            <br />
-            In this lesson,learners of all ages get an introductory experience with coding and computer science in a safe,supportive environment. This lesson has been designed for learners of all ages but does require reading. This activity requires sound as the tool was built to respond to music.
-            <br /><br />
-            <b>Grade Level:</b> 2+<br />
-            <b>Subject: </b>Music, Computer Science<br />
-            <b>Tech Required: </b>Device w/ Browser
-          </div>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <img src="https://code.org/images/fill-480x360/tutorials/hoc2018/csfirst_name.jpg">
-      </div>
-      <div class="col-md-4">
-        <img src="https://code.org/images/fill-480x360/tutorials/new/scratch_music.jpg">
-      </div>
-    </div> -->
-    <span id="content"> </span>
-    <table id="resource-table" class="display">
-      <thead>
-          <tr><b>
-              <th>Activity</th>
-              <th>Description</th>
-              <th width="75px">Duration</th>
-              <th width="55px">Grade Level</th>
-              <th>Subject</th>
-              <th>Tech Required</th>
-              <!-- <th>Author</th> -->
-              <th>Miscellaneous</th>
-          </tr></b>
-      </thead>
-      <tbody id='table-content'>
-      </tbody>
-    </table>
-        <!-- Form Designed by Sunil Rajput -->
-    <!-- <div class="container">
-        <div class="login-form">
-        <div class="main-div">
-            <div class="panel">
-           <p>Please enter your email and password</p>
-           </div>
-            <form id="Login">
-
-                <div class="form-group">
-
-
-                    <input type="email" class="form-control" id="inputEmail" placeholder="Email Address">
-
-                </div>
-
-                <div class="form-group">
-
-                    <input type="password" class="form-control" id="inputPassword" placeholder="Password">
-
-                </div>
-                <div class="forgot">
-                    <a href="reset.html">Forgot password?</a>
-                </div>
-                <button type="submit" class="btn btn-primary">Login</button>
-
-            </form>
-            </div>
-        </div>
-    </div> -->
+    <span class="spacer"></span>
+    <div id="content" class="grid-container">
+      <span class="item-header">Activity</span> 
+      <span class="item-header">Description</span> 
+      <span class="item-header">Time</span> 
+      <span class="item-header">Experience</span> 
+      <span class="item-header">Subject</span> 
+      <span class="item-header">Materials</span> 
+      <span class="item-header">More Info</span> 
+    </div>
     <script src="https://code.jquery.com/jquery-latest.js"></script>
 <!--     <script src="../js/jquery/dist/jquery.js"></script> -->
     <script type="text/javascript" src="https://netdna.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
-    <script type="text/javascript" src="https://cdn.datatables.net/v/dt/dt-1.10.18/b-1.5.4/fh-3.1.4/r-2.2.2/datatables.min.js"></script>
+    <!-- <script type="text/javascript" src="https://cdn.datatables.net/v/dt/dt-1.10.18/b-1.5.4/fh-3.1.4/r-2.2.2/datatables.min.js"></script> -->
 <!--     <script src="./DataTables/datatables.js"></script> -->
-    <script src="https://cdn.rawgit.com/noelboss/featherlight/1.7.13/release/featherlight.min.js" type="text/javascript" charset="utf-8"></script>
+    <!-- <script src="https://cdn.rawgit.com/noelboss/featherlight/1.7.13/release/featherlight.min.js" type="text/javascript" charset="utf-8"></script> -->
+    <script src="featherlight.js"></script>
     <script src="airtable.browser.js"></script>
     <script src="resource_table.js"></script>
     <script type="text/javascript" src="credentials.js"></script>

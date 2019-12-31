@@ -25,14 +25,14 @@ $(document).ready(function(){
     _handleSearch();
 
     // switch between activity and curriculum views
-    $('input[name=view]').click(function() {
-        var selected = $('input[name=view]:checked').val();
-        if(selected != table_state) {
-            table_state = selected;
-            renderTable(); 
-            // renderFeatures();  
-        }
-    });
+    // $('input[name=view]').click(function() {
+    //     var selected = $('input[name=view]:checked').val();
+    //     if(selected != table_state) {
+    //         table_state = selected;
+    //         renderTable(); 
+    //         // renderFeatures();  
+    //     }
+    // });
 
     // $('input[name=tech-required]').change(function() {
     //   renderTable();
@@ -44,8 +44,8 @@ $(document).ready(function(){
     //work around to putting the text search with other filters and initially hiding the table
     $('#tech-filters').prepend($("#resource-table_filter"));
     $("#resource-table_filter").css('margin', '0');
-    $('#resource-table_wrapper').hide();
-    $('#resource-table').hide();
+    // $('#resource-table_wrapper').hide();
+    $('.grid-container').hide();
 });
 
 /*
@@ -55,7 +55,11 @@ $(document).ready(function(){
     search is becoming a default condition for rendering the table, which means we could remove it as an argument
 */
 function renderTable(search=true) {
+    $('.item').remove();
+    $('.grid-container').show();
     var query_string = _getQueryString();
+    if(query_string == 'AND(')
+        return;
     search_results = [];
     base('Activities').select({
         view: 'Grid view',
@@ -64,6 +68,10 @@ function renderTable(search=true) {
         if (err) { console.error(err); return; }
         records.forEach(function(record) {
             search_results.push(record.fields);
+        });
+        _buildTable(search_results);
+        document.querySelector('#content').scrollIntoView({ 
+          behavior: 'smooth' 
         });
     });
 }
@@ -98,6 +106,16 @@ function resetFilters() {
     $('input[type="search"]').val("");
     renderTable();
 }
+
+/*
+    Reveal a the More Info lightbox for a resource
+    @param {int} index - index of the resource in the table
+*/
+function showLightbox(index) {
+    var id = '#resource' + index;
+    $(id).show();
+}
+
 /*
     Create a search string from the chosen filter options. 
 */
@@ -149,7 +167,56 @@ function _getQueryString() {
     return query;
 }
 
+/*
+    Generate HTML for all resources returned by a search query. 
+    Called by renderTable()
+    @param {array} search_resutls - resources returned by a query search to airtable
+    @private
+*/
+function _buildTable(search_results) {
+    console.log('building ' + search_results.length + ' resources');
+    var new_elements;
+    var grid_item = "<span class='item'>*</span>";
+    search_results.forEach(function(resource, index) {
+        console.log('appending ' + resource["Resource Name"]);
+        new_elements = grid_item.replace('*', '<a target="_blank" href="'+ resource["Resource Link"] +'">'+ resource["Resource Name"] +'</a>');
+        // if(item['Tags'].includes('incomplete')) 
+        //     resource_link = _adaptActivity(resource_link, i, item["Resource Name"]);
+        new_elements += grid_item.replace('*', resource["Description"]);
+        new_elements += grid_item.replace('*', resource["Duration"]);
+        new_elements += grid_item.replace('*', resource["Experience"]);
+        new_elements += grid_item.replace('*', resource["Subject"]);
+        new_elements += grid_item.replace('*', resource["Materials"]);
+        new_elements += grid_item.replace('*',  "<big><a href='#' data-featherlight='#resource" + index + "'>&#9432;</a></big>");
+        $('.grid-container').append(new_elements); 
+        _addLightbox(resource, index);
+    });  
+}
 
+/*
+    Create a lightbox to house the "More Info" text for an activity
+    This includes a thumbnail if the activity has one, link to the activity,
+    information about the source, and activity tags.
+    @param {object} resource - resource object as returned from Airtable
+    @param {int} index - number of the activity in the search results. 
+        also the html id number for this element
+    @private
+*/
+function _addLightbox(resource, index) {
+    html_template = `<div class='ligthbox' id='*id' hidden>
+            <a target='_blank' href='*link'>*img<span align='center'><h3>*title</h3><span></a>
+            *info
+        </div>`;
+    var author_info = "<a target='_blank' href='" + resource["Source Link"] + "'>" + resource.Source + "</a>";
+
+    html_template = html_template.replace('*id', 'resource' + index);
+    if(resource.Thumbnail != undefined) 
+        html_template = html_template.replace('*img',"<img src='" + resource.Thumbnail[0].url + "'>");
+    html_template = html_template.replace('*title', resource["Resource Name"]);
+    html_template = html_template.replace('*info', "This resource was created by " + author_info + " and has the following keyword tags " + resource.Tags);
+    $('.grid-container').append(html_template);
+    alert(html_template);
+}
 
 /*
     Start a new search if the user presses "Enter" after typing in the search box.
@@ -229,7 +296,7 @@ function renderTableDEPRECATED(search=false) {
     Reference: https://developers.google.com/sheets/api/
     @private
 */
-function _buildTable() {
+function _buildTableDEPRECATED() {
     // _displayLoading(true);
     _addGradeRange();
     _renderSelects();
@@ -347,7 +414,7 @@ function _setupDataTable(table_source) {
     Create DOM elements for the features to live in
 */
 function _setupFeatures() {
-    $('#content').after(`
+    $('#load-div').after(`
     <span id="content"> </span>
     <section id="feature-container">
       <br /><h3>Featured Activities:</h3><br />
@@ -356,5 +423,6 @@ function _setupFeatures() {
         <div class="featured-activity" id="featurediv2"></div>
         <div class="featured-activity" id="featurediv3"></div>
       </div>
-    </section>`);
+    </section>
+    <br />`);
 }
