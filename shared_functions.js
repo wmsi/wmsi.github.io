@@ -386,7 +386,7 @@ function _buildFeatures(features) {
                 <div style="display: none"><div id="`+ feature_id +`" style="padding: 10px;">
                     <h3>Activity Page: <a target="_blank" href="`+ features[i]["Resource Link"] +`">`+ features[i]["Resource Name"] +`</a></h3>
                     <br />`+ features[i]["Description"] +`<br /><br />
-                    <b>Grade Level: </b>`+ features[i]["Grade Level"] +`<br />
+                    <b>Experience: </b>`+ features[i]["Experience"] +`<br />
                     <b>Subject: </b>`+ subjects +`<br />
                     <b>Tech Required: </b>`+ features[i]["Tech Required"] +`<br />
                     <b>Author: </b><a href="`+ features[i]["Source Link"] +`">`+ features[i]["Source"] +`</a>

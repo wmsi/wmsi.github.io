@@ -38,6 +38,11 @@ img {
   border-bottom: 1px solid black;
 }
 
+.featherlight img {
+  margin-left: 25%;
+  max-width: 400;
+}
+
 .lightbox {
   /** Default lightbox to hidden */
   display: none;
