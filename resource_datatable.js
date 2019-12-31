@@ -213,9 +213,8 @@ function _addLightbox(resource, index) {
     if(resource.Thumbnail != undefined) 
         html_template = html_template.replace('*img',"<img src='" + resource.Thumbnail[0].url + "'>");
     html_template = html_template.replace('*title', resource["Resource Name"]);
-    html_template = html_template.replace('*info', "This resource was created by " + author_info + " and has the following keyword tags " + resource.Tags);
+    html_template = html_template.replace('*info', "This resource was created by " + author_info + " and has the following keyword tags: " + resource.Tags);
     $('.grid-container').append(html_template);
-    alert(html_template);
 }
 
 /*
