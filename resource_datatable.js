@@ -21,7 +21,6 @@ $(document).ready(function(){
     // _buildTable();
     _renderSelects();
     _setupFeatures();
-    renderFeatures();
     _handleSearch();
 
     // switch between activity and curriculum views
@@ -69,6 +68,7 @@ function renderTable(search=true) {
         records.forEach(function(record) {
             search_results.push(record.fields);
         });
+        renderFeatures(search_results);
         _buildTable(search_results);
         document.querySelector('.features').scrollIntoView({ 
           behavior: 'smooth' 
@@ -77,25 +77,22 @@ function renderTable(search=true) {
 }
 
 /*
-    Render 3 Featured Activities at the top of the page. Collect a list of all
-    activities with img urls that match the set of filters chosen. Then pick
-    features from this list based on keywords
+    Render 3 Featured Activities at the top of the page. 
+    Check which of the search results have thumbnails, then render
+    3 of those. 
+    @param {array} search_results - list of activites returned based on a user search
+
+    TODO: select activities by highest ratings
 */
-function renderFeatures() {
+function renderFeatures(search_results) {
     console.log('rendering features');
     var feature_list = [];
-    base('Activities').select({
-        view: 'Grid view',
-        filterByFormula: "NOT({Thumbnail} = '')"
-    }).firstPage(function(err, records) {
-        if (err) { console.error(err); return; }
-        records = records.slice(0,3);
-        records.forEach(function(record) {
-            feature_list.push(record.fields);
-        });
-        console.log('building from ' + feature_list.length + ' features');
-        _buildFeatures(feature_list);
+    search_results.forEach(function(resource) {
+        if(resource.Thumbnail != undefined && feature_list.length < 3)
+            feature_list.push(resource);
     });
+    console.log('building ' + feature_list.length + ' features');
+    _buildFeatures(feature_list);
 }
 
 /* 
@@ -117,27 +114,24 @@ function showLightbox(index) {
 }
 
 /*
-    Create a search string from the chosen filter options. 
+    Add 3 features to the top of the page. 
+    For now these can be any activities with thumbnails in the base.
+    @private
 */
-function _getSearchString() {
-    var search_params = [];
-
-    // if($('input[type="search"]').val() != "")
-    //     search_params.push($('input[type="search"]').val());
-    
-    if($('#subject').val() != "") 
-        search_params.push("Subject=" + $('#subject').val());
-
-    if($('#grade').val() != "")
-        search_params.push("Grade=" + $('#grade').val());
-
-    if($('#no-tech').is(':checked'))
-        search_params.push('unplugged');
-
-    if($('#tech').is(':checked'))
-        search_params.push('tech');
-
-    return "q=" + search_params.join('&');
+function _setupFeatures() {
+    var feature_list = [];
+    base('Activities').select({
+        view: 'Grid view',
+        filterByFormula: "NOT({Thumbnail} = '')"
+    }).firstPage(function(err, records) {
+        if (err) { console.error(err); return; }
+        records = records.slice(0,3);
+        records.forEach(function(record) {
+            feature_list.push(record.fields);
+        });
+        console.log('building from ' + feature_list.length + ' features');
+        _buildFeatures(feature_list);
+    });
 }
 
 /*
@@ -154,12 +148,12 @@ function _getQueryString() {
         query += "Find('" + $('#experience').val() + "', Experience), ";
 
     if($('#no-tech').is(':checked') && !$('#tech').is(':checked'))
-        query += "Find('None', Materials), ";
+        query += "Find('unplugged', Tags), ";
     else if(!$('#no-tech').is(':checked') && $('#tech').is(':checked'))
-        query += "NOT(Find('None', Materials)), ";
+        query += "NOT(Find('unplugged', Tags)), ";
 
     if($('input[type="search"]').val() != '')
-        query += "Find('" + $('input[type="search"]').val() + "', Tags), ";
+        query += "Find('" + $('input[type="search"]').val().toLowerCase() + "', {Search Text}), ";
 
     var split_index = query.lastIndexOf(',');
     query = query.slice(0, split_index) + ")";
@@ -190,8 +184,9 @@ function _buildTable(search_results) {
         new_elements += grid_item.replace('*', resource["Duration"]);
         new_elements += grid_item.replace('*', resource["Experience"]);
         new_elements += grid_item.replace('*', resource["Subject"]);
-        new_elements += grid_item.replace('*', resource["Materials"]);
-        new_elements += grid_item.replace('*',  "<big><a href='#' data-featherlight='#resource" + index + "'>&#9432;</a></big>");
+        new_elements += grid_item.replace('*', '<center><div class="Stars" style="--rating: '+resource["Rating"]+';"></div></center>');
+        // new_elements += grid_item.replace('*', resource["Materials"]);
+        new_elements += grid_item.replace('*',  "<center><big><a href='#' data-featherlight='#resource" + index + "'>&#9432;</a></big></center>");
         $('.grid-container').append(new_elements); 
         _addLightbox(resource, index);
     });  
@@ -212,6 +207,7 @@ function _buildTable(search_results) {
 function _addLightbox(resource, index) {
     var html_template = `<div class='ligthbox-grid' id='*id' hidden>
             <a target='_blank' href='*link'>*img<span align='center'><h3>*title</h3><span></a>
+            <br />
             <span>*description</span>
             <span>*tags</span>
         </div>`;
@@ -223,6 +219,8 @@ function _addLightbox(resource, index) {
         html_template = html_template.replace('*img',"<img class='lightbox' src='" + resource.Thumbnail[0].url + "'>");
     html_template = html_template.replace('*title', resource["Resource Name"]);
     html_template = html_template.replace('*description', resource["Description"]);
+    // if(resource.Materials != "None")
+    //     html_template = html_template.replace('*tags',  "This activity requires the following materials/ technology: " + resource["Materials"]);
     html_template = html_template.replace('*tags', "This resource has the following keyword tags: " + resource.Tags);
     $('.grid-container').append(html_template);
 }
@@ -267,16 +265,6 @@ function _handleSearch() {
     });
 }
 
-/*
-    Display some text or graphic to show that the resources are still loading.
-    More testing will be needed to see if this is necessary with the Airtable API
-*/
-function _displayLoading(loading) {
-    if(loading)
-        $('#load-div').show();
-    else
-        $('#load-div').hide();
-}
 
 //////////      DEPRECATED          /////////////
 /*
@@ -363,6 +351,31 @@ function _buildTableDEPRECATED() {
     });
 }
 
+
+/*
+    Create a search string from the chosen filter options. 
+*/
+function _getSearchString() {
+    var search_params = [];
+
+    // if($('input[type="search"]').val() != "")
+    //     search_params.push($('input[type="search"]').val());
+    
+    if($('#subject').val() != "") 
+        search_params.push("Subject=" + $('#subject').val());
+
+    if($('#grade').val() != "")
+        search_params.push("Grade=" + $('#grade').val());
+
+    if($('#no-tech').is(':checked'))
+        search_params.push('unplugged');
+
+    if($('#tech').is(':checked'))
+        search_params.push('tech');
+
+    return "q=" + search_params.join('&');
+}
+
 /*
     Display some text or graphic to show that the resources are still loading
 */
@@ -445,11 +458,11 @@ function _setupDataTable(table_source) {
     // datatable = table_ref;
     // return table_ref;
 }
-
 /*
     Create DOM elements for the features to live in
+    @private
 */
-function _setupFeatures() {
+function _setupFeatureElemnts() {
     $('#load-div').after(`
     <span id="content"> </span>
     <section id="feature-container">

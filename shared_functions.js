@@ -378,6 +378,8 @@ function _buildFeatures(features) {
     
     $(".featured-activity").each(function(i) {
         $(this).empty();
+        if(!features[i])
+            return true;
         var feature_id = 'feature' + (i + 1);
         var subjects = Array.isArray(features[i]["Subject"]) ? features[i]["Subject"].join(", ") : features[i]["Subject"];
         var feature_div = `
