@@ -17,7 +17,7 @@ var base = Airtable.base('app2FkHOwb0jN0G8v');
 // When the page loads populate the table with activities and render the dropdown menus.
 // Add a graderange to each activity that JS can interpret
 $(document).ready(function(){
-    console.log('table length ' + resource_table.Activities.length);
+    // console.log('table length ' + resource_table.Activities.length);
     // _buildTable();
     _renderSelects();
     _setupFeatures();
@@ -44,7 +44,7 @@ $(document).ready(function(){
     $('#tech-filters').prepend($("#resource-table_filter"));
     $("#resource-table_filter").css('margin', '0');
     // $('#resource-table_wrapper').hide();
-    $('.grid-container').hide();
+    $('#content').hide();
 });
 
 /*
@@ -70,7 +70,7 @@ function renderTable(search=true) {
         });
         renderFeatures(search_results);
         _buildTable(search_results);
-        document.querySelector('.features').scrollIntoView({ 
+        document.querySelector('#content').scrollIntoView({ 
           behavior: 'smooth' 
         });
     });
@@ -125,13 +125,47 @@ function _setupFeatures() {
         filterByFormula: "NOT({Thumbnail} = '')"
     }).firstPage(function(err, records) {
         if (err) { console.error(err); return; }
-        records = records.slice(0,3);
         records.forEach(function(record) {
             feature_list.push(record.fields);
         });
         console.log('building from ' + feature_list.length + ' features');
-        _buildFeatures(feature_list);
+        _buildFeatureCarousel(feature_list);
     });
+}
+
+/*
+    Create three features to appear above the table. Features can fit whatever criteria we want-
+    ideally this would tie in to our rating system. In this version, the features are also rendered
+    into a carousel using Slick.
+    @param {array} feature_list - a list of activities that could be used as features. Currently this
+        is all activities with an "Img URL" field
+    @returns {array} features - featured activities to display above the table
+    @private
+*/
+function _buildFeatureCarousel(features) {
+    features.map(function(item, i) {
+        var feature_id = 'feature' + i;
+        var subjects = Array.isArray(item["Subject"]) ? item["Subject"].join(", ") : item["Subject"];
+        var resource_link = '<a target="_blank" href="'+ item["Resource Link"] +'">'+ item["Resource Name"] +'</a>';
+        // if(item['Tags'].includes('incomplete')) 
+        //     resource_link = _adaptActivity(resource_link, i, item["Resource Name"]);
+        // data-lazy="`+ item["Thumbnail"][0].url +`" /></div><br />
+        var feature_div = `
+            <a href="#" data-featherlight="#`+ feature_id +`"><div><img src="` + item.Thumbnail[0].url + `" /></div><br />
+            <span class="feature-link">`+ item["Resource Name"] +`</span></a>
+                <div style="display: none"><div id="`+ feature_id +`" style="padding: 10px;">
+                    <h3>Activity Page: ` + resource_link + `</h3>
+                    <br />`+ item["Description"] +`<br /><br />
+                    <b>Experience Level: </b>`+ item["Experience"] +`<br />
+                    <b>Subject: </b>`+ subjects +`<br />
+                    <b>This activity requires the following materials: </b>`+ item["Materials"] +`<br />
+                    <b>Created by: </b><a href="`+ item["Source Link"] +`">`+ item["Source"] +`</a>
+                </div>`;
+        console.log('appending ' + item["Resource Name"]);
+        $(".feature-list").append("<li>" + feature_div + "</li>");
+        // $("#featured-activities").append("<div class='thumbnail' list-index='" + features.indexOf(item) + "'>" + feature_div + "</div>");
+    });
+    $('.feature-list').css('grid-template-columns', 'repeat(' + features.length + ', 240px)');
 }
 
 /*
@@ -147,10 +181,11 @@ function _getQueryString() {
     if($('#experience').val() != "") 
         query += "Find('" + $('#experience').val() + "', Experience), ";
 
-    if($('#no-tech').is(':checked') && !$('#tech').is(':checked'))
-        query += "Find('unplugged', Tags), ";
-    else if(!$('#no-tech').is(':checked') && $('#tech').is(':checked'))
-        query += "NOT(Find('unplugged', Tags)), ";
+    // if($('#no-tech').is(':checked') && !$('#tech').is(':checked'))
+    //     query += "Find('unplugged', Tags), ";
+    // else if(!$('#no-tech').is(':checked') && $('#tech').is(':checked'))
+    //     query += "NOT(Find('unplugged', Tags)), ";
+    query += _getMaterialsQuery();
 
     if($('input[type="search"]').val() != '')
         query += "Find('" + $('input[type="search"]').val().toLowerCase() + "', {Search Text}), ";
@@ -160,6 +195,34 @@ function _getQueryString() {
     console.log('query string: ' + query);
     if(query == "AND)")
         alert('Please use at least one search option to find resources.');
+    return query;
+}
+
+/*
+    Helper function for _getQueryString
+    Compile all the materials checkboxes into part of the Airtable query
+    @private
+*/
+function _getMaterialsQuery() {
+    var query = "OR(";
+
+    if($('#browser').is(':checked'))
+        query += "Find('Device w/ Browser', Materials), ";
+    if($('#pen-paper').is(':checked'))
+        query += "Find('Pen and Paper', Materials), ";
+    if($('#craft').is(':checked'))
+        query += "Find('Craft Supplies', Materials), ";
+    if($('#art').is(':checked'))
+        query += "Find('Art Supplies', Materials), ";
+    if($('#robotics').is(':checked'))
+        query += "Find('Robotics', Materials), ";
+
+    if(query == "OR(")
+        return "";
+
+    string_preslice = query;
+    var split_index = query.lastIndexOf(',');
+    query = query.slice(0, split_index) + "), ";
     return query;
 }
 
@@ -208,7 +271,8 @@ function _addLightbox(resource, index) {
     var html_template = `<div class='ligthbox-grid' id='*id' hidden>
             <a target='_blank' href='*link'>*img<span align='center'><h3>*title</h3><span></a>
             <br />
-            <span>*description</span>
+            <span>*description</span><br />
+            <span>*materials</span><br />
             <span>*tags</span>
         </div>`;
     var author_info = "<a target='_blank' href='" + resource["Source Link"] + "'>" + resource.Source + "</a>";
@@ -219,9 +283,9 @@ function _addLightbox(resource, index) {
         html_template = html_template.replace('*img',"<img class='lightbox' src='" + resource.Thumbnail[0].url + "'>");
     html_template = html_template.replace('*title', resource["Resource Name"]);
     html_template = html_template.replace('*description', resource["Description"]);
-    // if(resource.Materials != "None")
-    //     html_template = html_template.replace('*tags',  "This activity requires the following materials/ technology: " + resource["Materials"]);
-    html_template = html_template.replace('*tags', "This resource has the following keyword tags: " + resource.Tags);
+    if(resource.Materials != "None")
+        html_template = html_template.replace('*materials',  "This activity requires the following materials: " + resource["Materials"]);
+    html_template = html_template.replace('*tags', "Keyword tags: " + resource.Tags);
     $('.grid-container').append(html_template);
 }
 

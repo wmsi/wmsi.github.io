@@ -390,7 +390,7 @@ function _buildFeatures(features) {
                     <br />`+ features[i]["Description"] +`<br /><br />
                     <b>Experience: </b>`+ features[i]["Experience"] +`<br />
                     <b>Subject: </b>`+ subjects +`<br />
-                    <b>Tech Required: </b>`+ features[i]["Tech Required"] +`<br />
+                    <b>Materials: </b>`+ features[i]["Materials"] +`<br />
                     <b>Author: </b><a href="`+ features[i]["Source Link"] +`">`+ features[i]["Source"] +`</a>
                 </div>`;
         $(this).append(feature_div);

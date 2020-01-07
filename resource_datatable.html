@@ -8,11 +8,12 @@
     <!-- Latest compiled and minified CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <link href='https://fonts.googleapis.com/css?family=Roboto:400,300,100,500,700,900' rel='stylesheet' type='text/css'>
-    <link href="resource_table.css" rel="stylesheet" id="demo-css" type="text/css">
-    <!-- <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/dt-1.10.18/b-1.5.4/fh-3.1.4/r-2.2.2/datatables.min.css"/> -->
-    <!-- <link href="https://cdn.rawgit.com/noelboss/featherlight/1.7.13/release/featherlight.min.css" type="text/css" rel="stylesheet" /> -->
-    <link rel="stylesheet" type="text/css" href="featherlight.css">
-    <link rel="stylesheet" type="text/css" href="style.css">
+    
+    <link rel="stylesheet" type="text/css" href="css/resource_table.css">
+    <link rel="stylesheet" type="text/css" href="css/featherlight.css">
+    <link rel="stylesheet" type="text/css" href="css/style.css">
+
+    <title>Master Branch</title>
 </head>
 
 <body>
@@ -33,8 +34,13 @@
       </div>
       <div class="filters" id="tech-filters">
         <b>Tech Required: </b><br>
-        <input type="checkbox" id="no-tech" checked> Unplugged<br>
-        <input type="checkbox" id="tech" checked> Some Technology<br>
+        <!-- <input type="checkbox" id="no-tech" checked> Unplugged<br>
+        <input type="checkbox" id="tech" checked> Some Technology<br> -->
+        <input type="checkbox" id="browser" checked> Device w/ Browser<br>
+        <input type="checkbox" id="pen-paper" checked> Pen and Paper<br>
+        <input type="checkbox" id="craft" checked> Craft Supplies<br>
+        <input type="checkbox" id="robotics" checked> Robotics<br>
+        <input type="checkbox" id="art" checked> Art Supplies<br> 
       </div>
       <div class="filters">
         <label>Keyword Search:<br /><input type="search" class="" placeholder="" aria-controls="resource-table"></label><br />
@@ -76,12 +82,12 @@
     <!-- <script type="text/javascript" src="https://cdn.datatables.net/v/dt/dt-1.10.18/b-1.5.4/fh-3.1.4/r-2.2.2/datatables.min.js"></script> -->
 <!--     <script src="./DataTables/datatables.js"></script> -->
     <!-- <script src="https://cdn.rawgit.com/noelboss/featherlight/1.7.13/release/featherlight.min.js" type="text/javascript" charset="utf-8"></script> -->
-    <script src="featherlight.js"></script>
-    <script src="airtable.browser.js"></script>
-    <script src="resource_table.js"></script>
+    <script src="js/featherlight.js"></script>
+    <script src="js/airtable.browser.js"></script>
+    <script src="js/resource_table.js"></script>
     <script type="text/javascript" src="credentials.js"></script>
-    <script src="shared_functions.js"></script>
-    <script src="resource_datatable.js"></script>
+    <script src="js/shared_functions.js"></script>
+    <script src="js/resource_datatable.js"></script>
     <script>table_state='Activities'</script>
 </body>
 

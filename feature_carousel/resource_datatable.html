@@ -1,0 +1,97 @@
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Latest compiled and minified CSS -->
+    <!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous"> -->
+    <link href='https://fonts.googleapis.com/css?family=Roboto:400,300,100,500,700,900' rel='stylesheet' type='text/css'>
+    <!-- <link rel="stylesheet" type="text/css" href="../slick.css"/> -->
+    <link rel="stylesheet" id="demo-css" type="text/css" href="../css/resource_table.css">
+    <link rel="stylesheet" type="text/css" href="../css/featherlight.css">
+    <link rel="stylesheet" type="text/css" href="style.css">
+
+    <title>Featured Activities Carousel</title>
+</head>
+
+<body>
+    <img src="images/wmsi-header-condensed.png" style="width: 100vw">
+    <div class="page-layout">
+      <div class="welcome">
+        <b>Welcome to our STEM Activity Site!</b><br /><br>
+        Choose from one of the Featured Activities to the right, or use the options below to start a search.
+      </div>
+      <ul class="feature-list">
+      </ul>
+
+      <div class="filter-form">
+        <div class="filters">
+          <h3 style="text-align: center">Filter Activities By:</h3>
+        </div>
+        <div class="filters">
+          <select class="form-control form-control-lg" id="subject">
+              <option value="">Subject</option>
+          </select><br />
+          <select class="form-control form-control-lg" id="experience">
+              <option value="">Experience Level</option>
+          </select>
+          <div class="tooltip">More info on Experience Level
+            <span class="tooltiptext">Experience level is determined by school grade and STEM experience. Early Learners have no STEM experience and are usually in grades K-2. Beginners have little STEM experience and may be in grades 3-5, Intermediate means some experience or grades 6-8, and Advanced for solid STEM knowledge or grades 9+</span>
+          </div>
+        </div>
+        <div class="filters" id="tech-filters">
+          <b>Tech Required: </b><br>
+          <!-- <input type="checkbox" id="no-tech" checked> Unplugged<br>
+          <input type="checkbox" id="tech" checked> Some Technology<br> -->
+          <input type="checkbox" id="browser" checked> Device w/ Browser<br>
+          <input type="checkbox" id="pen-paper" checked> Pen and Paper<br>
+          <input type="checkbox" id="craft" checked> Craft Supplies<br>
+          <input type="checkbox" id="robotics" checked> Robotics<br>
+          <input type="checkbox" id="art" checked> Art Supplies<br> 
+        </div>
+        <div class="filters">
+          <label>Keyword Search:<br /><input type="search" class="" placeholder="" aria-controls="resource-table"></label><br />
+          <button onClick="renderTable(true)" class='filter-button'>Search for Activities</button><br>
+          <button onClick="resetFilters()" class='filter-button'>Reset All Filters</button>
+        </div>
+        <span class='filter-instructions'>Choose at least one of the options above and then click 'Search for Activities' to load resources.</span>
+      <br>
+      <hr>
+      </div>
+      <div id="load-div" style="display: none">
+        Activities will appear here when they load. If nothing happens please wait a minute before refreshing the page.
+        If a problem persists please notify us by clicking on the form link above.
+      </div>
+
+        <span class="spacer"></span>
+        <div id="content" class="grid-container">
+          <span class="item-header">Activity</span> 
+          <!-- <span class="item-header">Description</span>  -->
+          <span class="item-header">Author</span>
+          <span class="item-header">Time</span> 
+          <span class="item-header">Experience</span> 
+          <span class="item-header">Subject</span> 
+          <span class="item-header">Rating</span> 
+          <span class="item-header">More Info</span> 
+        </div>
+      </div>
+    <script src="https://code.jquery.com/jquery-latest.js"></script>
+<!--     <script src="../js/jquery/dist/jquery.js"></script> -->
+    <script type="text/javascript" src="https://netdna.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
+    <!-- <script type="text/javascript" src="https://cdn.datatables.net/v/dt/dt-1.10.18/b-1.5.4/fh-3.1.4/r-2.2.2/datatables.min.js"></script> -->
+<!--     <script src="./DataTables/datatables.js"></script> -->
+    <!-- <script src="https://cdn.rawgit.com/noelboss/featherlight/1.7.13/release/featherlight.min.js" type="text/javascript" charset="utf-8"></script> -->
+    <script src="../js/featherlight.js"></script>
+    <!-- <script src="slick.js"></script> -->
+    <script src="../js/airtable.browser.js"></script>
+    <!-- <script type="text/javascript" src="slick.js"></script> -->
+    <script   src="feature_carousel.js"></script>
+    <script src="../credentials.js"></script>
+    <script src="../js/shared_functions.js"></script>
+    <script src="resource_datatable.js"></script>
+    <script>table_state='Activities'</script>
+</body>
+
+</html>
