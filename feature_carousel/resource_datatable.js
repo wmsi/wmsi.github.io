@@ -165,7 +165,7 @@ function _buildFeatureCarousel(features) {
         $(".feature-list").append("<li>" + feature_div + "</li>");
         // $("#featured-activities").append("<div class='thumbnail' list-index='" + features.indexOf(item) + "'>" + feature_div + "</div>");
     });
-    $('.feature-list').css('grid-template-columns', 'repeat(' + features.length + ', 240px)');
+    $('.feature-list').css('grid-template-columns', 'repeat(' + features.length + ', 300px)');
 }
 
 /*
