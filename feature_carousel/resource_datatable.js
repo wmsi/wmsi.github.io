@@ -38,6 +38,13 @@ $(document).ready(function(){
             num_stars += " stars"
         confirm("Would you like to submit a rating of " + num_stars + " for " + activity_name + "?");
     });
+
+    $('#scroll-right').click(function() {
+        $('.feature-list').animate( {scrollLeft: '+=640' }, 500);
+    });
+    $('#scroll-left').click(function() {
+        $('.feature-list').animate( {scrollLeft: '-=640' }, 500);
+    });
 });
 
 /*
@@ -67,25 +74,6 @@ function renderTable(search=true) {
           behavior: 'smooth' 
         });
     });
-}
-
-/*
-    Render 3 Featured Activities at the top of the page. 
-    Check which of the search results have thumbnails, then render
-    3 of those. 
-    @param {array} search_results - list of activites returned based on a user search
-
-    TODO: select activities by highest ratings
-*/
-function renderFeatures(search_results) {
-    console.log('rendering features');
-    var feature_list = [];
-    search_results.forEach(function(resource) {
-        if(resource.Thumbnail != undefined && feature_list.length < 3)
-            feature_list.push(resource);
-    });
-    console.log('building ' + feature_list.length + ' features');
-    _buildFeatures(feature_list);
 }
 
 /* 
@@ -531,4 +519,25 @@ function _setupFeatureElemnts() {
       </div>
     </section>
     <br />`);
+}
+
+
+
+/*
+    Render 3 Featured Activities at the top of the page. 
+    Check which of the search results have thumbnails, then render
+    3 of those. 
+    @param {array} search_results - list of activites returned based on a user search
+
+    TODO: select activities by highest ratings
+*/
+function renderFeatures(search_results) {
+    console.log('rendering features');
+    var feature_list = [];
+    search_results.forEach(function(resource) {
+        if(resource.Thumbnail != undefined && feature_list.length < 3)
+            feature_list.push(resource);
+    });
+    console.log('building ' + feature_list.length + ' features');
+    _buildFeatures(feature_list);
 }

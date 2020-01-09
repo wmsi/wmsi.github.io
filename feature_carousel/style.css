@@ -14,7 +14,10 @@
   grid-column: 2 / -1;
   grid-gap: 20px;
   overflow-x: scroll;
-  /*grid-template-columns: repeat(8, 200px);*/
+  /*grid-template-columns: repeat(8, 200px);
+  Now this line appears in _buildFeatureCarousel():
+    $('.feature-list').css('grid-template-columns', 'repeat(' + features.length + ', 300px)');
+  */
   scroll-snap-type: x proximity;
   list-style-type: none;
   position: relative;
@@ -29,6 +32,28 @@
   position: absolute;
   bottom: 0;
   width: 100%;
+}
+
+.scroll {
+  font-size: 40px;
+  position: absolute;
+  background: white;
+  border-left: 10px solid white;
+  border-right: 10px solid white;
+  grid-row: 1;
+  cursor: pointer;
+  z-index: 999;
+}
+
+#scroll-left {
+  grid-column: 2;
+  left: : 180px;
+  top: 120px;  
+}
+
+#scroll-right {
+  right: 40px;
+  top: 120px;
 }
 
 .grid-container {
