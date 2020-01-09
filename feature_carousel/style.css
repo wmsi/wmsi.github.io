@@ -142,6 +142,48 @@
   visibility: visible;
 }
 
+.stars-test {
+  direction: rtl;
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+
+/*
+Work towards finding a way for active stars to go blank
+when user is selecting a rating
+.stars-test:hover .active {
+  color: #ddd;
+}
+*/
+.star {
+  color: #ddd;
+  cursor: pointer;
+}
+.active {
+  color: #f1c40f;
+}
+.star:hover,
+.star:hover ~ span {
+  color: #f1c40f;
+}
+/*
+#star1:hover ~ span {
+  color: #f1c40f;
+}
+#star2:hover ~ span {
+  color: #f1c40f;
+}
+#star3:hover ~ span {
+  color: #f1c40f;
+}
+#star4:hover ~ span {
+  color: #f1c40f;
+}
+#star5:hover ~ span {
+  color: #f1c40f;
+}*/
+
 /* Stars for Ratings */
 :root {
   --star-size: 16px;

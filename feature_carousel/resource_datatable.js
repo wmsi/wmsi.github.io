@@ -23,28 +23,21 @@ $(document).ready(function(){
     _setupFeatures();
     _handleSearch();
 
-    // switch between activity and curriculum views
-    // $('input[name=view]').click(function() {
-    //     var selected = $('input[name=view]:checked').val();
-    //     if(selected != table_state) {
-    //         table_state = selected;
-    //         renderTable(); 
-    //         // renderFeatures();  
-    //     }
-    // });
-
-    // $('input[name=tech-required]').change(function() {
-    //   renderTable();
-    //   renderFeatures();
-    // });
-    // $('.dataTables_filter').addClass('pull-left');
-    // $('.dataTables_length').addClass('pull-left');
-
     //work around to putting the text search with other filters and initially hiding the table
     $('#tech-filters').prepend($("#resource-table_filter"));
     $("#resource-table_filter").css('margin', '0');
     // $('#resource-table_wrapper').hide();
     $('#content').hide();
+
+    $('.star').click(function() {
+        var num_stars = event.target.id.split("star")[1];
+        var activity_name = $(event.target).parent().attr('id');
+        if(num_stars == 1)
+            num_stars += " star"
+        else
+            num_stars += " stars"
+        confirm("Would you like to submit a rating of " + num_stars + " for " + activity_name + "?");
+    });
 });
 
 /*
