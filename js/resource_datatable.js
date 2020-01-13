@@ -1,12 +1,3 @@
-var table_state = 'Activities';     // what is currently being displayed?
-var datatable;
-// var table_source;                   // store data for the DataTables plugin to render
-// var resource_table = {"Activities": []};
-var table_ref;                      // reference variable for accessing the data table
-var select_expanded = false;        // used to dynamically render the dropdown- checkbox menu
-// const columns = [{ title: "Resource Name" }, { title: "Description" }, { title: "Duration" }, { title: "Grade Level "},
-//                     { title: "Subject" }, { title: "Tech Required "}, { title: "Author" }];
-
 var Airtable = require('airtable');
 Airtable.configure({
     endpointUrl: 'https://api.airtable.com',
@@ -22,23 +13,6 @@ $(document).ready(function(){
     _renderSelects();
     _setupFeatures();
     _handleSearch();
-
-    // switch between activity and curriculum views
-    // $('input[name=view]').click(function() {
-    //     var selected = $('input[name=view]:checked').val();
-    //     if(selected != table_state) {
-    //         table_state = selected;
-    //         renderTable(); 
-    //         // renderFeatures();  
-    //     }
-    // });
-
-    // $('input[name=tech-required]').change(function() {
-    //   renderTable();
-    //   renderFeatures();
-    // });
-    // $('.dataTables_filter').addClass('pull-left');
-    // $('.dataTables_length').addClass('pull-left');
 
     //work around to putting the text search with other filters and initially hiding the table
     $('#tech-filters').prepend($("#resource-table_filter"));
@@ -203,7 +177,6 @@ function _buildTable(search_results) {
     var new_elements;
     var grid_item = "<span class='item'>*</span>";
     search_results.forEach(function(resource, index) {
-        console.log('appending ' + resource["Resource Name"]);
         activity_link = grid_item.replace('*', '<a target="_blank" href="'+ resource["Resource Link"] +'">'+ resource["Resource Name"] +'</a>');
         if(resource['Tags'].includes('incomplete')) 
             activity_link = _adaptActivity(activity_link, index, resource["Resource Name"]);
@@ -214,12 +187,46 @@ function _buildTable(search_results) {
         new_elements += grid_item.replace('*', resource["Duration"]);
         new_elements += grid_item.replace('*', resource["Experience"]);
         new_elements += grid_item.replace('*', resource["Subject"]);
-        new_elements += grid_item.replace('*', '<center><div class="Stars" style="--rating: '+resource["Rating"]+';"></div></center>');
-        // new_elements += grid_item.replace('*', resource["Materials"]);
+        new_elements += grid_item.replace('*', _starsMarkup(resource));
         new_elements += grid_item.replace('*',  "<center><big><a href='#' data-featherlight='#resource" + index + "'>&#9432;</a></big></center>");
         $('.grid-container').append(new_elements); 
         _addLightbox(resource, index);
     });  
+    _postRatings();
+}
+
+/*
+    Add rating column for an activity. As of 1/12/20 this feature is being
+    rendered as responsive stars to click for a rating and a number/10 
+    existing rating.
+    @param {object} resrouce - Airtable resource object
+    @private
+*/
+function _starsMarkup(resource) {
+    var markup = $('#stars-template').html().replace('stars-id', resource["Resource Name"]);
+    if(resource.Rating == undefined)
+        markup = markup.replace('rating/5 by num','');
+    else {
+        markup = markup.replace('rating', resource.Rating);
+        markup = markup.replace('num', resource.Votes + (resource.Votes == 1 ? ' vote' : ' votes'));
+    }
+
+    return markup;
+}
+
+/*
+    Trigger an event when stars are clicked and
+    post a new rating to Airtable
+    @private
+*/
+function _postRatings() {
+    $('.star').click(function() {
+        var name = $(this).parent().attr('id');
+        var rating = $(this).attr('id').split('star')[1];
+        if(confirm("Do you want to post a rating of " +rating+"/5 to "+name+"?")) {
+            console.log('posting ' + rating + ' to airtable for activity ' + name);
+        }
+    });
 }
 
 /*

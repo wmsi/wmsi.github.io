@@ -14,24 +14,31 @@
   grid-column: 2 / -1;
   grid-gap: 20px;
   overflow-x: scroll;
-  /*grid-template-columns: repeat(8, 200px);
-  Now this line appears in _buildFeatureCarousel():
+  /* From _buildFeatureCarousel():   (resource_table.js)
     $('.feature-list').css('grid-template-columns', 'repeat(' + features.length + ', 300px)');
   */
   scroll-snap-type: x proximity;
-  list-style-type: none;
-  position: relative;
 }
 
-.feature-list li img {
+.feature-list li {
+  display: grid;
+}
+
+.feature-list a {
+  display: grid;
+  height: 100%;
+}
+
+.feature-list img {
   max-width: 240px;
   max-height: 200px;
+  padding-bottom: 25px;
+  align-self: center;
 }
 
 .feature-link {
-  position: absolute;
-  bottom: 0;
-  width: 100%;
+  align-self: end;
+  justify-self: stretch;
 }
 
 .scroll {
@@ -54,195 +61,4 @@
 #scroll-right {
   right: 40px;
   top: 120px;
-}
-
-.grid-container {
-  display: grid;
-  grid-column: 1 / -1;
-  /*grid-column-gap: 10px;*/
-  grid-row-gap: 10px;
-  grid-template-columns: auto 200px auto auto auto 110px 80px;
-  /*background-color: #2196F3;*/
-  padding: 20px;
-}
-
-.spacer {
-  padding: 20px;
-  grid-row: 1;
-}
-
-.item-header {
-  font-weight: bold;
-  font-size: 18px;
-  border: 1px solid black;
-  text-align: center;
-  padding: 10px;
-}
-
-.item {
-  text-align: left;
-  border-bottom: 1px solid black;
-  padding: 10px;
-  position: relative;
-}
-
-.item-center {
-  text-align: center;
-  border-bottom: 1px solid black;
-
-}
-
-.featherlight-content {
-  max-width: 60%;
-}
-
-.featherlight img {
-  display: block;
-  margin-left: auto;
-  margin-right: auto;
-  max-width: 100%;
-  padding: 20px;
-}
-
-.filter-form {
-  display: inline-grid;
-  grid-column: 1 / -1;
-  /*grid-row: row 2;*/
-  grid-template-columns: auto auto auto auto;
-  background-color: #f7f7f7;
-  padding: 20px 20px 0px 0px;
-  margin: 10px;
-  overflow: hidden;
-}
-
-.filter-form hr {
-  grid-column: 1 / -1;
-}
-
-.filters {
-  float: left;
-  width: 100%;
-  padding: 20px;
-  margin-left: 20px;
-  /*display: inline-block;*/
-}
-
-.filter-button {
-  margin-top: 5px; 
-}
-
-
-.filter-instructions {
-  /*position: absolute;*/
-  grid-column-start: 1;
-  grid-column-end: 4; 
-  text-align: left;
-  padding-left: 10px;
-}
-
-.tooltip {
-  position: relative;
-  display: inline-block;
-  border-bottom: 1px dotted black;
-  opacity: 100;
-}
-
-.tooltip .tooltiptext {
-  visibility: hidden;
-  width: 240px;
-  background-color: black;
-  color: #fff;
-  text-align: center;
-  border-radius: 6px;
-  padding: 5px 0;
-
-  /* Position the tooltip */
-  position: absolute;
-  z-index: 1;
-  /*top: -5px;*/
-  bottom: 10%;
-  right: 105%;
-}
-
-.tooltip:hover .tooltiptext {
-  visibility: visible;
-}
-
-.stars {
-  direction: rtl;
-  /*position: absolute;*/
-  top: 0;
-  right: 0;
-}
-
-/*
-Work towards finding a way for active stars to go blank
-when user is selecting a rating
-.stars-test:hover .active {
-  color: #ddd;
-}
-*/
-.star {
-  color: #ddd;
-  cursor: pointer;
-  font-size: 14px;
-}
-.star:hover,
-.star:hover ~ span {
-  color: #f1c40f;
-}
-/*
-#star1:hover ~ span {
-  color: #f1c40f;
-}
-#star2:hover ~ span {
-  color: #f1c40f;
-}
-#star3:hover ~ span {
-  color: #f1c40f;
-}
-#star4:hover ~ span {
-  color: #f1c40f;
-}
-#star5:hover ~ span {
-  color: #f1c40f;
-}*/
-
-/* Stars for Ratings */
-/*:root {
-  --star-size: 16px;
-  --star-color: #fff;
-  --star-background: #fc0;
-}
-
-.Stars {
-  --percent: calc(var(--rating) / 5 * 100%);
-  display: inline-block;
-  font-size: var(--star-size);
-  font-family: Times;
-  line-height: 1;
-
-}
-.Stars::before {
-  content: "★★★★★";
-  letter-spacing: 3px;
-  background: linear-gradient(90deg, var(--star-background) var(--percent), var(--star-color) var(--percent));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}*/
-
-
-/* Eventually use this(?) to design our own lightbox */
-.lightboxDEPRECATED {
-  /** Default lightbox to hidden */
-  display: none;
-  /** Position and style */
-  position: fixed;
-  z-index: 999;
-  width: 100%;
-  height: 100%;
-  text-align: center;
-  top: 0;
-  left: 0;
-  background: rgba(0,0,0,0.8);
 }

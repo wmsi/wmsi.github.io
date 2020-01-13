@@ -1,34 +1,93 @@
-table.display,
-table.display th {
-/*#resource-table {*/
-  /*margin-left: 20px; */
-  margin: 20px;
-  text-align: left;
-  border-spacing: 10px;
-  /*background: rgba(0, 0, 0, 0.75);*/
+.page-layout {
+  display: inline-grid;
+  padding-left: 20px;
+}
+
+.grid-container {
+  display: grid;
+  grid-column: 1 / -1;
+  /*grid-column-gap: 10px;*/
+  grid-row-gap: 10px;
+  grid-template-columns: auto 200px auto auto auto 110px 80px;
+  /*background-color: #2196F3;*/
   padding: 20px;
-  /* opacity: 0.5;
-  filter: alpha(opacity=50); /* For IE8 and earlier */
 }
 
-#resource-table th,
-#resource-table td {
-  padding: 10px;
+.spacer {
+  padding: 20px;
+  grid-row: 1;
+}
+
+.filter-form {
+  display: inline-grid;
+  grid-column: 1 / -1;
+  /*grid-row: row 2;*/
+  grid-template-columns: auto auto auto auto;
+  background-color: #f7f7f7;
+  padding: 20px 20px 0px 0px;
+  margin: 10px;
+  overflow: hidden;
+}
+
+.filter-form hr {
+  grid-column: 1 / -1;
+}
+
+.filters {
+  float: left;
+  width: 100%;
+  padding: 20px;
+  margin-left: 20px;
+  /*display: inline-block;*/
+}
+
+.filter-button {
+  margin-top: 5px; 
+}
+
+
+.filter-instructions {
+  /*position: absolute;*/
+  grid-column-start: 1;
+  grid-column-end: 4; 
+  text-align: left;
+  padding-left: 10px;
+}
+
+.item-header {
+  font-weight: bold;
+  font-size: 18px;
   border: 1px solid black;
+  text-align: center;
+  padding: 10px;
 }
 
-/*#resource-table {
-  margin: 50px;
-  width: 90%;
-}*/
+.item {
+  text-align: left;
+  border-bottom: 1px solid black;
+  padding: 10px;
+  position: relative;
+}
 
-/*.features {
-  margin-left: 10vw;
-  margin-right: 10vw;
-  width: 80vw;
-  max-height: 30vw;
-}*/
-  
+.item-center {
+  text-align: center;
+  border-bottom: 1px solid black;
+
+}
+
+.featherlight-content {
+  max-width: 60%;
+}
+
+.featherlight img {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 240px;
+  padding: 20px;
+}
+
+
 .feature-container {
   padding-left: 80px; 
 }
@@ -79,6 +138,52 @@ hr {
   margin-left: auto;
   margin-right: auto;
   font-size: 16;
+}
+
+/* stars styling for activity ratings */
+.stars {
+  direction: rtl;
+  /*position: absolute;*/
+  top: 0;
+  right: 0;
+}
+
+.star {
+  color: #ddd;
+  cursor: pointer;
+  font-size: 14px;
+}
+.star:hover,
+.star:hover ~ span {
+  color: #f1c40f;
+}
+
+.tooltip {
+  position: relative;
+  display: inline-block;
+  border-bottom: 1px dotted black;
+  opacity: 100;
+}
+
+.tooltip .tooltiptext {
+  visibility: hidden;
+  width: 240px;
+  background-color: black;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 5px 0;
+
+  /* Position the tooltip */
+  position: absolute;
+  z-index: 1;
+  /*top: -5px;*/
+  bottom: 10%;
+  right: 105%;
+}
+
+.tooltip:hover .tooltiptext {
+  visibility: visible;
 }
 
 /* move the datatable search bar to the left and add margin to length control*/

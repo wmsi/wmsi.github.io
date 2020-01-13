@@ -109,7 +109,6 @@ function _setupFeatures() {
         records.forEach(function(record) {
             feature_list.push(record.fields);
         });
-        console.log('building from ' + feature_list.length + ' features');
         _buildFeatureCarousel(feature_list);
     });
 }
@@ -131,8 +130,9 @@ function _buildFeatureCarousel(features) {
         // if(item['Tags'].includes('incomplete')) 
         //     resource_link = _adaptActivity(resource_link, i, item["Resource Name"]);
         // data-lazy="`+ item["Thumbnail"][0].url +`" /></div><br />
+            // <a href="#" data-featherlight="#`+ feature_id +`"><div><img src="` + item.Thumbnail[0].url + `" /></div>
         var feature_div = `
-            <a href="#" data-featherlight="#`+ feature_id +`"><div><img src="` + item.Thumbnail[0].url + `" /></div><br />
+        <a href="#" data-featherlight="#`+ feature_id +`"><img src="` + item.Thumbnail[0].url + `" />
             <span class="feature-link">`+ item["Resource Name"] +`</span></a>
                 <div style="display: none"><div id="`+ feature_id +`" style="padding: 10px;">
                     <h3>Activity Page: ` + resource_link + `</h3>
@@ -142,7 +142,6 @@ function _buildFeatureCarousel(features) {
                     <b>This activity requires the following materials: </b>`+ item["Materials"] +`<br />
                     <b>Created by: </b><a href="`+ item["Source Link"] +`">`+ item["Source"] +`</a>
                 </div>`;
-        console.log('appending ' + item["Resource Name"]);
         $(".feature-list").append("<li>" + feature_div + "</li>");
         // $("#featured-activities").append("<div class='thumbnail' list-index='" + features.indexOf(item) + "'>" + feature_div + "</div>");
     });
@@ -228,9 +227,7 @@ function _buildTable(search_results) {
         new_elements += grid_item.replace('*', resource["Duration"]);
         new_elements += grid_item.replace('*', resource["Experience"]);
         new_elements += grid_item.replace('*', resource["Subject"]);
-        // new_elements += grid_item.replace('*', '<center><div class="Stars" style="--rating: '+resource["Rating"]+';"></div></center>');
         new_elements += grid_item.replace('*', _starsMarkup(resource));
-        // new_elements += grid_item.replace('*', resource["Materials"]);
         new_elements += grid_item.replace('*',  "<center><big><a href='#' data-featherlight='#resource" + index + "'>&#9432;</a></big></center>");
         $('.grid-container').append(new_elements); 
         _addLightbox(resource, index);
