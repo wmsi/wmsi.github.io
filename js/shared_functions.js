@@ -416,7 +416,7 @@ function _refreshTable(table_source) {
 function _adaptActivity(activity_link, index, name) {
     var resource_link = '<a href="#" target="_blank" data-featherlight="#adapt' + index + '">' + name + '</a>';
     resource_link += '<div style="display: none"><div id="adapt' + index + '" style="padding: 10px;">';
-    resource_link += `<div class="header"><img src="/s/adapt-icon.png"><h3>Thank you for choosing one of our activities for adaptation!</h3></div>
+    resource_link += `<div class="header"><img src="images/adapt-icon.png"><h3>Thank you for choosing one of our activities for adaptation!</h3></div>
         <br />
         This is an activity that we believe belongs in this resource, but currently does not meet Computer Science Education standards. We consider this activity to be <b>primed for CS Ed</b> and we believe it could be creatively adapted to fit your classroom needs. You can find the original activity page at the link below.
         <div style="padding-top: 1em">`;

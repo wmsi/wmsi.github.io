@@ -59,15 +59,15 @@
         <span class='filter-instructions'>Choose at least one of the options above and then click 'Search for Activities' to load resources.</span>
       <br>
       <hr>
-      <div style="position: relative">
-        <span><b>Human Robot</b><small> (Sample)</small></span>
-        <div class='stars-test' id="Human Robot" onclick='getNewRating()'>
-          <span class="star" id="star5">★</span>
-          <span class="star" id="star4">★</span>
-          <span class="star" id="star3">★</span>
-          <span class="star active" id="star2">★</span>
-          <span class="star active" id="star1">★</span>
-        </div>
+      <div id="stars-template" hidden>
+          <div class='stars' id="stars-id">
+            <span class="star" id="star5">★</span>
+            <span class="star" id="star4">★</span>
+            <span class="star" id="star3">★</span>
+            <span class="star" id="star2">★</span>
+            <span class="star" id="star1">★</span>
+          </div>
+          <small>rating/5 by num</small>
       </div>
       </div>
       <div id="load-div" style="display: none">

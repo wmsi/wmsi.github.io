@@ -204,9 +204,10 @@ function _buildTable(search_results) {
     var grid_item = "<span class='item'>*</span>";
     search_results.forEach(function(resource, index) {
         console.log('appending ' + resource["Resource Name"]);
-        new_elements = grid_item.replace('*', '<a target="_blank" href="'+ resource["Resource Link"] +'">'+ resource["Resource Name"] +'</a>');
-        // if(item['Tags'].includes('incomplete')) 
-        //     resource_link = _adaptActivity(resource_link, i, item["Resource Name"]);
+        activity_link = grid_item.replace('*', '<a target="_blank" href="'+ resource["Resource Link"] +'">'+ resource["Resource Name"] +'</a>');
+        if(resource['Tags'].includes('incomplete')) 
+            activity_link = _adaptActivity(activity_link, index, resource["Resource Name"]);
+        new_elements = activity_link;
         // new_elements += grid_item.replace('*', resource["Description"]);
         author_link = 'Created by <a target="_blank" href="' + resource["Source Link"] + '">' + resource["Source"] + '</a>'
         new_elements += grid_item.replace('*', author_link);

@@ -3,6 +3,12 @@
   padding-left: 20px;
 }
 
+.features {
+  display: inline-grid;
+  grid-template-columns: auto auto auto;
+  width: 100%;
+}
+
 .grid-container {
   display: inline-grid;
   /*grid-column-gap: 10px;*/

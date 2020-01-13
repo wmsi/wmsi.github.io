@@ -228,12 +228,37 @@ function _buildTable(search_results) {
         new_elements += grid_item.replace('*', resource["Duration"]);
         new_elements += grid_item.replace('*', resource["Experience"]);
         new_elements += grid_item.replace('*', resource["Subject"]);
-        new_elements += grid_item.replace('*', '<center><div class="Stars" style="--rating: '+resource["Rating"]+';"></div></center>');
+        // new_elements += grid_item.replace('*', '<center><div class="Stars" style="--rating: '+resource["Rating"]+';"></div></center>');
+        new_elements += grid_item.replace('*', _starsMarkup(resource));
         // new_elements += grid_item.replace('*', resource["Materials"]);
         new_elements += grid_item.replace('*',  "<center><big><a href='#' data-featherlight='#resource" + index + "'>&#9432;</a></big></center>");
         $('.grid-container').append(new_elements); 
         _addLightbox(resource, index);
     });  
+    $('.star').click(function() {
+        var name = $(this).parent().attr('id');
+        var rating = $(this).attr('id').split('star')[1];
+        confirm("Do you want to post a rating of " +rating+"/5 to "+name+"?");
+    });
+}
+
+/*
+    Add rating column for an activity. As of 1/12/20 this feature is being
+    rendered as responsive stars to click for a rating and a number/10 
+    existing rating.
+    @param {object} resrouce - Airtable resource object
+    @private
+*/
+function _starsMarkup(resource) {
+    var markup = $('#stars-template').html().replace('stars-id', resource["Resource Name"]);
+    if(resource.Rating == undefined)
+        markup = markup.replace('rating/5 by num','');
+    else {
+        markup = markup.replace('rating', resource.Rating);
+        markup = markup.replace('num', resource.Votes + (resource.Votes == 1 ? ' vote' : ' votes'));
+    }
+
+    return markup;
 }
 
 /*
@@ -287,6 +312,13 @@ function _addLightboxAUTHOR(resource, index) {
     html_template = html_template.replace('*title', resource["Resource Name"]);
     html_template = html_template.replace('*info', "This resource was created by " + author_info + " and has the following keyword tags: " + resource.Tags);
     $('.grid-container').append(html_template);
+}
+
+/*
+    post a new rating to the database;
+*/
+function _postRating(name, rating) {
+    return;
 }
 
 /*
