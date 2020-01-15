@@ -32,12 +32,13 @@
 .feature-list img {
   max-width: 240px;
   max-height: 200px;
-  padding-bottom: 25px;
+  padding-bottom: 15px;
   align-self: center;
 }
 
 .feature-link {
   align-self: end;
+  font-size: 18px;
   justify-self: stretch;
 }
 

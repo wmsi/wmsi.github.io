@@ -65,14 +65,12 @@
 .item {
   text-align: left;
   border-bottom: 1px solid black;
-  padding: 10px;
-  position: relative;
+  padding: 5px;
+  display: grid;
 }
 
 .item-center {
-  text-align: center;
-  border-bottom: 1px solid black;
-
+  justify-self: center;
 }
 
 .featherlight-content {
@@ -143,9 +141,7 @@ hr {
 /* stars styling for activity ratings */
 .stars {
   direction: rtl;
-  /*position: absolute;*/
-  top: 0;
-  right: 0;
+  justify-self: center;
 }
 
 .star {
@@ -178,7 +174,7 @@ hr {
   position: absolute;
   z-index: 1;
   /*top: -5px;*/
-  bottom: 10%;
+  bottom: -10%;
   right: 105%;
 }
 

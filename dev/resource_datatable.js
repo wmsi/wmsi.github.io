@@ -145,7 +145,7 @@ function _buildFeatureCarousel(features) {
         $(".feature-list").append("<li>" + feature_div + "</li>");
         // $("#featured-activities").append("<div class='thumbnail' list-index='" + features.indexOf(item) + "'>" + feature_div + "</div>");
     });
-    $('.feature-list').css('grid-template-columns', 'repeat(' + features.length + ', 300px)');
+    $('.feature-list').css('grid-template-columns', 'repeat(' + features.length + ', 240px)');
 }
 
 /*
@@ -232,11 +232,7 @@ function _buildTable(search_results) {
         $('.grid-container').append(new_elements); 
         _addLightbox(resource, index);
     });  
-    $('.star').click(function() {
-        var name = $(this).parent().attr('id');
-        var rating = $(this).attr('id').split('star')[1];
-        confirm("Do you want to post a rating of " +rating+"/5 to "+name+"?");
-    });
+    _postRatings();
 }
 
 /*
@@ -312,10 +308,18 @@ function _addLightboxAUTHOR(resource, index) {
 }
 
 /*
-    post a new rating to the database;
+    Trigger an event when stars are clicked and
+    post a new rating to Airtable
+    @private
 */
-function _postRating(name, rating) {
-    return;
+function _postRatings() {
+    $('.star').click(function() {
+        var name = $(this).parent().attr('id');
+        var rating = $(this).attr('id').split('star')[1];
+        if(confirm("Do you want to post a rating of " +rating+"/5 to "+name+"?")) {
+            console.log('posting ' + rating + ' to airtable for activity ' + name);
+        }
+    });
 }
 
 /*
