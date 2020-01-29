@@ -24,8 +24,8 @@ $(document).ready(function(){
     _handleSearch();
 
     $('#content').hide();
-    $('#search').click(renderTable());
-    $('#reset').click(resetFilters());
+    $('#search').click(function() {renderTable()});
+    $('#reset').click(function() {resetFilters()});
     $('#uncheck-materials').click(function() {
         $(':checkbox').prop('checked', false);
     });
@@ -49,6 +49,7 @@ $(document).ready(function(){
 
 /*
     Render the datatable with activities filtered by user
+    Requests are handled by API proxy on our Linode, wmisnh.org
     @param {boolean} search - 'true' if user has filtered activities. 
         'false' if the whole table should be rendered
     search is becoming a default condition for rendering the table, which means we could remove it as an argument
@@ -58,19 +59,19 @@ function renderTable(search=true) {
     var query_string = _getQueryString();
     if(query_string == 'AND)')
         return;
+    console.log('filter by formula: ' + query_string);
     $('.grid-container').show();
-    search_results = [];
-    base('Activities').select({
-        view: 'Grid view',
-        filterByFormula: query_string
-    }).firstPage(function(err, records) {
-        if (err) { console.error(err); return; }
-        records.forEach(function(record) {
-            search_results.push(record.fields);
-        });
+    var search_results = [];
+    var url = "https://wmsinh.org/airtable?query=" + query_string;
+    // var url = "http://localhost:5000/airtable?query=" + query_string;
+    $.ajax({
+        type: 'GET',
+        headers: {'Access-Control-Allow-Origin': '*'},
+        url: url
+    }).done(function(data, status) {
+        search_results=JSON.parse(data);
         _renderFeatures(search_results);
         _buildTable(search_results);
-        // #results = features results carousel, #content = resource table
         document.querySelector('#results').scrollIntoView({ 
           behavior: 'smooth' 
         });

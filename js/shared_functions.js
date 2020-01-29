@@ -233,7 +233,65 @@ function _buildTable(search_results) {
         $('.grid-container').append(new_elements); 
         _addLightbox(resource, index);
     });  
-    _postRatings(search_results);
+    _postRatingsAjax(search_results);
+}
+
+/*
+    Trigger an event when stars are clicked in order to post a new rating to Airtable
+    @param {array} search_results - list of resources returned by Airtable from a user-generated search
+    @private
+*/
+function _postRatings(search_results) {
+    $('.star').click(function() {
+        var name = $(this).parent().attr('id');
+        var rating = $(this).attr('id').split('star')[1];
+        if(confirm("Do you want to post a rating of " +rating+"/5 to "+name+"?")) {
+            var resource = search_results.find(x => x["Resource Name"] == name);
+            var votes = (resource.Votes == undefined ? 0 : resource.Votes);
+            var new_rating = (resource.Rating*votes + parseInt(rating))/(++votes);
+            if(resource.Rating == undefined) 
+                new_rating = parseInt(rating);
+            console.log('posting rating of ' + new_rating + ' based on ' + votes + ' votes');
+            base('Activities').update([
+                {
+                    "id": resource.id,
+                    "fields": {
+                        "Rating": new_rating,
+                        "Votes": votes
+                    }
+                }]);
+        }
+    });
+}
+
+/*
+    Handle an event when stars are clicked in order to post a new rating to Airtable
+    Post ratings using Ajax request to a secure API proxy, in order to hide API key
+    @param {array} search_results - list of resources returned by Airtable from a user-generated search
+    @private
+*/
+function _postRatingsAjax(search_results) {
+    $('.star').click(function() {
+        var name = $(this).parent().attr('id');
+        var rating = $(this).attr('id').split('star')[1];
+        if(confirm("Do you want to post a rating of " +rating+"/5 to "+name+"?")) {
+            var resource = search_results.find(x => x["Resource Name"] == name);
+            var votes = (resource.Votes == undefined ? 0 : resource.Votes);
+            var new_rating = (resource.Rating*votes + parseInt(rating))/(++votes);
+            if(resource.Rating == undefined) 
+                new_rating = parseInt(rating);
+            console.log('posting rating of ' + new_rating + ' based on ' + votes + ' votes');
+            $.ajax({
+                type: 'POST',
+                url: 'https://wmsinh.org/airtable',
+                data: {
+                    "id": resource.id,
+                    "Rating": new_rating,
+                    "Votes": votes
+                }
+            });
+        }
+    });
 }
 
 /*
