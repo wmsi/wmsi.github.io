@@ -1,6 +1,7 @@
 .page-layout {
   display: inline-grid;
   padding-left: 20px;
+  width: 100%;
 }
 
 .grid-container {
@@ -18,13 +19,18 @@
   grid-row: 1;
 }
 
+/* overwrite bootstrap styling for headings */
+h3 {
+  margin: auto;
+}
+
 .filter-form {
   display: inline-grid;
   grid-column: 1 / -1;
   /*grid-row: row 2;*/
   grid-template-columns: auto auto auto auto;
   background-color: #f7f7f7;
-  padding: 20px 20px 0px 0px;
+  /*padding: 20px 20px 0px 0px;*/
   margin: 10px;
   overflow: hidden;
 }
@@ -113,7 +119,7 @@ hr {
     height: 1px;
     border: 0;
     border-top: 1px solid #ccc;
-    margin: 1em 0;
+    margin: 0;
     padding: 0;
 }
 
@@ -140,6 +146,7 @@ hr {
 
 /* stars styling for activity ratings */
 .stars {
+  display: inline-block;
   direction: rtl;
   justify-self: center;
 }
@@ -173,8 +180,8 @@ hr {
   /* Position the tooltip */
   position: absolute;
   z-index: 1;
-  /*top: -5px;*/
-  bottom: -10%;
+  top: -100px;
+  /*bottom: -10%;*/
   right: 105%;
 }
 
@@ -182,45 +189,11 @@ hr {
   visibility: visible;
 }
 
-/* move the datatable search bar to the left and add margin to length control*/
-.pull-left{
-  float: left !important;
-  margin-left: 40px;
-}
-
-/* for select menu checkbox rendering
-Reference: https://stackoverflow.com/questions/17714705/how-to-use-checkbox-inside-select-option */
-.multiselect {
-  width: 250px;
-  /*width: 100%;*/
-}
-
-.selectBox {
-  position: relative;
-}
-
-.selectBox select {
-  width: 100%;
-  font-weight: bold;
-}
-
-.overSelect {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 0;
-  bottom: 0;
-}
-
-#tech-required {
-  display: none;
-  border: 1px #dadada solid;
-}
-
-#tech-required label {
-  display: block;
-}
-
-#tech-required label:hover {
-  background-color: #1e90ff;
+#footer {
+  position: fixed;
+  bottom: 5;
+  right: 20;
+  padding: 5;
+  border: 1px solid black;
+  background: white;
 }

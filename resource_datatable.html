@@ -17,10 +17,11 @@
 </head>
 
 <body>
+  <img src="images/wmsi-header-condensed.png" style="width: 100vw">
   <div class="page-layout">
     <div class="filter-form">
       <div class="filters">
-        <h3 style="text-align: center">Filter Activities By:</h3>
+        <h3>Filter Activities By:</h3>
       </div>
       <div class="filters">
         <select class="form-control form-control-lg" id="subject">
@@ -38,27 +39,29 @@
         <!-- <input type="checkbox" id="no-tech" checked> Unplugged<br>
         <input type="checkbox" id="tech" checked> Some Technology<br> -->
         <input type="checkbox" id="browser" checked> Device w/ Browser<br>
+        <input type="checkbox" id="tablet" checked> Tablet<br>
         <input type="checkbox" id="pen-paper" checked> Pen and Paper<br>
         <input type="checkbox" id="craft" checked> Craft Supplies<br>
-        <input type="checkbox" id="robotics" checked> Robotics<br>
+        <!-- <input type="checkbox" id="robotics" checked> Robotics<br> *Bring this back when we have robotics in the Airtable -->
+        <button id="uncheck-materials">Uncheck All</button>
       </div>
       <div class="filters">
         <label>Keyword Search:<br /><input type="search" class="" placeholder="" aria-controls="resource-table"></label><br />
-        <button onClick="renderTable(true)" class='filter-button'>Search for Activities</button><br>
-        <button onClick="resetFilters()" class='filter-button'>Reset All Filters</button>
+        <button id="search" class='filter-button'>Search for Activities</button><br>
+        <button id="reset" class='filter-button'>Reset All Filters</button>
       </div>
       <span class='filter-instructions'>Choose at least one of the options above and then click 'Search for Activities' to load resources.</span>
     </div>
-    <br>
+    <!-- <br> -->
     <hr>
     <div id="stars-template" hidden>
-        <div class='stars' id="stars-id">
+        <span class='stars' id="stars-id">
           <span class="star" id="star5">★</span>
           <span class="star" id="star4">★</span>
           <span class="star" id="star3">★</span>
           <span class="star" id="star2">★</span>
           <span class="star" id="star1">★</span>
-        </div>
+        </span>
         <small class="item-center">rating/5 by num</small>
     </div>
     <div id="load-div" style="display: none">
@@ -75,7 +78,7 @@
       </div>
     </section>
     <br />
-    <span class="spacer"></span>
+    <!-- <span class="spacer"></span> -->
     <div id="content" class="grid-container">
       <span class="item-header">Activity</span> 
       <!-- <span class="item-header">Description</span>  -->
@@ -87,6 +90,7 @@
       <span class="item-header">More Info</span> 
     </div>
   </div>
+  <div id="footer"><i>Find a broken link? Please <a href="mailto:mbucchieri@whitemountainscience.org" target="_blank">let us know</a> so we can fix it!</i></div>
   <script src="https://code.jquery.com/jquery-latest.js"></script>
   <script type="text/javascript" src="https://netdna.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
   <script src="js/featherlight.js"></script>

@@ -1,5 +1,4 @@
 .page-layout {
-  display: inline-grid;
   grid-template-columns: 240px auto;
 }
 
@@ -40,6 +39,10 @@
   align-self: end;
   font-size: 18px;
   justify-self: stretch;
+}
+
+#results {
+  position: relative;
 }
 
 .scroll {

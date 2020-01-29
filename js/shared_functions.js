@@ -1,149 +1,16 @@
-// Shared core of functions between different versions of the Resource Table vs. Activity Grid
+// Shared functions between different versions of the STEM Resource Table (ie master and dev branches)
 
-/*
-    Toggle display of a select element full of checkboxes. Use the global state variables
-    'select_expanded' to switch between states.
-*/
-function showCheckboxes() {
-  var checkboxes = document.getElementById("tech-required");
-  if (!select_expanded) {
-    checkboxes.style.display = "block";
-    select_expanded = true;
-  } else {
-    checkboxes.style.display = "none";
-    select_expanded = false;
-  }
-}
 
 /* 
-    Reset all fitlers to their default values
+    Reset all filters to their default values
 */
-function _resetFilters() {
+function resetFilters() {
     $('#subject').val("");
     $('#grade').val("");
-    $('#tech').prop('checked',true);
-    $('#no-tech').prop('checked',true);
-
-    // var checkboxes = $('#tech-required').find('input.tech-check');
-    // $.map(checkboxes, function(item, index) {
-    //     item.checked= true;
-    // });
+    $(':checkbox').prop('checked',true);
+    $('input[type="search"]').val("");
 }
 
-/*
-    Apply user-defined filters to the array of resources and return a filtered array
-    @returns {array} of activities that match all filters
-    @private
-*/
-function _filterResources(resource_list, search=false) {
-    var render_activities = [];
-    // render_activities = _applyFilter(resource_list, "tech-required", "Tech Required");
-    render_activities = _applyFilter(resource_list, "subject", "Subject");
-    // render_activities = _applyCheckboxFilter(render_activities, "#tech-required", "Tech Required");
-    render_activities = _applyTechFilter(render_activities);
-    render_activities = _applyGradeFilter(render_activities);
-    if(search)
-        render_activities = _applySearchFilter(render_activities);
-
-    return render_activities;
-}
-
-
-/*
-    Apply a filter to an array of activities and return a filtered array
-    @param {array} activities - array to filter
-    @param {string} id - HTML id of the filtering element (in this case a select object)
-    @param {string} key - JSON key of the activity field to apply the filter to
-    @returns {array} of activities that match the given filter
-    @private
-*/
-function _applyFilter(activities, id, key) {
-    var filter_val = $('#' + id).val();
-    var render_activities = [];
-
-    if(filter_val != "") {
-        $.each(activities, function(index, item) {
-        // console.log('checking: ' + filter_val + ' against ' + item[key]);
-            if(Array.isArray(item[key])) {
-                $.each(item[key], function(index, array_item) {
-                    if(array_item == filter_val) 
-                        render_activities.push(item);
-                });
-            } else {
-                if(item[key] == filter_val) 
-                    render_activities.push(item);
-            }
-        });
-    } else 
-        render_activities = activities;
-
-    return render_activities;
-}
-
-/*
-    Apply a filter to an array of activities and return a filtered array
-    @param {array} activities - array to filter
-    @param {string} id - HTML id of the filtering element (in this case a select object)
-    @param {string} key - JSON key of the activity field to apply the filter to
-    @returns {array} of activities that match the given filter
-    @private
-*/
-function _applyCheckboxFilter(activities, id, key) {
-    var filter_values = [];
-    var render_activities = [];
-    var checkboxes = $(id).find('input.tech-check');
-
-    $.map(checkboxes, function(item, index) {
-        if(item.checked)
-            filter_values.push(item.value);
-    });
-    // console.log(filter_values);
-
-    $.map(activities, function(item) {
-        if(Array.isArray(item[key])) {
-            $.map(item[key], function(field_item) {
-                if(filter_values.includes(field_item) && !render_activities.includes(item)) {
-                    render_activities.push(item);
-                    return;
-                }
-            });
-        } else {
-            if(filter_values.includes(item[key])) render_activities.push(item);
-        }
-    });
-    // console.log('filtering ' + render_activities.length + " resources");
-
-    return render_activities;
-}
-
-function _applyTechFilter(activities) {
-    var unplugged = $('#no-tech').is(':checked');
-    var tech = $('#tech').is(':checked');
-    // if(!unplugged && )
-    var key = "Tech Required";
-    var render_activities = [];
-
-    $.map(activities, function(item) {
-        if(Array.isArray(item[key])) {
-            // $.map(item[key], function(field_item) {
-                if(unplugged && item[key].includes("None")) {
-                    render_activities.push(item);
-                    return;
-                } else if(tech && !item[key].includes("None")) {
-                    render_activities.push(item);
-                    return;
-                }
-            // });
-        } else {
-            if(unplugged && item[key] == "None") 
-                render_activities.push(item);
-            else if(tech && item[key]    != "None")
-                render_activities.push(item);
-        }
-    });
-    
-    return render_activities;
-}
 
 /*
     Apply the grade range filter to an array of activities and return a filtered array
@@ -171,37 +38,25 @@ function _applyGradeFilter(activities) {
 }
 
 /*
-    Print a generic error message if the resource does not load
-    @param {object} response - REST Request Error message
-    @private
-*/
-function _displayError(xhr, text_status, error) {
-    console.log('jqXHR:');
-    console.log(xhr);
-    console.log('textStatus:');
-    console.log(textStatus);
-    console.log('errorThrown:');
-    console.log(errorThrown);
-    // print a generic error message with instructions
-    // $('#feature-container').html(`Whoops! The resource failed to load. Please wait a few minutes and then refresh the page. 
-    //     If the problem persists please <a href="https://www.whitemountainscience.org/contact-us">contact</a> a WMSI administrator.`);
-    _getResourceTable();
-}
-
-/*
     Parent function for rendering the drop down menus at the top of the table
     Populate each menu with the options available in the activities array
     @private
 */
 function _renderSelects() {
-    subjects = ["Computer Science", "Social Studies", "Language Arts", "Music", "Visual Arts", "Physical Education", "Science", "STEM"];
+    subjects = ["Computer Science", "Social Studies", "Language Arts", "Music", "Visual Arts", "Physical Education", "Science", "Engineering"];
     _renderSelect("#subject","Subject", subjects);
     // _renderGradeSelect();
     _renderExperienceSelect();
 }
 
+/*
+    Update the options available in a dropdown based on what's in the table
+    @private
+
+    TODO: Since this only applies to Subjects now the following two functions could
+    be re-written to deal with this one case. 
+*/
 function _updateSelects(data=resource_table.Activities) {
-    // _renderCheckboxes('#tech-required',"Tech Required", data);
     _renderSelect("#subject","Subject", data);
 }
 
@@ -222,62 +77,6 @@ function _renderSelect(id, key, data) {
         }).join());
 }
 
-function _renderSelectComplex(id, key, data) {
-    var select_options = $(id).children().toArray().map(i => i.innerHTML);
-    var new_options = [];
-
-    $.each(data, function(index, item) {
-        if(Array.isArray(item[key])) {
-            $.each(item[key], function(index, array_item) {
-                if($.inArray(array_item, select_options) === -1) {
-                    select_options.push(array_item);
-                    new_options.push(array_item);
-                }
-            });
-        } else {
-            if($.inArray(item[key], select_options) === -1) {
-                select_options.push(item[key]);
-                new_options.push(item[key]);
-            }
-        }
-    });
-
-    $(id).append(
-        $.map(new_options, function(item) {
-            return '<option value="' + item + '">' + item + '</option>';
-        }).join());
-}
-
-/*
-    Add options to a checkboxfilter
-    @param {string} id - HTML id of the dropdown to create
-    @param {string} key - JSON key in the Activity object that corresponds to the options for this menu
-    @private
-*/
-function _renderCheckboxes(id, key, data) {
-    var select_options = [];
-    var container = $(id);
-    var tag_id = id.substr(1);
-
-    $.each(resource_table[table_state], function(index, item) {
-        if(Array.isArray(item[key])) {
-            $.each(item[key], function(index, array_item) {
-                if($.inArray(array_item, select_options) === -1) select_options.push(array_item);
-            });
-        } else {
-            if($.inArray(item[key], select_options) === -1) select_options.push(item[key]);
-        }
-    });
-    console.log('rendering ' + select_options);
-
-    container.html('');
-    $.map(select_options, function(item, index) {
-        var check_label = $('<label />', { 'for': (tag_id + index), text: item, style: 'font-weight: normal' }).appendTo(container);
-        $('<input />', { type: 'checkbox', id: (tag_id + index), class: 'tech-check', value: item, checked: 'true', name: tag_id }).appendTo(check_label);
-        // $('<br />').appendTo(container);
-    });
-}
-
 /*
     Add options to the experience level dropdown menu
     Give users optiosn for beginner, intermediate, advanced
@@ -292,117 +91,94 @@ function _renderExperienceSelect() {
 }
 
 /*
-    Add options to the grade level dropdown menu
-    Give users all grade options from K-12
+    Build a query string for the Airtable API. This query will take into account all filters 
+    and the text-based search.
     @private
 */
-function _renderGradeSelect() {
-    var grade_options = ['K','1','2','3','4','5','6','7','8','9','10','11','12'];
-    $('#grade').append(
-        $.map(grade_options, function(item) {
-            return '<option value="' + item + '">' + item + '</option>';
-        }).join());
+function _getQueryString() {
+    var query = "AND(";
+    if($('#subject').val() != "") 
+        query += "Find('" + $('#subject').val() + "', Subject), ";
+        // search_params.push("Subject=" + $('#subject').val());
+
+    if($('#experience').val() != "") 
+        query += "Find('" + $('#experience').val() + "', Experience), ";
+
+    query += _getMaterialsQuery();
+
+    if($('input[type="search"]').val() != '')
+        query += "Find('" + $('input[type="search"]').val().toLowerCase() + "', {Search Text}), ";
+
+    var split_index = query.lastIndexOf(',');
+    query = query.slice(0, split_index) + ")";
+    if(query == "AND)")
+        alert('Please use at least one search option to find resources.');
+    return query;
 }
 
 /*
-    Create a lightbox with more info about the activity, including a thumbnail (if available),
-    link to the host page (author), activity description and keyword tags
-    @param {object} item - Activity object used to build ligthbox content
-    @param {int} index - activity index number used for building element IDs
+    Helper function for _getQueryString
+    Compile all the materials checkboxes into part of the Airtable query
     @private
 */
-function _moreInfo(item, index) {
-    var author_link = '<a target="_blank" href="' + item["Author Link"] + '">' + item["Author"] + '</a>';
-    var activity_link = '<a target="_blank" href="' + item["Resource Link"] + '"">';
-    var lightbox_link = '<a href="#" data-featherlight="#activity'+ index + '"">More Info</a>';
-    var lightbox_div = lightbox_link + '<div  style="display: none"><div id="activity' + index +'" style="padding: 10px;">' + activity_link;
+function _getMaterialsQuery() {
+    var query = "OR(";
 
-    // console.log('building more info url=' + item["Img URL"]);
-    if(item["Img URL"] != "")
-            lightbox_div += '<img src="' + item["Img URL"] + '" style="width: 50%; margin-left: 25%;"><br />';
-    lightbox_div += '<span align="center" style="margin-left: 40%"><h3>' + item["Resource Name"] + '</h3></a></span><br />';
-    lightbox_div += 'This activitiy was created by ' + author_link + ' and has the following keyword tags: <br />' + item['Tags'].join(', ') + '</div></div>';
+    if($('#browser').is(':checked'))
+        query += "Find('Device w/ Browser', Materials), ";
+    if($('#pen-paper').is(':checked'))
+        query += "Find('Pen and Paper', Materials), ";
+    if($('#craft').is(':checked'))
+        query += "Find('Craft Supplies', Materials), ";
+    if($('#tablet').is(':checked'))
+        query += "Find('Tablet', Materials), ";
+    if($('#robotics').is(':checked'))
+        query += "Find('Robotics', Materials), ";
 
+    if(query == "OR(")
+        return "";
 
-        // lightbox_link.replace('mylightbox', 'activity'+index) + lightbox_div.replace('mylightbox', 'activity'+index);
-        // lightbox = lightbox.replace('#author', author_link).replace('#tags', item['Tags'].join(', '));
-    return lightbox_div;
+    string_preslice = query;
+    var split_index = query.lastIndexOf(',');
+    query = query.slice(0, split_index) + "), ";
+    return query;
 }
 
 /*
-    Build the HTML elements for one row of activities in the grid.
-    @param {object} row - auto-generated row object with 'title', 'id', and 'data' fields
-    @param {number} index_offset - offset number to add to the featherlight id of each item
-        in this row. This allows lightboxes to render properly
+    Build an ordered list of featured activities based on search results
+    Most relevant/ highly rated activities sort towards the top of list.
+    TODO: Continue to refine criteria for sorting/ filtering
+            Ideally we end up with one sort() and one filter()
+
+    @param {list} search_results - list of resource objects returned from airtable search
+    @returns {list} feature_list - featured activities sorted with most relevant towards the top
     @private
 */
-function _buildRow(row, index_offset) {
-    var jq_id = '#' + row.id;
-    $(jq_id).empty();
+function _buildFeatureList(search_results) {
+    var feature_list = [];
+    search_results.forEach(function(resource) {
+        // push all items to list that have a thumbnail and are not incomplete
+        if(resource.Thumbnail != undefined && !resource.Tags.includes('incomplete'))
+            feature_list.push(resource);
+    });
 
-    if(row.data.length == 0)
-        $(jq_id).hide();
+    // sort by rating
+    feature_list.sort(function(a, b) {
+        var a_rating = a.Rating == undefined ? 0 : a.Rating;
+        var b_rating = b.Rating == undefined ? 0 : b.Rating;
+        // take number of votes into account?
 
-    row.data.map(function(item, i) {
-        var feature_id = 'feature' + (i + index_offset);
-        var subjects = Array.isArray(item["Subject"]) ? item["Subject"].join(", ") : item["Subject"];
-        var resource_link = '<a target="_blank" href="'+ item["Resource Link"] +'">'+ item["Resource Name"] +'</a>';
-        if(item['Tags'].includes('incomplete')) 
-            resource_link = _adaptActivity(resource_link, i, item["Resource Name"]);
-        var feature_div = `
-            <a href="#" data-featherlight="#`+ feature_id +`"><div class="feature"><img class="feature" data-lazy="`+ item["Img URL"] +`" /></div><br />
-            <span>`+ item["Resource Name"] +`</span></a>
-                <div style="display: none"><div id="`+ feature_id +`" style="padding: 10px;">
-                    <h3>Activity Page: ` + resource_link + `</h3>
-                    <br />`+ item["Description"] +`<br /><br />
-                    <b>Grade Level: </b>`+ item["Grade Level"] +`<br />
-                    <b>Subject: </b>`+ subjects +`<br />
-                    <b>Tech Required: </b>`+ item["Tech Required"] +`<br />
-                    <b>Author: </b><a href="`+ item["Author Link"] +`">`+ item["Author"] +`</a>
-                </div>`;
-        $("#" + row.id).append("<div class='thumbnail' list-index='" + resource_table[table_state].indexOf(item) + "'>" + feature_div + "</div>");
-        // $("#" + id).append("<div class='thumbnail'><img data-lazy='" + item["Img URL"] + "'></div>");
-    });  
-}
+        return b_rating - a_rating;
+    });
 
-
-/*
-    Create three features to appear above the table. Features can fit whatever criteria we want-
-    Right now the first one always comes from a list of 'best authors' and the other two are random
-    @param {array} feature_list - a list of activities that could be used as features. Currently this
-        is all activities with an "Img URL" field
-    @returns {array} features - featured activities to display above the table
-    @private
-*/
-function _buildFeatures(features) {
-    
-    $(".featured-activity").each(function(i) {
-        $(this).empty();
-        if(!features[i])
+    // no duplicate sources next to each other
+    return feature_list.filter(function(resource, i, feature_list) {
+        if(i == 0)
             return true;
-        var feature_id = 'feature' + (i + 1);
-        var subjects = Array.isArray(features[i]["Subject"]) ? features[i]["Subject"].join(", ") : features[i]["Subject"];
-        var feature_div = `
-            <a href="#" data-featherlight="#`+ feature_id +`"><div class="feature"><img class="feature" src="`+ features[i]["Thumbnail"][0].url +`" /></div><br />
-            <span>`+ features[i]["Resource Name"] +`</span></a>
-                <div style="display: none"><div id="`+ feature_id +`" style="padding: 10px;">
-                    <h3>Activity Page: <a target="_blank" href="`+ features[i]["Resource Link"] +`">`+ features[i]["Resource Name"] +`</a></h3>
-                    <br />`+ features[i]["Description"] +`<br /><br />
-                    <b>Experience: </b>`+ features[i]["Experience"] +`<br />
-                    <b>Subject: </b>`+ subjects +`<br />
-                    <b>Materials: </b>`+ features[i]["Materials"] +`<br />
-                    <b>Author: </b><a href="`+ features[i]["Source Link"] +`">`+ features[i]["Source"] +`</a>
-                </div>`;
-        $(this).append(feature_div);
-    });}
+        return !(resource.Source == feature_list[i-1].Source);
+    });
 
-/*
-    Refresh the data table based on a new lsit of activities
-    @param {array} table_source - array of activity objects to render
-    @private
-*/
-function _refreshTable(table_source) {
-    table_ref.clear().rows.add(table_source).draw();
+    // return feature_list;
 }
 
 /*
@@ -414,7 +190,9 @@ function _refreshTable(table_source) {
     @private
 */
 function _adaptActivity(activity_link, index, name) {
-    var resource_link = '<a href="#" target="_blank" data-featherlight="#adapt' + index + '">' + name + '</a>';
+    // console.log('building adaptation with link: ' + activity_link);
+    // var resource_link = '<a href="#" target="_blank" data-featherlight="#adapt' + index + '">' + name + '</a>';
+    var resource_link = '<span class="item"><a href="#" target="_blank" data-featherlight="#adapt' + index + '">' + name + '</a></span>';
     resource_link += '<div style="display: none"><div id="adapt' + index + '" style="padding: 10px;">';
     resource_link += `<div class="header"><img src="images/adapt-icon.png"><h3>Thank you for choosing one of our activities for adaptation!</h3></div>
         <br />
@@ -428,6 +206,110 @@ function _adaptActivity(activity_link, index, name) {
         </div>`;
     return resource_link;
 }
+
+/*
+    Generate HTML for all resources returned by a search query. 
+    Called by renderTable()
+    @param {array} search_resutls - resources returned by a query search to airtable
+    @private
+*/
+function _buildTable(search_results) {
+    console.log('building ' + search_results.length + ' resources');
+    var new_elements;
+    var grid_item = "<span class='item'>*</span>";
+    search_results.forEach(function(resource, index) {
+        var activity_link = grid_item.replace('*', '<a target="_blank" href="'+ resource["Resource Link"] +'">'+ resource["Resource Name"] +'</a>');
+        if(resource['Tags'].includes('incomplete')) 
+            activity_link = _adaptActivity(activity_link, index, resource["Resource Name"]);
+        
+        new_elements = activity_link;
+        author_link = '<a target="_blank" href="' + resource["Source Link"] + '">' + resource["Source"] + '</a>'
+        new_elements += grid_item.replace('*', author_link);
+        new_elements += grid_item.replace('*', resource["Duration"]);
+        new_elements += grid_item.replace('*', resource["Experience"]);
+        new_elements += grid_item.replace('*', resource["Subject"]);
+        new_elements += grid_item.replace('*', _starsMarkup(resource));
+        new_elements += grid_item.replace('*',  "<center><big><a href='#' data-featherlight='#resource" + index + "'>&#9432;</a></big></center>");
+        $('.grid-container').append(new_elements); 
+        _addLightbox(resource, index);
+    });  
+    _postRatings(search_results);
+}
+
+/*
+    Create a lightbox to house the "More Info" text for an activity
+    This includes a thumbnail if the activity has one, link to the activity,
+    activity description, and activity tags.
+    @param {object} resource - resource object as returned from Airtable
+    @param {int} index - number of the activity in the search results. 
+        also the html id number for this element
+    @private
+
+    TODO: create lightbox with generic thumbnail image if no thumbnail exists. 
+        continue to evaluate what content fits best here
+*/
+function _addLightbox(resource, index) {
+    var html_template = `<div class='ligthbox-grid' id='*id' hidden>
+            <a target='_blank' href='*link'>*img<span align='center'><h3>*title</h3><span></a>
+            <br />
+            <span><center>*description</center></span><br /><hr>
+            <span>*materials</span><br />
+            <span>*tags</span>
+        </div>`;
+    var author_info = "<a target='_blank' href='" + resource["Source Link"] + "'>" + resource.Source + "</a>";
+
+    html_template = html_template.replace('*id', 'resource' + index);
+    html_template = html_template.replace('*link', resource["Resource Link"]);
+    // console.log('building img with ' + resource.Thumbnail[0].url);
+    if(resource.Thumbnail != undefined) 
+        html_template = html_template.replace('*img',"<img class='lightbox' src='" + resource.Thumbnail[0].url + "'>");
+    html_template = html_template.replace('*title', resource["Resource Name"]);
+    html_template = html_template.replace('*description', resource["Description"]);
+    if(resource.Materials != "None")
+        html_template = html_template.replace('*materials',  "This activity requires the following materials: " + resource["Materials"]);
+    html_template = html_template.replace('*tags', "Keyword tags: " + resource.Tags);
+    $('.grid-container').append(html_template);
+}
+
+
+/*
+    Reveal a the More Info lightbox for a resource
+    @param {int} index - index of the resource in the table
+
+    TODO: use this function instead of FeatherlightJS for lightboxes
+*/
+function showLightbox(index) {
+    var id = '#resource' + index;
+    $(id).show();
+}
+
+/*
+    Add rating column for an activity. As of 1/12/20 this feature is being
+    rendered as responsive stars to click for a rating and a number/10 
+    existing rating.
+    @param {object} resrouce - Airtable resource object
+    @private
+*/
+function _starsMarkup(resource) {
+    var markup = $('#stars-template').html().replace('stars-id', resource["Resource Name"]);
+    if(resource.Rating == undefined)
+        markup = markup.replace('rating/5 by num','');
+    else {
+        markup = markup.replace('rating', Number.isInteger(resource.Rating) ? resource.Rating : resource.Rating.toFixed(2));
+        markup = markup.replace('num', resource.Votes + (resource.Votes == 1 ? ' vote' : ' votes'));
+    }
+
+    return markup;
+}
+
+
+
+
+
+
+
+
+////////////////////////////// DEPRECATED ////////////////////////////////////////
 
 /*
     Add a code-interpretable grade range to an activity in the array
@@ -456,6 +338,19 @@ function _addGradeRange(data=resource_table.Activities) {
 }
 
 /*
+    Add options to the grade level dropdown menu
+    Give users all grade options from K-12
+    @private
+*/
+function _renderGradeSelect() {
+    var grade_options = ['K','1','2','3','4','5','6','7','8','9','10','11','12'];
+    $('#grade').append(
+        $.map(grade_options, function(item) {
+            return '<option value="' + item + '">' + item + '</option>';
+        }).join());
+}
+
+/*
     Display some text or graphic to show that the resources are still loading
     @param {boolean} loading - indicates whether the loading placeholder is to be
         displayed or not
@@ -468,39 +363,3 @@ function _displayLoading(loading) {
         $('#load-div').hide();
 }
 
-
-/////////////////   Deprecated  /////////////////////////
-
-/*
-    Create three features to appear above the table. Features can fit whatever criteria we want-
-    Right now the first one always comes from a list of 'best authors' and the other two are random
-    @param {array} feature_list - a list of activities that could be used as features. Currently this
-        is all activities with an "Img URL" field
-    @returns {array} features - featured activities to display above the table
-    @private
-*/
-// function _buildFeaturesDEPRECATED(feature_list) {
-//     features = [];
-//     num_features = 3;
-//     var counter = 0;
-//     const BEST_AUTHORS = ["Code.org Unplugged","code.org","Scratch","CSFirst with Google"];
-
-//     while(features.length < num_features) {
-//         var new_id = Math.floor(Math.random()*feature_list.length);
-
-//         // get the first feature from a top-tier source
-//         // if(features.length == 0) {
-//         //     if(BEST_AUTHORS.includes(feature_list[new_id]["Author"]))
-//         //         features.push(feature_list[new_id]);
-
-//         // } else 
-//         if(!features.includes(feature_list[new_id]) && !feature_list[new_id]["Tags"].includes("incomplete"))
-//             features.push(feature_list[new_id]);
-//         counter++;
-//         if(counter > feature_list.length)
-//             return features;
-//     }
-
-//     // console.log('built ' + features.length + ' features with first author ' + features[0]["Author"]);
-//     return features;
-// }

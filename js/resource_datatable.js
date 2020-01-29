@@ -14,11 +14,12 @@ $(document).ready(function(){
     _setupFeatures();
     _handleSearch();
 
-    //work around to putting the text search with other filters and initially hiding the table
-    $('#tech-filters').prepend($("#resource-table_filter"));
-    $("#resource-table_filter").css('margin', '0');
-    // $('#resource-table_wrapper').hide();
     $('.grid-container').hide();
+    $('#search').click(function() {renderTable()});
+    $('#reset').click(function() {resetFilters()});
+    $('#uncheck-materials').click(function() {
+        $(':checkbox').prop('checked', false);
+    });
 });
 
 /*
@@ -27,13 +28,14 @@ $(document).ready(function(){
         'false' if the whole table should be rendered
     search is becoming a default condition for rendering the table, which means we could remove it as an argument
 */
-function renderTable(search=true) {
+function renderTable() {
     _clearTable();
     var query_string = _getQueryString();
     if(query_string == 'AND)')
         return;
+    console.log('filter by formula: ' + query_string);
     $('.grid-container').show();
-    search_results = [];
+    var search_results = [];
     base('Activities').select({
         view: 'Grid view',
         filterByFormula: query_string
@@ -42,7 +44,7 @@ function renderTable(search=true) {
         records.forEach(function(record) {
             search_results.push(record.fields);
         });
-        renderFeatures(search_results);
+        _renderFeatures(search_results);
         _buildTable(search_results);
         document.querySelector('.features').scrollIntoView({ 
           behavior: 'smooth' 
@@ -50,41 +52,47 @@ function renderTable(search=true) {
     });
 }
 
+function renderTableAjax(search=true) {
+    _clearTable();
+    var query_string = _getQueryString();
+    if(query_string == 'AND)')
+        return;
+    console.log('filter by formula: ' + query_string);
+    $('.grid-container').show();
+    search_results = [];
+    var url = "http://localhost:5000/airtable?query=" + query_string;
+    console.log('getting ' + url);
+    // $.get(url, function(data) {
+    //     console.log('received ' + data);
+    // });
+    $.ajax({
+        type: 'GET',
+        headers: {'Access-Control-Allow-Origin': '*'},
+        url: url
+    }).done(function(data, status) {
+        search_results=JSON.parse(data);
+        _renderFeatures(search_results);
+        _buildTable(search_results);
+        document.querySelector('.features').scrollIntoView({ 
+          behavior: 'smooth' 
+        });
+    });
+    return;
+}
+
 /*
     Render 3 Featured Activities at the top of the page. 
-    Check which of the search results have thumbnails, then render
-    3 of those. 
+    Call helper function to build ordered list of relevant features 
+    based on ratings and other criteria.
     @param {array} search_results - list of activites returned based on a user search
 
-    TODO: select activities by highest ratings
+    TODO: Refine selection criteria, limit duplicate Source
 */
-function renderFeatures(search_results) {
+function _renderFeatures(search_results) {
     console.log('rendering features');
-    var feature_list = [];
-    search_results.forEach(function(resource) {
-        if(resource.Thumbnail != undefined && feature_list.length < 3)
-            feature_list.push(resource);
-    });
+    feature_list = _buildFeatureList(search_results);
     console.log('building ' + feature_list.length + ' features');
     _buildFeatures(feature_list);
-}
-
-/* 
-    Reset all filters to their default values
-*/
-function resetFilters() {
-    _resetFilters();
-    $('input[type="search"]').val("");
-    renderTable();
-}
-
-/*
-    Reveal a the More Info lightbox for a resource
-    @param {int} index - index of the resource in the table
-*/
-function showLightbox(index) {
-    var id = '#resource' + index;
-    $(id).show();
 }
 
 /*
@@ -93,140 +101,68 @@ function showLightbox(index) {
     @private
 */
 function _setupFeatures() {
-    var feature_list = [];
+    var search_results = [];
     base('Activities').select({
         view: 'Grid view',
         filterByFormula: "NOT({Thumbnail} = '')"
     }).firstPage(function(err, records) {
         if (err) { console.error(err); return; }
-        records = records.slice(0,3);
+        // records = records.slice(0,3);
         records.forEach(function(record) {
-            feature_list.push(record.fields);
+            search_results.push(record.fields);
         });
+        feature_list = _buildFeatureList(search_results);
         console.log('building from ' + feature_list.length + ' features');
         _buildFeatures(feature_list);
     });
 }
 
 /*
-    Build a query string for the Airtable API. This query will take into account all filters 
-    and the text-based search.
+    Create three features to appear above the table. Features can fit whatever criteria we want-
+    Right now the first one always comes from a list of 'best authors' and the other two are random
+    @param {array} features - a list of activities that could be used as features. Currently this
+        is all activities with an "Img URL" field
+    @private
 */
-function _getQueryString() {
-    var query = "AND(";
-    if($('#subject').val() != "") 
-        query += "Find('" + $('#subject').val() + "', Subject), ";
-        // search_params.push("Subject=" + $('#subject').val());
-
-    if($('#experience').val() != "") 
-        query += "Find('" + $('#experience').val() + "', Experience), ";
-
-    // if($('#no-tech').is(':checked') && !$('#tech').is(':checked'))
-    //     query += "Find('unplugged', Tags), ";
-    // else if(!$('#no-tech').is(':checked') && $('#tech').is(':checked'))
-    //     query += "NOT(Find('unplugged', Tags)), ";
-    query += _getMaterialsQuery();
-
-    if($('input[type="search"]').val() != '')
-        query += "Find('" + $('input[type="search"]').val().toLowerCase() + "', {Search Text}), ";
-
-    var split_index = query.lastIndexOf(',');
-    query = query.slice(0, split_index) + ")";
-    if(query == "AND)")
-        alert('Please use at least one search option to find resources.');
-    return query;
+function _buildFeatures(features) {
+    
+    $(".featured-activity").each(function(i) {
+        $(this).empty();
+        if(!features[i])
+            return true;
+        var feature_id = 'feature' + (i + 1);
+        var subjects = Array.isArray(features[i]["Subject"]) ? features[i]["Subject"].join(", ") : features[i]["Subject"];
+        var feature_div = `
+            <a href="#" data-featherlight="#`+ feature_id +`"><div class="feature"><img class="feature" src="`+ features[i]["Thumbnail"][0].url +`" /></div><br />
+            <span>`+ features[i]["Resource Name"] +`</span></a>
+                <div style="display: none"><div id="`+ feature_id +`" style="padding: 10px;">
+                    <h3><a target="_blank" href="`+ features[i]["Resource Link"] +`">`+ features[i]["Resource Name"] +`</a></h3>
+                    <br />`+ features[i]["Description"] +`<br /><br />
+                    <b>Experience: </b>`+ features[i]["Experience"] +`<br />
+                    <b>Subject: </b>`+ subjects +`<br />
+                    <b>Materials: </b>`+ features[i]["Materials"] +`<br />
+                    <b>Author: </b><a href="`+ features[i]["Source Link"] +`">`+ features[i]["Source"] +`</a><br>   
+                    <b>Rating: </b>` + _starsMarkup(features[i]) + `
+                </div>`;
+        $(this).append(feature_div);
+    });
 }
 
 /*
-    Helper function for _getQueryString
-    Compile all the materials checkboxes into part of the Airtable query
+    Trigger an event when stars are clicked in order to post a new rating to Airtable
+    @param {array} search_results - list of resources returned by Airtable from a user-generated search
     @private
 */
-function _getMaterialsQuery() {
-    var query = "OR(";
-
-    if($('#browser').is(':checked'))
-        query += "Find('Device w/ Browser', Materials), ";
-    if($('#pen-paper').is(':checked'))
-        query += "Find('Pen and Paper', Materials), ";
-    if($('#craft').is(':checked'))
-        query += "Find('Craft Supplies', Materials), ";
-    if($('#art').is(':checked'))
-        query += "Find('Art Supplies', Materials), ";
-    if($('#robotics').is(':checked'))
-        query += "Find('Robotics', Materials), ";
-
-    if(query == "OR(")
-        return "";
-
-    string_preslice = query;
-    var split_index = query.lastIndexOf(',');
-    query = query.slice(0, split_index) + "), ";
-    return query;
-}
-
-/*
-    Generate HTML for all resources returned by a search query. 
-    Called by renderTable()
-    @param {array} search_resutls - resources returned by a query search to airtable
-    @private
-*/
-function _buildTable(search_results) {
-    console.log('building ' + search_results.length + ' resources');
-    var new_elements;
-    var grid_item = "<span class='item'>*</span>";
-    search_results.forEach(function(resource, index) {
-        activity_link = grid_item.replace('*', '<a target="_blank" href="'+ resource["Resource Link"] +'">'+ resource["Resource Name"] +'</a>');
-        if(resource['Tags'].includes('incomplete')) 
-            activity_link = _adaptActivity(activity_link, index, resource["Resource Name"]);
-        new_elements = activity_link;
-        // new_elements += grid_item.replace('*', resource["Description"]);
-        author_link = 'Created by <a target="_blank" href="' + resource["Source Link"] + '">' + resource["Source"] + '</a>'
-        new_elements += grid_item.replace('*', author_link);
-        new_elements += grid_item.replace('*', resource["Duration"]);
-        new_elements += grid_item.replace('*', resource["Experience"]);
-        new_elements += grid_item.replace('*', resource["Subject"]);
-        new_elements += grid_item.replace('*', _starsMarkup(resource));
-        new_elements += grid_item.replace('*',  "<center><big><a href='#' data-featherlight='#resource" + index + "'>&#9432;</a></big></center>");
-        $('.grid-container').append(new_elements); 
-        _addLightbox(resource, index);
-    });  
-    _postRatings();
-}
-
-/*
-    Add rating column for an activity. As of 1/12/20 this feature is being
-    rendered as responsive stars to click for a rating and a number/10 
-    existing rating.
-    @param {object} resrouce - Airtable resource object
-    @private
-*/
-function _starsMarkup(resource) {
-    var markup = $('#stars-template').html().replace('stars-id', resource["Resource Name"]);
-    if(resource.Rating == undefined)
-        markup = markup.replace('rating/5 by num','');
-    else {
-        markup = markup.replace('rating', Number.isInteger(resource.Rating) ? resource.Rating : resource.Rating.toFixed(2));
-        markup = markup.replace('num', resource.Votes + (resource.Votes == 1 ? ' vote' : ' votes'));
-    }
-
-    return markup;
-}
-
-/*
-    Trigger an event when stars are clicked and
-    post a new rating to Airtable
-    @private
-*/
-function _postRatings() {
+function _postRatings(search_results) {
     $('.star').click(function() {
         var name = $(this).parent().attr('id');
         var rating = $(this).attr('id').split('star')[1];
         if(confirm("Do you want to post a rating of " +rating+"/5 to "+name+"?")) {
-            console.log('posting ' + rating + ' to airtable for activity ' + name);
             var resource = search_results.find(x => x["Resource Name"] == name);
-            var votes = resource.Votes;
+            var votes = (resource.Votes == undefined ? 0 : resource.Votes);
             var new_rating = (resource.Rating*votes + parseInt(rating))/(++votes);
+            if(resource.Rating == undefined) 
+                new_rating = parseInt(rating);
             console.log('posting rating of ' + new_rating + ' based on ' + votes + ' votes');
             base('Activities').update([
                 {
@@ -241,42 +177,63 @@ function _postRatings() {
 }
 
 /*
-    Create a lightbox to house the "More Info" text for an activity
-    This includes a thumbnail if the activity has one, link to the activity,
-    activity description, and activity tags.
-    @param {object} resource - resource object as returned from Airtable
-    @param {int} index - number of the activity in the search results. 
-        also the html id number for this element
+    Handle an event when stars are clicked in order to post a new rating to Airtable
+    Post ratings using Ajax request to a secure API proxy, in order to hide API key
+    @param {array} search_results - list of resources returned by Airtable from a user-generated search
     @private
-
-    TODO: create lightbox with generic thumbnail image if no thumbnail exists. 
-        continue to evaluate what content fits best here
 */
-function _addLightbox(resource, index) {
-    var html_template = `<div class='ligthbox-grid' id='*id' hidden>
-            <a target='_blank' href='*link'>*img<span align='center'><h3>*title</h3><span></a>
-            <br />
-            <span>*description</span><br />
-            <span>*materials</span><br />
-            <span>*tags</span>
-        </div>`;
-    var author_info = "<a target='_blank' href='" + resource["Source Link"] + "'>" + resource.Source + "</a>";
-
-    html_template = html_template.replace('*id', 'resource' + index);
-    html_template = html_template.replace('*link', resource["Resource Link"]);
-    // console.log('building img with ' + resource.Thumbnail[0].url);
-    if(resource.Thumbnail != undefined) 
-        html_template = html_template.replace('*img',"<img class='lightbox' src='" + resource.Thumbnail[0].url + "'>");
-    html_template = html_template.replace('*title', resource["Resource Name"]);
-    html_template = html_template.replace('*description', resource["Description"]);
-    if(resource.Materials != "None")
-        html_template = html_template.replace('*materials',  "This activity requires the following materials: " + resource["Materials"]);
-    html_template = html_template.replace('*tags', "Keyword tags: " + resource.Tags);
-    $('.grid-container').append(html_template);
+function _postRatingsAjax() {
+    $('.star').click(function() {
+        var name = $(this).parent().attr('id');
+        var rating = $(this).attr('id').split('star')[1];
+        if(confirm("Do you want to post a rating of " +rating+"/5 to "+name+"?")) {
+            var resource = search_results.find(x => x["Resource Name"] == name);
+            var votes = (resource.Votes == undefined ? 0 : resource.Votes);
+            var new_rating = (resource.Rating*votes + parseInt(rating))/(++votes);
+            if(resource.Rating == undefined) 
+                new_rating = parseInt(rating);
+            console.log('posting rating of ' + new_rating + ' based on ' + votes + ' votes');
+            $.ajax({
+                type: 'POST',
+                url: 'http://localhost:5000/airtable',
+                data: {
+                    "id": resource.id,
+                    "Rating": new_rating,
+                    "Votes": votes
+                }
+            });
+        }
+    });
 }
 
 /*
-    Create a ligthbox similar to the 
+    Clear the table from previous search results
+    @private
+*/
+function _clearTable() {
+    $('.item').remove();
+    $('.ligthbox-grid').remove();
+}
+
+/*
+    Start a new search if the user presses "Enter" after typing in the search box.
+    With the new (non-datatables) implementation this could also be handled by
+    making the search bar part of a form with a Submit button
+    @private
+*/
+function _handleSearch() {
+    $('input[type="search"]').on('keydown', function(e) {
+        if (e.which == 13) {
+            renderTable();
+        }
+    });
+}
+
+/*                        DEPRECATED                  */
+/*
+    Create a ligthbox similar to the featherlight plugin
+    Eventually we want to minimize are use of dependencies, including
+    Featherlight.JS
 */
 function _addLightboxAUTHOR(resource, index) {
     var html_template = `<div class='ligthbox-grid' id='*id' hidden>
@@ -293,24 +250,20 @@ function _addLightboxAUTHOR(resource, index) {
     html_template = html_template.replace('*info', "This resource was created by " + author_info + " and has the following keyword tags: " + resource.Tags);
     $('.grid-container').append(html_template);
 }
-
 /*
-    Clear the table from previous search results
-*/
-function _clearTable() {
-    $('.item').remove();
-    $('.lightbox').remove();
-}
-
-/*
-    Start a new search if the user presses "Enter" after typing in the search box.
-    With the new (non-datatables) implementation this could also be handled by
-    making the search bar part of a form with a Submit button
-*/
-function _handleSearch() {
-    $('input[type="search"]').on('keydown', function(e) {
-        if (e.which == 13) {
-            renderTable(true);
-        }
+// Code to query airtable directly instead of by pinging the Linode
+    base('Activities').select({
+        view: 'Grid view',
+        filterByFormula: query_string
+    }).firstPage(function(err, records) {
+        if (err) { console.error(err); return; }
+        records.forEach(function(record) {
+            search_results.push(record.fields);
+        });
+        renderFeatures(search_results);
+        _buildTable(search_results);
+        document.querySelector('.features').scrollIntoView({ 
+          behavior: 'smooth' 
+        });
     });
-}
+*/ 
