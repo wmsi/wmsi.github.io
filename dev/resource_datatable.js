@@ -1,19 +1,3 @@
-var table_state = 'Activities';     // what is currently being displayed?
-var datatable;
-// var table_source;                   // store data for the DataTables plugin to render
-// var resource_table = {"Activities": []};
-var table_ref;                      // reference variable for accessing the data table
-var select_expanded = false;        // used to dynamically render the dropdown- checkbox menu
-// const columns = [{ title: "Resource Name" }, { title: "Description" }, { title: "Duration" }, { title: "Grade Level "},
-//                     { title: "Subject" }, { title: "Tech Required "}, { title: "Author" }];
-
-var Airtable = require('airtable');
-Airtable.configure({
-    endpointUrl: 'https://api.airtable.com',
-    apiKey: API_KEY
-});
-var base = Airtable.base('app2FkHOwb0jN0G8v');
-
 // When the page loads populate the table with activities and render the dropdown menus.
 // Add a graderange to each activity that JS can interpret
 $(document).ready(function(){
@@ -48,13 +32,11 @@ $(document).ready(function(){
 });
 
 /*
-    Render the datatable with activities filtered by user
-    Requests are handled by API proxy on our Linode, wmisnh.org
-    @param {boolean} search - 'true' if user has filtered activities. 
-        'false' if the whole table should be rendered
-    search is becoming a default condition for rendering the table, which means we could remove it as an argument
+    Render STEM Resource table based on search parameters
+    Generate a query and send it to the API proxy on our Linode
+    (wmsinh.org), then handle the response
 */
-function renderTable(search=true) {
+function renderTable() {
     _clearTable();
     var query_string = _getQueryString();
     if(query_string == 'AND)')
@@ -95,14 +77,13 @@ function showLightbox(index) {
 */
 function _setupFeatures() {
     var search_results = [];
-    base('Activities').select({
-        view: 'Grid view',
-        filterByFormula: "NOT({Thumbnail} = '')"
-    }).firstPage(function(err, records) {
-        if (err) { console.error(err); return; }
-        records.forEach(function(record) {
-            search_results.push(record.fields);
-        });
+    var url = "https://wmsinh.org/airtable?query=NOT({Thumbnail} = '')";
+    $.ajax({
+        type: 'GET',
+        headers: {'Access-Control-Allow-Origin': '*'},
+        url: url
+    }).done(function(data, status) {
+        search_results=JSON.parse(data);
         feature_list = _buildFeatureList(search_results);
         _buildFeatureCarousel(feature_list, '#feature-header');
     });

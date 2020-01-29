@@ -1,10 +1,3 @@
-var Airtable = require('airtable');
-Airtable.configure({
-    endpointUrl: 'https://api.airtable.com',
-    apiKey: WRITE_API_KEY
-});
-var base = Airtable.base('app2FkHOwb0jN0G8v');
-
 // When the page loads populate the table with activities and render the dropdown menus.
 // Add a graderange to each activity that JS can interpret
 $(document).ready(function(){
@@ -15,7 +8,7 @@ $(document).ready(function(){
     _handleSearch();
 
     $('.grid-container').hide();
-    $('#search').click(function() {renderTableAjax()});
+    $('#search').click(function() {renderTable()});
     $('#reset').click(function() {resetFilters()});
     $('#uncheck-materials').click(function() {
         $(':checkbox').prop('checked', false);
@@ -23,10 +16,11 @@ $(document).ready(function(){
 });
 
 /*
-    Render the datatable with activities filtered by user
-    @param {boolean} search - 'true' if user has filtered activities. 
-        'false' if the whole table should be rendered
-    search is becoming a default condition for rendering the table, which means we could remove it as an argument
+
+/*
+    Render STEM Resource table based on search parameters
+    Generate a query and send it to the API proxy on our Linode
+    (wmsinh.org), then handle the response
 */
 function renderTable() {
     _clearTable();
@@ -36,36 +30,8 @@ function renderTable() {
     console.log('filter by formula: ' + query_string);
     $('.grid-container').show();
     var search_results = [];
-    base('Activities').select({
-        view: 'Grid view',
-        filterByFormula: query_string
-    }).firstPage(function(err, records) {
-        if (err) { console.error(err); return; }
-        records.forEach(function(record) {
-            search_results.push(record.fields);
-        });
-        _renderFeatures(search_results);
-        _buildTable(search_results);
-        document.querySelector('.features').scrollIntoView({ 
-          behavior: 'smooth' 
-        });
-    });
-}
-
-function renderTableAjax(search=true) {
-    _clearTable();
-    var query_string = _getQueryString();
-    if(query_string == 'AND)')
-        return;
-    console.log('filter by formula: ' + query_string);
-    $('.grid-container').show();
-    search_results = [];
     var url = "https://wmsinh.org/airtable?query=" + query_string;
     // var url = "http://localhost:5000/airtable?query=" + query_string;
-    console.log('getting ' + url);
-    // $.get(url, function(data) {
-    //     console.log('received ' + data);
-    // });
     $.ajax({
         type: 'GET',
         headers: {'Access-Control-Allow-Origin': '*'},
@@ -78,7 +44,6 @@ function renderTableAjax(search=true) {
           behavior: 'smooth' 
         });
     });
-    return;
 }
 
 /*
@@ -103,15 +68,16 @@ function _renderFeatures(search_results) {
 */
 function _setupFeatures() {
     var search_results = [];
-    base('Activities').select({
-        view: 'Grid view',
-        filterByFormula: "NOT({Thumbnail} = '')"
-    }).firstPage(function(err, records) {
-        if (err) { console.error(err); return; }
-        // records = records.slice(0,3);
-        records.forEach(function(record) {
-            search_results.push(record.fields);
-        });
+
+    $('.grid-container').show();
+    var search_results = [];
+    var url = "https://wmsinh.org/airtable?query=NOT({Thumbnail} = '')";
+    $.ajax({
+        type: 'GET',
+        headers: {'Access-Control-Allow-Origin': '*'},
+        url: url
+    }).done(function(data, status) {
+        search_results=JSON.parse(data);
         feature_list = _buildFeatureList(search_results);
         console.log('building from ' + feature_list.length + ' features');
         _buildFeatures(feature_list);
@@ -173,6 +139,42 @@ function _handleSearch() {
 }
 
 /*                        DEPRECATED                  */
+
+// var Airtable = require('airtable');
+// Airtable.configure({
+//     endpointUrl: 'https://api.airtable.com',
+//     apiKey: WRITE_API_KEY
+// });
+// var base = Airtable.base('app2FkHOwb0jN0G8v');
+/*
+    The original renderTable() used the Airtable JS class (above) to get
+    and update records from the base. As of 1/29/20 this funcitonality
+    has been moved to the server (wmsinh.org) in order to protect our API key
+*/
+function renderTableDEPRECATED() {
+    _clearTable();
+    var query_string = _getQueryString();
+    if(query_string == 'AND)')
+        return;
+    console.log('filter by formula: ' + query_string);
+    $('.grid-container').show();
+    var search_results = [];
+    base('Activities').select({
+        view: 'Grid view',
+        filterByFormula: query_string
+    }).firstPage(function(err, records) {
+        if (err) { console.error(err); return; }
+        records.forEach(function(record) {
+            search_results.push(record.fields);
+        });
+        _renderFeatures(search_results);
+        _buildTable(search_results);
+        document.querySelector('.features').scrollIntoView({ 
+          behavior: 'smooth' 
+        });
+    });
+}
+
 /*
     Create a ligthbox similar to the featherlight plugin
     Eventually we want to minimize are use of dependencies, including
