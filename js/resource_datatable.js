@@ -40,9 +40,41 @@ function renderTable() {
         search_results=JSON.parse(data);
         _renderFeatures(search_results);
         _buildTable(search_results);
+        _sortResults(search_results);
         document.querySelector('.features').scrollIntoView({ 
           behavior: 'smooth' 
         });
+    });
+}
+
+/*
+    Sort search results by field values. Event triggered when user clicks an 
+    arrow next to one of the column headers
+    @param {array} search_results - activities returned by Airtable
+    @private
+*/
+function _sortResults(search_results) {
+    $('i').click(function() {
+        var ascending = $(this).attr('class') == 'up' ? true : false;
+        var field = $(this).parent().attr('id');
+        // console.log('sorting by ' + field);
+        if(field == "activity")
+            _sortText(search_results, "Resource Name", ascending);
+        if(field == "author")
+            _sortText(search_results, "Source", ascending);
+        if(field == "time")
+            _sortTime(search_results, ascending);
+        if(field == "experience")
+            _sortExperience(search_results, ascending);
+        if(field == "subject")
+            _sortText(search_results, "Subject", ascending)
+        if(field == "rating")
+            _sortRating(search_results, ascending);
+
+        _clearTable();
+        _buildTable(search_results);
+        $('i').css('border-color', 'black');
+        $(this).css('border-color', 'green');
     });
 }
 
@@ -57,21 +89,26 @@ function renderTable() {
 function _renderFeatures(search_results) {
     console.log('rendering features');
     feature_list = _buildFeatureList(search_results);
-    console.log('building ' + feature_list.length + ' features');
-    _buildFeatures(feature_list);
+    // console.log('building ' + feature_list.length + ' features');
+    if(feature_list.length == 0)
+        $('#feature-container').hide();
+    else {
+        $('#feature-container').show();
+        _buildFeatures(feature_list);
+    }
 }
 
 /*
     Add 3 features to the top of the page. 
     For now these can be any activities with thumbnails in the base.
     @private
+    TODO: streamline Airtable query to return fewer features to choose from (e.g. filter by rating)
 */
 function _setupFeatures() {
     var search_results = [];
-
     $('.grid-container').show();
     var search_results = [];
-    var url = "https://wmsinh.org/airtable?query=NOT({Thumbnail} = '')";
+    var url = "https://wmsinh.org/airtable?query=AND(NOT({Thumbnail} = ''), NOT(Find('inomplete', Tags)))";
     $.ajax({
         type: 'GET',
         headers: {'Access-Control-Allow-Origin': '*'},
@@ -92,7 +129,6 @@ function _setupFeatures() {
     @private
 */
 function _buildFeatures(features) {
-    
     $(".featured-activity").each(function(i) {
         $(this).empty();
         if(!features[i])
@@ -113,6 +149,7 @@ function _buildFeatures(features) {
                 </div>`;
         $(this).append(feature_div);
     });
+    _postRatings(features);
 }
 
 /*
@@ -195,6 +232,54 @@ function _addLightboxAUTHOR(resource, index) {
     html_template = html_template.replace('*info', "This resource was created by " + author_info + " and has the following keyword tags: " + resource.Tags);
     $('.grid-container').append(html_template);
 }
+
+
+/*
+    Create DOM elements for the features to live in
+    @private
+*/
+function _setupFeatureElemnts() {
+    $('#load-div').after(`
+    <span id="content"> </span>
+    <section id="feature-container">
+      <br /><h3>Featured Activities:</h3><br />
+      <div class="features">
+        <div class="featured-activity" id="featurediv1"></div>
+        <div class="featured-activity" id="featurediv2"></div>
+        <div class="featured-activity" id="featurediv3"></div>
+      </div>
+    </section>
+    <br />`);
+}
+
+/*
+    Trigger an event when stars are clicked in order to post a new rating to Airtable
+    @param {array} search_results - list of resources returned by Airtable from a user-generated search
+    @private
+*/
+// function _postRatingsDEPRECATED(search_results) {
+//     $('.star').click(function() {
+//         var name = $(this).parent().attr('id');
+//         var rating = $(this).attr('id').split('star')[1];
+//         if(confirm("Do you want to post a rating of " +rating+"/5 to "+name+"?")) {
+//             var resource = search_results.find(x => x["Resource Name"] == name);
+//             var votes = (resource.Votes == undefined ? 0 : resource.Votes);
+//             var new_rating = (resource.Rating*votes + parseInt(rating))/(++votes);
+//             if(resource.Rating == undefined) 
+//                 new_rating = parseInt(rating);
+//             console.log('posting rating of ' + new_rating + ' based on ' + votes + ' votes');
+//             base('Activities').update([
+//                 {
+//                     "id": resource.id,
+//                     "fields": {
+//                         "Rating": new_rating,
+//                         "Votes": votes
+//                     }
+//                 }]);
+//         }
+//     });
+// }
+
 /*
 // Code to query airtable directly instead of by pinging the Linode
     base('Activities').select({

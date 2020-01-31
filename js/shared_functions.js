@@ -190,13 +190,13 @@ function _buildFeatureList(search_results) {
     @private
 */
 function _adaptActivity(activity_link, index, name) {
-    // console.log('building adaptation with link: ' + activity_link);
+    console.log('building adaptation with link: ' + activity_link);
     // var resource_link = '<a href="#" target="_blank" data-featherlight="#adapt' + index + '">' + name + '</a>';
     var resource_link = '<span class="item"><a href="#" target="_blank" data-featherlight="#adapt' + index + '">' + name + '</a></span>';
     resource_link += '<div style="display: none"><div id="adapt' + index + '" style="padding: 10px;">';
     resource_link += `<div class="header"><img src="images/adapt-icon.png"><h3>Thank you for choosing one of our activities for adaptation!</h3></div>
         <br />
-        This is an activity that we believe belongs in this resource, but currently does not meet Computer Science Education standards. We consider this activity to be <b>primed for CS Ed</b> and we believe it could be creatively adapted to fit your classroom needs. You can find the original activity page at the link below.
+        This is a resource that we believe can be helpful, but currently does include a full lesson plan. We consider this activity to be <b>primed for CS Ed</b> and we believe it could be creatively adapted to fit your classroom needs. You can find the original activity page at the link below.
         <div style="padding-top: 1em">`;
     resource_link += activity_link;
     resource_link += `</div>
@@ -220,7 +220,7 @@ function _buildTable(search_results) {
     search_results.forEach(function(resource, index) {
         var activity_link = grid_item.replace('*', '<a target="_blank" href="'+ resource["Resource Link"] +'">'+ resource["Resource Name"] +'</a>');
         if(resource['Tags'].includes('incomplete')) 
-            activity_link = _adaptActivity(activity_link, index, resource["Resource Name"]);
+            activity_link = _adaptActivity(activity_link.replace(" class='item'",""), index, resource["Resource Name"]);
         
         new_elements = activity_link;
         author_link = '<a target="_blank" href="' + resource["Source Link"] + '">' + resource["Source"] + '</a>'
@@ -233,11 +233,17 @@ function _buildTable(search_results) {
         $('.grid-container').append(new_elements); 
         _addLightbox(resource, index);
     });  
-    _postRatingsAjax(search_results);
+    _postRatings(search_results);
+    $('#results-meta').empty();
+    var results_text = search_results.length == 0 ? 
+        "We're sorry but your search did not return any results." :
+        "Displaying " + search_results.length + " Results.";
+    $('#results-meta').html(results_text);
 }
 
 /*
-    Trigger an event when stars are clicked in order to post a new rating to Airtable
+    Handle an event when stars are clicked in order to post a new rating to Airtable
+    Post ratings using Ajax request to a secure API proxy, in order to hide API key
     @param {array} search_results - list of resources returned by Airtable from a user-generated search
     @private
 */
@@ -252,35 +258,8 @@ function _postRatings(search_results) {
             if(resource.Rating == undefined) 
                 new_rating = parseInt(rating);
             console.log('posting rating of ' + new_rating + ' based on ' + votes + ' votes');
-            base('Activities').update([
-                {
-                    "id": resource.id,
-                    "fields": {
-                        "Rating": new_rating,
-                        "Votes": votes
-                    }
-                }]);
-        }
-    });
-}
+            _updateStars(this, name, new_rating, votes);
 
-/*
-    Handle an event when stars are clicked in order to post a new rating to Airtable
-    Post ratings using Ajax request to a secure API proxy, in order to hide API key
-    @param {array} search_results - list of resources returned by Airtable from a user-generated search
-    @private
-*/
-function _postRatingsAjax(search_results) {
-    $('.star').click(function() {
-        var name = $(this).parent().attr('id');
-        var rating = $(this).attr('id').split('star')[1];
-        if(confirm("Do you want to post a rating of " +rating+"/5 to "+name+"?")) {
-            var resource = search_results.find(x => x["Resource Name"] == name);
-            var votes = (resource.Votes == undefined ? 0 : resource.Votes);
-            var new_rating = (resource.Rating*votes + parseInt(rating))/(++votes);
-            if(resource.Rating == undefined) 
-                new_rating = parseInt(rating);
-            console.log('posting rating of ' + new_rating + ' based on ' + votes + ' votes');
             $.ajax({
                 type: 'POST',
                 url: 'https://wmsinh.org/airtable',
@@ -360,8 +339,98 @@ function _starsMarkup(resource) {
     return markup;
 }
 
+/*
+    Update a rating after it has been posted to the database
+    This function changes the html for an activity's rating to 
+    reflect the new user input.
+    @param {object} resource - 
+    @param {float} rating - new rating for the activity
+    @param {int} votes - number of votes, including the one just made
+    @private
+*/
+function _updateStars(element, name, rating, votes) {
+    rating = Number.isInteger(rating) ? rating : rating.toFixed(2);
+    var rating_string = rating + '/5 by ' + votes + ' votes';
+    parent = $(this).parent();
+    $(element).parent().parent().find('small').html(rating_string);
 
+    // var markup = $('#stars-template').html().replace('stars-id', name);
+    // markup = markup.replace('rating', Number.isInteger(rating) ? rating : rating.toFixed(2));
+    // markup = markup.replace('num', votes + (votes == 1 ? ' vote' : ' votes'));
+}
 
+////////////////////////////// SORT FUNCTIONS ////////////////////////////////////////
+/* Used for sorting resources based on field values. Called by _sortResults()   */
+
+/*
+    Sort results by text field in alphabetical order
+    Currently this is the default if no other sort is selected
+    @param {array} search_results - Airtable activities based on search options
+    @param {string} field - resource field key to sort by
+    @param {boolean} ascending - true = a to z, false = z to a
+    @private
+*/
+function _sortText(search_results, field, ascending) {
+    if(ascending)
+        search_results.sort((a, b) => a[field].localeCompare(b[field]));
+    else
+        search_results.sort((a, b) => b[field].localeCompare(a[field]));
+    return search_results;
+}
+
+/*
+    Sort results by the duration of the activity
+    @param {array} search_results - Airtable activities based on search options
+    @param {boolean} ascending - true = short to long, false = long to short
+    @private
+    TODO: how well do we want to handle edge cases of 1h00+, 1-2 hours, etc.?
+*/
+function _sortTime(search_results, ascending) {
+    search_results.sort(function(a, b) {
+
+        var a_time = parseFloat(a.Duration.replace('h','.'));
+        var b_time = parseFloat(b.Duration.replace('h','.'));
+        if(ascending)
+            return a_time - b_time;
+        else
+            return b_time - a_time;
+    });
+}
+
+/*
+    Sort results by the experience required for an activity
+    @param {array} search_results - Airtable activities based on search options
+    @param {boolean} ascending - true = low to high, false = high to low
+    @private
+*/
+function _sortExperience(search_results, ascending) {
+    var exp = ["Early Learner","Beginner","Intermediate","Advanced"];
+    search_results.sort(function(a, b) {
+        var a_experience = a.Experience.includes(",") ? a.Experience.split(",")[0] : a.Experience;
+        var b_experience = b.Experience.includes(",") ? b.Experience.split(",")[0] : b.Experience;
+        if(ascending)
+            return exp.indexOf(a_experience) - exp.indexOf(b_experience);
+        else
+            return exp.indexOf(b_experience) - exp.indexOf(a_experience);
+    });
+}
+
+/*
+    Sort results by Rating from high to low
+    Currently this is the default if no other sort is selected
+    @param {array} search_results - Airtable activities based on search options
+    @private
+*/
+function _sortRating(search_results, ascending=false) {
+    search_results.sort(function(a, b) {
+        var a_rating = a.Rating == undefined ? 0 : a.Rating;
+        var b_rating = b.Rating == undefined ? 0 : b.Rating;
+        if(ascending)
+            return a_rating - b_rating;
+        else
+            return b_rating - a_rating;
+    });
+}
 
 
 

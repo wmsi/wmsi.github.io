@@ -1,3 +1,5 @@
+featured_header = [];
+
 // When the page loads populate the table with activities and render the dropdown menus.
 // Add a graderange to each activity that JS can interpret
 $(document).ready(function(){
@@ -13,22 +15,7 @@ $(document).ready(function(){
     $('#uncheck-materials').click(function() {
         $(':checkbox').prop('checked', false);
     });
-    $('.star').click(function() {
-        var num_stars = event.target.id.split("star")[1];
-        var activity_name = $(event.target).parent().attr('id');
-        if(num_stars == 1)
-            num_stars += " star"
-        else
-            num_stars += " stars"
-        confirm("Would you like to submit a rating of " + num_stars + " for " + activity_name + "?");
-    });
-
-    $('#scroll-right').click(function() {
-        $('.feature-list').animate( {scrollLeft: '+=640' }, 500);
-    });
-    $('#scroll-left').click(function() {
-        $('.feature-list').animate( {scrollLeft: '-=640' }, 500);
-    });
+    _bindScrollClicks();
 });
 
 /*
@@ -54,20 +41,37 @@ function renderTable() {
         search_results=JSON.parse(data);
         _renderFeatures(search_results);
         _buildTable(search_results);
+        _sortResults(search_results);
         document.querySelector('#results').scrollIntoView({ 
           behavior: 'smooth' 
         });
     });
 }
 
-
 /*
-    Reveal a the More Info lightbox for a resource
-    @param {int} index - index of the resource in the table
+    Sort search results based on selected dropdown option
+    @param {array} search_results - Airtable activities based on search options
+    @private
 */
-function showLightbox(index) {
-    var id = '#resource' + index;
-    $(id).show();
+function _sortResults(search_results) {
+    $('#sort-results').change(function() {
+        _clearTable();
+        var sort = $(this).val();
+        if(sort == "")
+            _sortText(search_results, "Resource Name", true);
+        if(sort == "experience-low") 
+            _sortExperience(search_results, true);
+        if(sort == "experience-high") 
+            _sortExperience(search_results, false);
+        if(sort == "time-short") 
+            _sortTime(search_results, true);
+        if(sort == "time-long") 
+            _sortTime(search_results, false);
+        if(sort == "rating")
+            _sortRating(search_results);
+        // test = search_results;
+        _buildTable(search_results);
+    });
 }
 
 /*
@@ -77,7 +81,7 @@ function showLightbox(index) {
 */
 function _setupFeatures() {
     var search_results = [];
-    var url = "https://wmsinh.org/airtable?query=NOT({Thumbnail} = '')";
+    var url = "https://wmsinh.org/airtable?query=AND(NOT({Thumbnail} = ''), NOT(Find('inomplete', Tags)))";
     $.ajax({
         type: 'GET',
         headers: {'Access-Control-Allow-Origin': '*'},
@@ -95,9 +99,16 @@ function _setupFeatures() {
     @private
 */
 function _renderFeatures(search_results) {
+    $('#feature-results').empty();
+    
+    // do this differently or remove, depending on final carousel location
+    $('.welcome').remove();
+    $('#feature-header').parent().remove();
+
     var feature_list = _buildFeatureList(search_results);
     console.log('rendering ' + feature_list.length + ' new features');
     _buildFeatureCarousel(feature_list, '#feature-results');
+    _bindScrollClicks();
     $('#results').show();
 }
 
@@ -116,10 +127,6 @@ function _buildFeatureCarousel(features, location) {
         var feature_id = 'feature' + i;
         var subjects = Array.isArray(item["Subject"]) ? item["Subject"].join(", ") : item["Subject"];
         var resource_link = '<a target="_blank" href="'+ item["Resource Link"] +'">'+ item["Resource Name"] +'</a>';
-        // if(item['Tags'].includes('incomplete')) 
-        //     resource_link = _adaptActivity(resource_link, i, item["Resource Name"]);
-        // data-lazy="`+ item["Thumbnail"][0].url +`" /></div><br />
-            // <a href="#" data-featherlight="#`+ feature_id +`"><div><img src="` + item.Thumbnail[0].url + `" /></div>
         var feature_div = `
         <a href="#" data-featherlight="#`+ feature_id +`"><img src="` + item.Thumbnail[0].url + `" />
             <span class="feature-link">`+ item["Resource Name"] +`</span></a>
@@ -136,40 +143,7 @@ function _buildFeatureCarousel(features, location) {
         // $("#featured-activities").append("<div class='thumbnail' list-index='" + features.indexOf(item) + "'>" + feature_div + "</div>");
     });
     $(location).css('grid-template-columns', 'repeat(' + features.length + ', 240px)');
-}
-
-/*
-    Create a ligthbox similar to the 
-*/
-function _addLightboxAUTHOR(resource, index) {
-    var html_template = `<div class='ligthbox-grid' id='*id' hidden>
-            <a target='_blank' href='*link'>*img<span align='center'><h3>*title</h3><span></a>
-            *info
-        </div>`;
-    var author_info = "<a target='_blank' href='" + resource["Source Link"] + "'>" + resource.Source + "</a>";
-
-    html_template = html_template.replace('*id', 'resource' + index);
-    // console.log('building img with ' + resource.Thumbnail[0].url);
-    if(resource.Thumbnail != undefined) 
-        html_template = html_template.replace('*img',"<img class='lightbox' src='" + resource.Thumbnail[0].url + "'>");
-    html_template = html_template.replace('*title', resource["Resource Name"]);
-    html_template = html_template.replace('*info', "This resource was created by " + author_info + " and has the following keyword tags: " + resource.Tags);
-    $('.grid-container').append(html_template);
-}
-
-/*
-    Trigger an event when stars are clicked and
-    post a new rating to Airtable
-    @private
-*/
-function _postRatings() {
-    $('.star').click(function() {
-        var name = $(this).parent().attr('id');
-        var rating = $(this).attr('id').split('star')[1];
-        if(confirm("Do you want to post a rating of " +rating+"/5 to "+name+"?")) {
-            console.log('posting ' + rating + ' to airtable for activity ' + name);
-        }
-    });
+    _postRatings(features);
 }
 
 /*
@@ -193,7 +167,19 @@ function _handleSearch() {
     });
 }
 
-
+/*
+    Trigger a scroll of the features carousel when user clicks on an arrow
+    This gets called whenever a new carousel is rendered (e.g. after a search)
+    @private
+*/
+function _bindScrollClicks() {
+    $('#scroll-right').click(function() {
+        $('.feature-list').animate( {scrollLeft: '+=780' }, 500);
+    });
+    $('#scroll-left').click(function() {
+        $('.feature-list').animate( {scrollLeft: '-=780' }, 500);
+    });
+}
 
 
 
@@ -213,6 +199,49 @@ function _handleSearch() {
     of the current build. They may involve the datatables plugin and/ or the Google Sheets API
 */
 
+/*
+    Trigger an event when stars are clicked and
+    post a new rating to Airtable
+    @private
+*/
+// function _postRatings() {
+//     $('.star').click(function() {
+//         var name = $(this).parent().attr('id');
+//         var rating = $(this).attr('id').split('star')[1];
+//         if(confirm("Do you want to post a rating of " +rating+"/5 to "+name+"?")) {
+//             console.log('posting ' + rating + ' to airtable for activity ' + name);
+//         }
+//     });
+// }
+
+
+/*
+    Create a ligthbox similar to the 
+*/
+function _addLightboxAUTHOR(resource, index) {
+    var html_template = `<div class='ligthbox-grid' id='*id' hidden>
+            <a target='_blank' href='*link'>*img<span align='center'><h3>*title</h3><span></a>
+            *info
+        </div>`;
+    var author_info = "<a target='_blank' href='" + resource["Source Link"] + "'>" + resource.Source + "</a>";
+
+    html_template = html_template.replace('*id', 'resource' + index);
+    // console.log('building img with ' + resource.Thumbnail[0].url);
+    if(resource.Thumbnail != undefined) 
+        html_template = html_template.replace('*img',"<img class='lightbox' src='" + resource.Thumbnail[0].url + "'>");
+    html_template = html_template.replace('*title', resource["Resource Name"]);
+    html_template = html_template.replace('*info', "This resource was created by " + author_info + " and has the following keyword tags: " + resource.Tags);
+    $('.grid-container').append(html_template);
+}
+
+/*
+    Reveal a the More Info lightbox for a resource
+    @param {int} index - index of the resource in the table
+*/
+function showLightbox(index) {
+    var id = '#resource' + index;
+    $(id).show();
+}
 
 function renderTableDEPRECATED(search=false) {
     // var render_data = _filterResources(resource_table[table_state]);
@@ -398,21 +427,4 @@ function _setupDataTable(table_source) {
     });
     // datatable = table_ref;
     // return table_ref;
-}
-/*
-    Create DOM elements for the features to live in
-    @private
-*/
-function _setupFeatureElemnts() {
-    $('#load-div').after(`
-    <span id="content"> </span>
-    <section id="feature-container">
-      <br /><h3>Featured Activities:</h3><br />
-      <div class="features">
-        <div class="featured-activity" id="featurediv1"></div>
-        <div class="featured-activity" id="featurediv2"></div>
-        <div class="featured-activity" id="featurediv3"></div>
-      </div>
-    </section>
-    <br />`);
 }

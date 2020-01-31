@@ -8,6 +8,10 @@
   grid-column: 1;
 }
 
+#feature-header {
+  width: auto;
+}
+
 .feature-list {
   display: grid;
   grid-column: 2 / -1;
@@ -43,6 +47,24 @@
 
 #results {
   position: relative;
+}
+
+#results-info {
+  grid-column: 1 / -1;
+  display: inline-grid;
+  grid-template-columns: 240px;
+  /*width: 200px;*/
+}
+/*
+#sort-results {
+  width: 200px;
+}*/
+
+#results-meta {
+  grid-column: 2;
+  padding-left: 20px; 
+  font-weight: bold;
+  align-self: center;
 }
 
 .scroll {
