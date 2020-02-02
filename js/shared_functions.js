@@ -104,6 +104,9 @@ function _getQueryString() {
     if($('#experience').val() != "") 
         query += "Find('" + $('#experience').val() + "', Experience), ";
 
+    if($('#self-led').is(':checked'))
+        query += "Find('self-led', Tags), ";
+
     query += _getMaterialsQuery();
 
     if($('input[type="search"]').val() != '')
@@ -190,7 +193,7 @@ function _buildFeatureList(search_results) {
     @private
 */
 function _adaptActivity(activity_link, index, name) {
-    console.log('building adaptation with link: ' + activity_link);
+    // console.log('building adaptation with link: ' + activity_link);
     // var resource_link = '<a href="#" target="_blank" data-featherlight="#adapt' + index + '">' + name + '</a>';
     var resource_link = '<span class="item"><a href="#" target="_blank" data-featherlight="#adapt' + index + '">' + name + '</a></span>';
     resource_link += '<div style="display: none"><div id="adapt' + index + '" style="padding: 10px;">';
@@ -234,11 +237,14 @@ function _buildTable(search_results) {
         _addLightbox(resource, index);
     });  
     _postRatings(search_results);
+
     $('#results-meta').empty();
-    var results_text = search_results.length == 0 ? 
-        "We're sorry but your search did not return any results." :
-        "Displaying " + search_results.length + " Results.";
-    $('#results-meta').html(results_text);
+    if(search_results.length == 0)
+        $('#results-meta').html("We're sorry but your search did not return any results.");
+    else if(search_results.length == 1)
+            $('#results-meta').html("Displaying " + search_results.length + " Result.");
+    else
+            $('#results-meta').html("Displaying " + search_results.length + " Results.");
 }
 
 /*
@@ -483,10 +489,10 @@ function _renderGradeSelect() {
         displayed or not
     @private
 */
-function _displayLoading(loading) {
-    if(loading)
-        $('#load-div').show();
-    else
-        $('#load-div').hide();
-}
+// function _displayLoading(loading) {
+//     if(loading)
+//         $('#load-div').show();
+//     else
+//         $('#load-div').hide();
+// }
 

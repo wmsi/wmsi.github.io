@@ -30,6 +30,10 @@
   /*right: 20px;*/
 }
 
+.self-led {
+  margin-bottom: 20px;
+}
+
 .up {
   transform: rotate(-135deg);
   -webkit-transform: rotate(-135deg);

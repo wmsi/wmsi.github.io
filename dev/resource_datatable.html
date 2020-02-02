@@ -28,7 +28,11 @@
       </div>
       <div class="filter-form">
         <div class="filters">
-          <h3>Filter Activities By:</h3>
+          <h3>Filter Activities By:</h3><br>
+          <div class="tooltip">
+            <button id="self-led">Show Only Self-Led Activities</button>
+            <span class="tooltiptext self-led">Click here to search for activities that students should be able to run on their own.</span>
+          </div>
         </div>
         <div class="filters">
           <select class="form-control form-control-lg" id="subject">
@@ -39,7 +43,7 @@
           </select>
           <!-- <br /> -->
           <div class="tooltip">More info on Experience Level
-            <span class="tooltiptext">Experience level is determined by school grade and STEM experience. Early Learners have no STEM experience and are usually in grades K-2. Beginners have little STEM experience and may be in grades 3-5, Intermediate means some experience or grades 6-8, and Advanced for solid STEM knowledge or grades 9+</span>
+            <span class="tooltiptext experience">Experience level is determined by school grade and STEM experience. Early Learners have no STEM experience and are usually in grades K-2. Beginners have little STEM experience and may be in grades 3-5, Intermediate means some experience or grades 6-8, and Advanced for solid STEM knowledge or grades 9+</span>
           </div>
         </div>
         <div class="filters" id="tech-filters">
@@ -54,7 +58,8 @@
         <div class="filters">
           <label>Keyword Search:<br /><input type="search" class="" placeholder="" aria-controls="resource-table"></label><br />
           <button id="search" class='filter-button'>Search for Activities</button><br>
-          <button id="reset" class='filter-button'>Reset All Filters</button>
+          <button id="reset" class='filter-button'>Reset All Filters</button><br>
+          <div class='lds-ring'><div></div><div></div><div></div><div></div></div>
         </div>
         <span class='filter-instructions'>Choose at least one of the options above and then click 'Search for Activities' to load resources.</span>
         <br>

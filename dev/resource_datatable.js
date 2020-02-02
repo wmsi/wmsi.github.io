@@ -1,5 +1,3 @@
-featured_header = [];
-
 // When the page loads populate the table with activities and render the dropdown menus.
 // Add a graderange to each activity that JS can interpret
 $(document).ready(function(){
@@ -10,8 +8,10 @@ $(document).ready(function(){
     _handleSearch();
 
     $('#content').hide();
+    $('.lds-ring').hide();
     $('#search').click(function() {renderTable()});
     $('#reset').click(function() {resetFilters()});
+    $('#self-led').click(function() {renderTable(true)});
     $('#uncheck-materials').click(function() {
         $(':checkbox').prop('checked', false);
     });
@@ -22,10 +22,13 @@ $(document).ready(function(){
     Render STEM Resource table based on search parameters
     Generate a query and send it to the API proxy on our Linode
     (wmsinh.org), then handle the response
+    @param {boolean} self_led - when this is true render only self-led activities
+    TODO: can users add filters on top of "self-led" option?
 */
-function renderTable() {
+function renderTable(self_led=false) {
+    _displayLoading(true);
     _clearTable();
-    var query_string = _getQueryString();
+    var query_string = self_led ? "Find('self-led', Tags)" : _getQueryString();
     if(query_string == 'AND)')
         return;
     console.log('filter by formula: ' + query_string);
@@ -41,6 +44,7 @@ function renderTable() {
         search_results=JSON.parse(data);
         _renderFeatures(search_results);
         _buildTable(search_results);
+        _displayLoading(false);
         _sortResults(search_results);
         document.querySelector('#results').scrollIntoView({ 
           behavior: 'smooth' 
@@ -72,6 +76,10 @@ function _sortResults(search_results) {
         // test = search_results;
         _buildTable(search_results);
     });
+
+    // if a sort mode is selected apply it to the new search
+    if($('#sort-results').val() != '')
+        $('#sort-results').change();
 }
 
 /*
@@ -100,7 +108,7 @@ function _setupFeatures() {
 */
 function _renderFeatures(search_results) {
     $('#feature-results').empty();
-    
+
     // do this differently or remove, depending on final carousel location
     $('.welcome').remove();
     $('#feature-header').parent().remove();
@@ -351,9 +359,9 @@ function _getSearchString() {
 */
 function _displayLoading(loading) {
     if(loading)
-        $('#load-div').show();
+        $('.lds-ring').show();// $('#load-div').show();
     else
-        $('#load-div').hide();
+        $('.lds-ring').hide();//$('#load-div').hide();
 }
 
 /*
