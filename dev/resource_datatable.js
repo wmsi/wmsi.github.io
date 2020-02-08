@@ -9,9 +9,9 @@ $(document).ready(function(){
 
     $('#content').hide();
     $('.lds-ring').hide();
-    $('#search').click(function() {renderTable()});
+    $('#search').click(function() {renderPageLocal()});//renderTable()});
     $('#reset').click(function() {resetFilters()});
-    $('#self-led').click(function() {renderTable(true)});
+    $('#self-led-button').click(function() {renderSelfLed()});
     $('#uncheck-materials').click(function() {
         $(':checkbox').prop('checked', false);
     });
@@ -22,29 +22,32 @@ $(document).ready(function(){
     Render STEM Resource table based on search parameters
     Generate a query and send it to the API proxy on our Linode
     (wmsinh.org), then handle the response
-    @param {boolean} self_led - when this is true render only self-led activities
-    TODO: can users add filters on top of "self-led" option?
 */
-function renderTable(self_led=false) {
+function renderTable() {
     _displayLoading(true);
     _clearTable();
-    var query_string = self_led ? "Find('self-led', Tags)" : _getQueryString();
+    var query_string = _getQueryString();
     if(query_string == 'AND)')
         return;
     console.log('filter by formula: ' + query_string);
     $('.grid-container').show();
-    var search_results = [];
-    var url = "https://wmsinh.org/airtable?query=" + query_string;
-    // var url = "http://localhost:5000/airtable?query=" + query_string;
+    search_results = [];
+    // var url = "https://wmsinh.org/airtable?query=" + query_string;
+    // var url = "https://wmsinh.org/airtable";
+    var url = "http://localhost:5000/airtable";
     $.ajax({
         type: 'GET',
         headers: {'Access-Control-Allow-Origin': '*'},
-        url: url
+        url: url,
+        data: {
+            query: query_string
+        }
     }).done(function(data, status) {
         search_results=JSON.parse(data);
         _renderFeatures(search_results);
         _buildTable(search_results);
         _displayLoading(false);
+        _displayMetaData(search_results, search_results.length);
         _sortResults(search_results);
         document.querySelector('#results').scrollIntoView({ 
           behavior: 'smooth' 
@@ -53,12 +56,212 @@ function renderTable(self_led=false) {
 }
 
 /*
+    Obtain search results one page at a time instead of all at once to preserve
+    connection speed. Eventually this may replace renderTable() as the default
+    "render" function. 
+    @param {int} page_size - number of results to render per page
+    @param {int} page - page number 
+    TODO: how do we implement sort with the page by page approach?
+*/
+function renderPage(page_size=50, page=0) {
+    _displayLoading(true);
+    _clearTable();
+    var query_string = _getQueryString();
+    if(query_string == 'AND)')
+        return;
+    console.log('getting page: ' + page);
+    $('.grid-container').show();
+    var search_results = [];
+    // var url = "https://wmsinh.org/airtable?query=" + query_string;
+    // var url = "https://wmsinh.org/airtable";
+    var url = "http://localhost:5000/airtable";
+    $.ajax({
+        type: 'GET',
+        headers: {'Access-Control-Allow-Origin': '*'},
+        url: url,
+        data: {
+            query: query_string,
+            page_size: page_size,
+            page_num: page,
+            sort: _getSortTuple()
+        }
+    }).done(function(data, status, jqXHR) {
+        search_results=data;//JSON.parse(data);
+        _renderFeatures(search_results);
+        _buildTable(search_results);
+        _displayLoading(false);
+        // test = jqXHR;
+        _displayMetaData(search_results, page_size, page, parseInt(jqXHR.getResponseHeader('num_results')));
+        _sortResults(search_results);
+        document.querySelector('#results').scrollIntoView({ 
+          behavior: 'smooth' 
+        });
+    });
+}
+
+
+/*
+    Obtain search results and cache them locally while displaying pages one at a time
+    @param {int} page_size - number of results to render per page
+    @param {int} page - page number 
+    TODO: how do we implement sort with the page by page approach?
+*/
+function renderPageLocal(page_size=50, page=0) {
+    _displayLoading(true);
+    _clearTable();
+    var query_string = _getQueryString();
+    if(query_string == 'AND)')
+        return;
+    $('.grid-container').show();
+    var search_results = [];
+    // var url = "https://wmsinh.org/airtable?query=" + query_string;
+    // var url = "https://wmsinh.org/airtable";
+    var url = "http://localhost:5000/airtable";
+    $.ajax({
+        type: 'GET',
+        headers: {'Access-Control-Allow-Origin': '*'},
+        url: url,
+        data: {
+            query: query_string
+        }
+    }).done(function(data, status, jqXHR) {
+        search_results=JSON.parse(data);
+        var this_page = search_results.slice(page*page_size, (page+1)*page_size+1); // change this to default first page
+        _sortResults(search_results);
+        _renderFeatures(search_results);
+        _buildTable(this_page);
+        _displayLoading(false);
+        // test = jqXHR;
+        _displayMetaData(this_page, page_size, page, search_results.length);
+        _createLocalButtons(search_results, page_size);
+        document.querySelector('#results').scrollIntoView({ 
+          behavior: 'smooth' 
+        });
+    });
+}
+
+/*
+    Add a 'self-led activities' filter on top of any other search filters
+    TODO: find a cleaner way to implement this
+*/
+function renderSelfLed() {
+    $('#self-led').prop('checked', true);
+    renderTable();
+    $('#self-led').prop('checked', false);
+}
+
+function changePageLength(start) {
+    var page_size = $('#results-per-page').val();
+    var page = Math.floor(start/page_size);
+    console.log('new page length ' + page_size +' and page num ' + page);
+    renderPage(page_size, page);
+}
+
+/*
+    Display results meta data above the table. Meta data includes length of results,
+    results per page, current page number, etc.
+    @param {array} search_results - records returned by airtable
+    @param {int} page_size - max number of records per page
+    @private
+*/
+function _displayMetaData(search_results, page_size, page_num=0, num_results=search_results.length) {
+    console.log('display meta for page num ' + page_num +', page size ' + page_size + ', num results ' + num_results);
+    $('#results-meta').empty();
+    if(num_results == 0)
+        $('#results-meta').html("We're sorry but your search did not return any results.");
+    else if(num_results == 1)
+        $('#results-meta').html("Displaying " + search_results.length + " Result.");
+    else if(search_results.length < num_results) {         // pagination in effect
+        var start = page_size*page_num + 1;
+        var end = page_size*(page_num + 1) < num_results ? page_size*(page_num + 1) : num_results;
+        $('#results-meta').html("Displaying " + start + "-" + end + " of " + num_results + " Results.");
+    } else {
+        $('#results-meta').html("Displaying " + search_results.length + " Results.");
+    }
+    $('#results-per-page').unbind('change').change(function() {changePageLength(page_size*page_num)});
+    _createButtonFunctions(page_num, end, num_results);
+}
+
+/*
+    Attach behavior to Next Page and Last Page buttons
+    Unbind any functions previously attached to those buttons
+    Change styling to reflect (in)active buttons
+    @param {int} page - current page number
+    @param {int} last - index of the last record on the current page
+    @param {int} num_results - total number of results returned by the current search
+    @private
+*/
+function _createButtonFunctions(page, last, num_results) {
+    console.log('creating button functions with page ' + page + ', end ' + last + ', num_results ' + num_results);
+    if(last < num_results) {
+        $('#next-page').unbind('click').click(function() {
+            renderPage(parseInt($('#results-per-page').val()), page+1);
+        });
+        $('#next-page').css({'cursor': '', 'color': ''});
+    } else {
+        $('#next-page').unbind('click');
+        $('#next-page').css({'cursor': 'default', 'color': 'grey'});
+    }
+    if(page > 0) {
+        $('#last-page').unbind('click').click(function() {
+            renderPage(parseInt($('#results-per-page').val()), page-1);
+        });
+        $('#last-page').css({'cursor': '', 'color': ''});
+    } else {
+        $('#last-page').unbind('click');
+        $('#last-page').css({'cursor': 'default', 'color': 'grey'});
+    }
+}
+
+/*
+    Attach behavior to Next Page and Last Page buttons using locally stored results
+    Unbind any functions previously attached to those buttons
+    Change styling to reflect (in)active buttons
+    @param {array} search_results - all results that match the current search
+    @param {int} page - current page number
+    @param {int} last - index of the last record on the current page
+    @param {int} num_results - total number of results returned by the current search
+    @private
+*/
+function _createLocalButtons(search_results, page_size, page=0) {
+    var last = (page+1)*page_size;
+    console.log('creating local button functions with page ' + page + ', end ' + last + ', num_results ' + page_size);
+    if(last < search_results.length) {
+        var start = (page+1)*page_size;
+        var end = (page+2)*page_size+1;
+        end = end > search_results.length ? search_results.length : end;
+        $('#next-page').unbind('click').click(function() {
+            _clearTable();
+            _buildTable(search_results.slice(start, end));
+            _createLocalButtons(search_results, page_size, page+1);
+        });
+        $('#next-page').css({'cursor': '', 'color': ''});
+    } else {
+        $('#next-page').unbind('click');
+        $('#next-page').css({'cursor': 'default', 'color': 'grey'});
+    }
+    if(page > 0) {
+        var start = (page-1)*page_size;
+        var end = (page)*page_size+1;
+        $('#last-page').unbind('click').click(function() {
+            _clearTable();
+            _buildTable(search_results.slice(start, end));
+            _createLocalButtons(search_results, page_size, page-1);
+        });
+        $('#last-page').css({'cursor': '', 'color': ''});
+    } else {
+        $('#last-page').unbind('click');
+        $('#last-page').css({'cursor': 'default', 'color': 'grey'});
+    }
+}
+
+/*
     Sort search results based on selected dropdown option
     @param {array} search_results - Airtable activities based on search options
     @private
 */
 function _sortResults(search_results) {
-    $('#sort-results').change(function() {
+    $('#sort-results').unbind('change').change(function() {
         _clearTable();
         var sort = $(this).val();
         if(sort == "")
@@ -80,6 +283,29 @@ function _sortResults(search_results) {
     // if a sort mode is selected apply it to the new search
     if($('#sort-results').val() != '')
         $('#sort-results').change();
+}
+
+/*
+    Make a sort tuple to incorporate into Airtable query
+    @private
+    TODO: our sort doesnt map well to Airtable's (e.g. experience, duration strings)
+        Find a way to massage field values to sort alphabetically
+        **OR cache all results and paginate locally
+*/
+function _getSortTuple() {
+    var sort = $('#sort-results').val();
+    if(sort == "experience-low") 
+        return ['Experience', 'asc'];
+    if(sort == "experience-high") 
+        return ['Experience', 'desc'];
+    if(sort == "time-short") 
+        return ['Duration', 'asc'];
+    if(sort == "time-long") 
+        return ['Duration', 'asc'];
+    if(sort == "rating")
+        return ['Rating', 'asc'];
+    else
+        return '';
 }
 
 /*

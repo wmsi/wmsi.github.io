@@ -39,8 +39,8 @@ function renderTable() {
     }).done(function(data, status) {
         search_results=JSON.parse(data);
         _renderFeatures(search_results);
-        _buildTable(search_results);
-        _sortResults(search_results);
+        if(!_sortResults(search_results))
+            _buildTable(search_results);
         document.querySelector('.features').scrollIntoView({ 
           behavior: 'smooth' 
         });
@@ -51,7 +51,10 @@ function renderTable() {
     Sort search results by field values. Event triggered when user clicks an 
     arrow next to one of the column headers
     @param {array} search_results - activities returned by Airtable
+    @returns {boolean} true if table was built from existing sort, false if no build happens
     @private
+    TODO: we could avoid calling this with every search by keeping a permanent reference to
+        search_results
 */
 function _sortResults(search_results) {
     $('i').click(function() {
@@ -74,8 +77,16 @@ function _sortResults(search_results) {
         _clearTable();
         _buildTable(search_results);
         $('i').css('border-color', 'black');
+        $('i').removeAttr('alt');
         $(this).css('border-color', 'green');
+        $(this).attr('alt', 'selected');
     });
+    // if sort exists from previous search apply it to this one
+    $('i[alt="selected"]').click();
+    if($('i[alt="selected"]').length)
+        return true;
+    else
+        return false;
 }
 
 /*

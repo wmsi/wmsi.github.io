@@ -237,14 +237,6 @@ function _buildTable(search_results) {
         _addLightbox(resource, index);
     });  
     _postRatings(search_results);
-
-    $('#results-meta').empty();
-    if(search_results.length == 0)
-        $('#results-meta').html("We're sorry but your search did not return any results.");
-    else if(search_results.length == 1)
-            $('#results-meta').html("Displaying " + search_results.length + " Result.");
-    else
-            $('#results-meta').html("Displaying " + search_results.length + " Results.");
 }
 
 /*

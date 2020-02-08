@@ -30,7 +30,7 @@
         <div class="filters">
           <h3>Filter Activities By:</h3><br>
           <div class="tooltip">
-            <button id="self-led">Show Only Self-Led Activities</button>
+            <button id="self-led-button">Show Only Self-Led Activities</button>
             <span class="tooltiptext self-led">Click here to search for activities that students should be able to run on their own.</span>
           </div>
         </div>
@@ -74,6 +74,9 @@
             </div>
             <small>rating/5 by num</small>
         </div>
+        <div hidden>
+          <input type="checkbox" id="self-led">
+        </div>
       </div>
       <div id="load-div" style="display: none">
         Activities will appear here when they load. If nothing happens please wait a minute before refreshing the page.
@@ -100,6 +103,16 @@
                 <option value="rating">Rating</option>
             </select>
             <span id='results-meta'></span>
+            <div id='page-buttons'>
+              <button id='last-page'>Previous Page</button>
+              <button id='next-page'>Next Page</button>
+            </div>
+            <select class="form-control form-control-lg" id="results-per-page">
+              <option value="50">Results per Page</option>  <!-- default is 50 per page --> 
+              <option value="25">25</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+            </select>
           </div>
 
           <span class="item-header">Activity</span> 
