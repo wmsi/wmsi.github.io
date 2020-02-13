@@ -55,7 +55,7 @@ h3 {
 .filter-instructions {
   /*position: absolute;*/
   grid-column-start: 1;
-  grid-column-end: 4; 
+  grid-column-end: 3; 
   text-align: left;
   padding-left: 10px;
 }
@@ -207,6 +207,7 @@ hr {
 /*            Loading Spinner                 */
 .lds-ring {
   display: inline-block;
+  grid-column: -1;
   position: relative;
   width: 120px;
   height: 80px;
