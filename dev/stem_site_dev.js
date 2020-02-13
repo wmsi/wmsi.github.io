@@ -316,15 +316,21 @@ function _setupFeatures() {
 function _renderFeatures(search_results) {
     $('#feature-results').empty();
 
-    // do this differently or remove, depending on final carousel location
-    $('.welcome').remove();
-    $('#feature-header').parent().remove();
-
     var feature_list = _buildFeatureList(search_results);
     console.log('rendering ' + feature_list.length + ' new features');
-    _buildFeatureCarousel(feature_list, '#feature-results');
-    _bindScrollClicks();
-    $('#results').show();
+    if(feature_list.length == 0)
+        $('#results').hide();
+    else {
+        _buildFeatureCarousel(feature_list, '#feature-results');
+        $('#results').show();
+    }
+    
+    // do this differently or remove, depending on final carousel location
+    if($('.welcome').length) {
+        $('.welcome').remove();
+        $('#feature-header').parent().remove();
+        _bindScrollClicks();
+    }
 }
 
 

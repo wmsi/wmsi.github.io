@@ -185,32 +185,6 @@ function _buildFeatureList(search_results) {
 }
 
 /*
-    Create a special lightbox for any activity that does not meet CS standards,
-    and so requires adaptation by a teacher in order to qualify as a CS activity
-    @param {string} activity_link - Link to the activity page
-    @param {int} index - activity index number used for building element IDs
-    @param {string} name - name of the activity
-    @private
-*/
-function _adaptActivity(activity_link, index, name) {
-    // console.log('building adaptation with link: ' + activity_link);
-    // var resource_link = '<a href="#" target="_blank" data-featherlight="#adapt' + index + '">' + name + '</a>';
-    var resource_link = '<span class="item"><a href="#" target="_blank" data-featherlight="#adapt' + index + '">' + name + '</a></span>';
-    resource_link += '<div style="display: none"><div id="adapt' + index + '" style="padding: 10px;">';
-    resource_link += `<div class="header"><img src="images/adapt-icon.png"><h3>Thank you for choosing one of our activities for adaptation!</h3></div>
-        <br />
-        This is a resource that we believe can be helpful, but currently does include a full lesson plan. We consider this activity to be <b>primed for CS Ed</b> and we believe it could be creatively adapted to fit your classroom needs. You can find the original activity page at the link below.
-        <div style="padding-top: 1em">`;
-    resource_link += activity_link;
-    resource_link += `</div>
-            <br />
-            If you choose to work with this activity we'd love to collect some information on how it went! This will help us cultivate and improve the activities on this page and assist teachers who want to use this activity in the future. Please <a href="https://www.whitemountainscience.org/resource-table-contact-form">click here</a> to provide us with feedback.
-            </div>
-        </div>`;
-    return resource_link;
-}
-
-/*
     Generate HTML for all resources returned by a search query. 
     Called by renderTable()
     @param {array} search_resutls - resources returned by a query search to airtable
@@ -235,8 +209,35 @@ function _buildTable(search_results) {
         new_elements += grid_item.replace('*',  "<center><big><a href='#' data-featherlight='#resource" + index + "'>&#9432;</a></big></center>");
         $('.grid-container').append(new_elements); 
         _addLightbox(resource, index);
-    });  
+    }); 
     _postRatings(search_results);
+}
+
+/*
+    Create a special lightbox for any activity that does not meet CS standards,
+    and so requires adaptation by a teacher in order to qualify as a CS activity
+    @param {string} activity_link - Link to the activity page
+    @param {int} index - activity index number used for building element IDs
+    @param {string} name - name of the activity
+    @private
+    TODO: replace activity_link with resource and consolidate html here
+*/
+function _adaptActivity(activity_link, index, name) {
+    // console.log('building adaptation with link: ' + activity_link);
+    // var resource_link = '<a href="#" target="_blank" data-featherlight="#adapt' + index + '">' + name + '</a>';
+    var resource_link = '<span class="item"><a href="#" target="_blank" data-featherlight="#adapt' + index + '">' + name + '</a></span>';
+    resource_link += '<div style="display: none"><div id="adapt' + index + '" style="padding: 10px;">';
+    resource_link += `<div class="header"><img src="images/adapt-icon.png"><h3>Thank you for choosing one of our activities for adaptation!</h3></div>
+        <br />
+        This is a resource that we believe can be helpful, but currently does include a full lesson plan. We consider this activity to be <b>primed for CS Ed</b> and we believe it could be creatively adapted to fit your classroom needs. You can find the original activity page at the link below.
+        <div style="padding-top: 1em">`;
+    resource_link += activity_link;
+    resource_link += `</div>
+            <br />
+            If you choose to work with this activity we'd love to collect some information on how it went! This will help us cultivate and improve the activities on this page and assist teachers who want to use this activity in the future. Please <a href="https://www.whitemountainscience.org/resource-table-contact-form">click here</a> to provide us with feedback.
+            </div>
+        </div>`;
+    return resource_link;
 }
 
 /*
@@ -285,7 +286,7 @@ function _postRatings(search_results) {
 */
 function _addLightbox(resource, index) {
     var html_template = `<div class='ligthbox-grid' id='*id' hidden>
-            <a target='_blank' href='*link'>*img<span align='center'><h3>*title</h3><span></a>
+            *link
             <br />
             <span><center>*description</center></span><br /><hr>
             <span>*materials</span><br />
@@ -294,11 +295,15 @@ function _addLightbox(resource, index) {
     var author_info = "<a target='_blank' href='" + resource["Source Link"] + "'>" + resource.Source + "</a>";
 
     html_template = html_template.replace('*id', 'resource' + index);
-    html_template = html_template.replace('*link', resource["Resource Link"]);
-    // console.log('building img with ' + resource.Thumbnail[0].url);
-    if(resource.Thumbnail != undefined) 
-        html_template = html_template.replace('*img',"<img class='lightbox' src='" + resource.Thumbnail[0].url + "'>");
-    html_template = html_template.replace('*title', resource["Resource Name"]);
+    if(resource["Tags"].includes("incomplete")) 
+        html_template = html_template.replace('*link', _adaptActivityLightbox(resource, index));
+    else {
+        html_template = html_template.replace('*link', "<a target='_blank' href='*link'>*img<span align='center'><h3>*title</h3><span></a>");
+        html_template = html_template.replace('*link', resource["Resource Link"]);
+        if(resource.Thumbnail != undefined) 
+            html_template = html_template.replace('*img',"<img class='lightbox' src='" + resource.Thumbnail[0].url + "'>");
+        html_template = html_template.replace('*title', resource["Resource Name"]);
+    }
     html_template = html_template.replace('*description', resource["Description"]);
     if(resource.Materials != "None")
         html_template = html_template.replace('*materials',  "This activity requires the following materials: " + resource["Materials"]);
@@ -306,6 +311,34 @@ function _addLightbox(resource, index) {
     $('.grid-container').append(html_template);
 }
 
+/*
+    Add "activity adaptation" to lightbox
+    TODO: This rendering process needs significant refactoring- consolidate html within html files, 
+        consider moving adaptation text to initial 'Info' lightbox for incomplete activities,
+        consolidate _adapt functions as much as possible
+    @param {object} resource - activity object from Airtable
+    @param {int} index - index number of this activity in the search results
+*/
+function _adaptActivityLightbox(resource, index) {
+    // var resource_link = '<span class="item"><a href="#" target="_blank" data-featherlight="#adaptlightbox' + index + '">' + name + '</a></span>';
+    var resource_link = "<a target='_blank' href='*link' data-featherlight='#adaptlightbox" + index + "''>*img<span align='center'><h3>*title</h3><span></a>";
+    resource_link = resource_link.replace('*link', resource["Resource Link"]);
+    resource_link = resource_link.replace('*title', resource["Resource Name"]);
+    if(resource.Thumbnail != undefined) 
+        resource_link = resource_link.replace('*img',"<img class='lightbox' src='" + resource.Thumbnail[0].url + "'>");
+    resource_link += '<div style="display: none"><div id="adaptlightbox' + index + '" style="padding: 10px;">';
+    resource_link += `<div class="header"><img src="images/adapt-icon.png"><h3>Thank you for choosing one of our activities for adaptation!</h3></div>
+        <br />
+        This is a resource that we believe can be helpful, but currently does include a full lesson plan. We consider this activity to be <b>primed for CS Ed</b> and we believe it could be creatively adapted to fit your classroom needs. You can find the original activity page at the link below.
+        <div style="padding-top: 1em">`;
+    resource_link += '<a target="_blank" href="'+ resource["Resource Link"] +'">'+ resource["Resource Name"] +'</a>';
+    resource_link += `</div>
+            <br />
+            If you choose to work with this activity we'd love to collect some information on how it went! This will help us cultivate and improve the activities on this page and assist teachers who want to use this activity in the future. Please <a href="https://www.whitemountainscience.org/resource-table-contact-form">click here</a> to provide us with feedback.
+            </div>
+        </div>`;
+    return resource_link;
+}
 
 /*
     Reveal a the More Info lightbox for a resource
