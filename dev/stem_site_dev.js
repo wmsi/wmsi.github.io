@@ -6,6 +6,7 @@ $(document).ready(function(){
     _renderSelects();
     _setupFeatures();
     _handleSearch();
+    setupDevMenu();
 
     $('#content').hide();
     $('.lds-ring').hide();
@@ -17,6 +18,32 @@ $(document).ready(function(){
     });
     _bindScrollClicks();
 });
+
+function setupDevMenu() {
+    $('#top-carousel-toggle').click(function() {
+        if($('#top-carousel-toggle').is(':checked'))
+            $('.top-features').show();
+        else 
+            $('.top-features').hide();
+    });
+    $('#pages-toggle').click(function() {
+        if($('#pages-toggle').is(':checked')) {
+            $('.page-controls').show();
+            $('#results-meta').show();
+            $('#search').unbind('click').click(function() {renderPageLocal()});
+        } else { 
+            $('.page-controls').hide();
+            $('#results-meta').hide();
+            $('#search').unbind('click').click(function() {renderTable()});
+        }
+    });
+    $('#sort-toggle').click(function() {
+        if($(this).is(':checked'))
+            $('#sort-results').show();
+        else 
+            $('#sort-results').hide();
+    });
+}
 
 /*
     Render STEM Resource table based on search parameters
@@ -50,6 +77,7 @@ function renderTable() {
         _displayLoading(false);
         _displayMetaData(search_results, search_results.length);
         _sortResults(search_results);
+        _sortResultsDropdown(search_results);
         document.querySelector('#results').scrollIntoView({ 
           behavior: 'smooth' 
         });
@@ -109,7 +137,8 @@ function _manageTableLocal(search_results, page_size, page=0, sort=true) {
     _buildTable(this_page);
     _displayMetaData(this_page, page_size, page, search_results.length);
     _createLocalButtons(search_results, page_size, page);
-    _sortResults(search_results, false);
+    _sortResults(search_results);
+    _sortResultsDropdown(search_results, false);
     $('#sort-results').change(() => {_manageTableLocal(search_results, page_size, page)});
     $('#results-per-page').unbind('change').change(function() {changePageLengthLocal(start, search_results)});  
 }
@@ -259,7 +288,7 @@ function _buttonCss(next_page, last_page) {
         by _manageTableLocal()
     @private
 */
-function _sortResults(search_results, build=true) {
+function _sortResultsDropdown(search_results, build=true) {
     $('#sort-results').unbind('change').change(function(event) {
         event.stopPropagation();
         console.log('sort results triggered');
@@ -324,8 +353,8 @@ function _renderFeatures(search_results) {
         _buildFeatureCarousel(feature_list, '#feature-results');
         $('#results').show();
     }
-    
-    // do this differently or remove, depending on final carousel location
+
+    //TODO: do this differently or remove, depending on final carousel location
     if($('.welcome').length) {
         $('.welcome').remove();
         $('#feature-header').parent().remove();
@@ -373,19 +402,6 @@ function _buildFeatureCarousel(features, location) {
 function _clearTable() {
     $('.item').remove();
     $('.lightbox').remove();
-}
-
-/*
-    Start a new search if the user presses "Enter" after typing in the search box.
-    With the new (non-datatables) implementation this could also be handled by
-    making the search bar part of a form with a Submit button
-*/
-function _handleSearch() {
-    $('input[type="search"]').on('keydown', function(e) {
-        if (e.which == 13) {
-            renderTable(true);
-        }
-    });
 }
 
 /*
@@ -456,6 +472,7 @@ function renderPage(page_size=50, page=0) {
         $('#results-per-page').unbind('change').change(function() {changePageLength(page_size*page)});
         _createButtonFunctions(page, (page+1)*page_size, num_results);
         _sortResults(search_results);
+        _sortResultsDropdown(search_results);
         document.querySelector('#results').scrollIntoView({ 
           behavior: 'smooth' 
         });

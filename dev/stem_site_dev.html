@@ -16,11 +16,11 @@
 <body>
     <img src="../images/wmsi-header-condensed.png" style="width: 100vw">
     <div class="page-layout">
-      <div class="welcome">
+      <div class="welcome top-features">
         <h3>Welcome to our STEM Activity Site!</h3><br>
         Choose from one of the Featured Activities to the right, or use the options below to start a search.
       </div>
-      <div style="width: 75vw">
+      <div style="width: 75vw" class="top-features">
         <a class="scroll" id="scroll-left"><</a>
         <ul class="feature-list" id="feature-header">
         </ul>
@@ -89,43 +89,60 @@
         <a class="scroll" id="scroll-right">></a>      
       </div>
       <span class="spacer"></span>
-        <div id="content" class="grid-container">
-          <div id="results-info">
-            <!-- Evaluate dropdown vs sort arrows on column headers
-                Dropdown should have no more than 4-6 options to avoid confusion 
-                (ie only numeric/ ordered options)  -->
-            <select class="form-control form-control-lg" id="sort-results">
-                <option value="" selected="selected">Sort by:</option>
-                <option value="experience-low">Experience (Low to High)</option>
-                <option value="experience-high">Experience (High to Low)</option>
-                <option value="time-short">Time (Short to Long)</option>
-                <option value="time-long">Time (Long to Short)</option>
-                <option value="rating">Rating</option>
-            </select>
-            <span id='results-meta'></span>
-            <div id='page-buttons'>
-              <button id='last-page'>Previous Page</button>
-              <button id='next-page'>Next Page</button>
-            </div>
-            <select class="form-control form-control-lg" id="results-per-page">
-              <option value="50">Results per Page</option>  <!-- default is 50 per page --> 
-              <option value="25">25</option>
-              <option value="50">50</option>
-              <option value="100">100</option>
-            </select>
+      <div id="content" class="grid-container">
+        <div id="results-info">
+          <!-- Evaluate dropdown vs sort arrows on column headers
+              Dropdown should have no more than 4-6 options to avoid confusion 
+              (ie only numeric/ ordered options)  -->
+          <select class="form-control form-control-lg" id="sort-results">
+              <option value="" selected="selected">Sort by:</option>
+              <option value="experience-low">Experience (Low to High)</option>
+              <option value="experience-high">Experience (High to Low)</option>
+              <option value="time-short">Time (Short to Long)</option>
+              <option value="time-long">Time (Long to Short)</option>
+              <option value="rating">Rating</option>
+          </select>
+          <span id='results-meta'></span>
+          <div id='page-buttons' class='page-controls'>
+            <button id='last-page'>Previous Page</button>
+            <button id='next-page'>Next Page</button>
           </div>
-
-          <span class="item-header">Activity</span> 
+          <select class="form-control form-control-lg page-controls" id="results-per-page">
+            <option value="50">Results per Page</option>  <!-- default is 50 per page --> 
+            <option value="25">25</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+          </select>
+        </div>
+        <div id="content" class="grid-container">
+          <span class="item-header">Activity
+            <span class="sort" id="activity"><i class="up"></i><i class="down"></i></span>
+          </span> 
           <!-- <span class="item-header">Description</span>  -->
-          <span class="item-header">Author</span>
-          <span class="item-header">Time</span> 
-          <span class="item-header">Experience</span> 
-          <span class="item-header">Subject</span> 
-          <span class="item-header">Rating</span> 
+          <span class="item-header">Author 
+            <span class="sort" id="author"><i class="up"></i><i class="down"></i></span>
+          </span>
+          <span class="item-header">Time
+            <span class="sort" id="time"><i class="up"></i><i class="down"></i></span>
+          </span>
+          <span class="item-header">Experience
+            <span class="sort" id="experience"><i class="up"></i><i class="down"></i></span>
+          </span>
+          <span class="item-header">Subject
+            <span class="sort" id="subject"><i class="up"></i><i class="down"></i></span>
+          </span>
+          <span class="item-header">Rating
+            <span class="sort" id="rating"><i class="up"></i><i class="down"></i></span>
+          </span> 
           <span class="item-header">Info</span> 
         </div>
       </div>
-      <div id="footer"><i>Find a broken link? Please <a href="https://www.whitemountainscience.org/contact-us" target="_blank">let us know</a> so we can fix it!</i></div>
+      <div id="dev-menu" class="footer footer-left">Dev features menu: 
+        <input type="checkbox" id="top-carousel-toggle" checked> Top Features Carousel
+        <input type="checkbox" id="pages-toggle" checked> Paged Results
+        <input type="checkbox" id="sort-toggle" checked> Sort Dropdown
+      </div>
+      <div class="footer footer-right"><i>Find a broken link? Please <a href="https://www.whitemountainscience.org/contact-us" target="_blank">let us know</a> so we can fix it!</i></div>
     <script src="https://code.jquery.com/jquery-latest.js"></script>
     <script type="text/javascript" src="https://netdna.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
     <script src="../js/featherlight.js"></script>

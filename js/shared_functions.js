@@ -1,5 +1,5 @@
 // Shared functions between different versions of the STEM Resource Table (ie master and dev branches)
-
+//TODO: reorder functions from most- to least-used
 
 /* 
     Reset all filters to their default values
@@ -8,6 +8,7 @@ function resetFilters() {
     $('#subject').val("");
     $('#grade').val("");
     $(':checkbox').prop('checked',true);
+    $('#self-led').prop('checked', false);
     $('input[type="search"]').val("");
 }
 
@@ -211,6 +212,48 @@ function _buildTable(search_results) {
         _addLightbox(resource, index);
     }); 
     _postRatings(search_results);
+}
+
+/*
+    Sort search results by field values. Event triggered when user clicks an 
+    arrow next to one of the column headers
+    @param {array} search_results - activities returned by Airtable
+    @returns {boolean} true if table was built from existing sort, false if no build happens
+    @private
+    TODO: we could avoid calling this with every search by keeping a permanent reference to
+        search_results
+*/
+function _sortResults(search_results) {
+    $('i').click(function() {
+        var ascending = $(this).attr('class') == 'up' ? true : false;
+        var field = $(this).parent().attr('id');
+        console.log('sorting by ' + field);
+        if(field == "activity")
+            _sortText(search_results, "Resource Name", ascending);
+        if(field == "author")
+            _sortText(search_results, "Source", ascending);
+        if(field == "time")
+            _sortTime(search_results, ascending);
+        if(field == "experience")
+            _sortExperience(search_results, ascending);
+        if(field == "subject")
+            _sortText(search_results, "Subject", ascending)
+        if(field == "rating")
+            _sortRating(search_results, ascending);
+
+        _clearTable();
+        _buildTable(search_results);
+        $('i').css('border-color', 'black');
+        $('i').removeAttr('alt');
+        $(this).css('border-color', 'green');
+        $(this).attr('alt', 'selected');
+    });
+    // if sort exists from previous search apply it to this one
+    $('i[alt="selected"]').click();
+    if($('i[alt="selected"]').length)
+        return true;
+    else
+        return false;
 }
 
 /*
@@ -464,8 +507,18 @@ function _sortRating(search_results, ascending=false) {
 }
 
 
-
-
+/*
+    Start a new search if the user presses "Enter" after typing in the search box.
+    With the new (non-datatables) implementation this could also be handled by
+    making the search bar part of a form with a Submit button
+*/
+function _handleSearch() {
+    $('input[type="search"]').on('keydown', function(e) {
+        if (e.which == 13) {
+            $('#search').click();
+        }
+    });
+}
 
 ////////////////////////////// DEPRECATED ////////////////////////////////////////
 
