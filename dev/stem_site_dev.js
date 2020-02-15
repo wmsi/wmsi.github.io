@@ -8,17 +8,20 @@ $(document).ready(function(){
     _handleSearch();
     setupDevMenu();
 
-    $('#content').hide();
+    $('.grid-container').hide();
     $('.lds-ring').hide();
-    $('#search').click(function() {renderPageLocal()});//renderTable()});
+    $('#search').click(function() {renderPages()});//renderTable()});
     $('#reset').click(function() {resetFilters()});
     $('#self-led-button').click(function() {renderSelfLed()});
     $('#uncheck-materials').click(function() {
-        $(':checkbox').prop('checked', false);
+        $('#materials-filter').children().prop('checked', false);
     });
     _bindScrollClicks();
 });
 
+/*
+    Handle events related to dev features menu in bottom left of page
+*/
 function setupDevMenu() {
     $('#top-carousel-toggle').click(function() {
         if($('#top-carousel-toggle').is(':checked'))
@@ -30,7 +33,7 @@ function setupDevMenu() {
         if($('#pages-toggle').is(':checked')) {
             $('.page-controls').show();
             $('#results-meta').show();
-            $('#search').unbind('click').click(function() {renderPageLocal()});
+            $('#search').unbind('click').click(function() {renderPages()});
         } else { 
             $('.page-controls').hide();
             $('#results-meta').hide();
@@ -43,6 +46,31 @@ function setupDevMenu() {
         else 
             $('#sort-results').hide();
     });
+}
+
+/*
+    Manage locally stored search results. Update sorting, meta data, and buttons
+    as necessary.
+    @param {array} search_results - all results returned by the current search
+    @param {int} page_size - number of results per page
+    @param {int} page - number of the current page
+    @param {boolean} sort - variable to keep sort from always calling this function recursively
+    @private
+*/
+function _manageTableLocal(search_results, page_size, page=0, sort=true) {
+    var start = page*page_size;
+    var end = Math.min((page+1)*page_size, search_results.length);
+    this_page = search_results.slice(start, end); // change this to default first page
+    console.log('rendering search results from index ' + start + ' to ' + end);
+    _clearTable();
+    _buildTable(this_page);
+    _displayMetaData(this_page, page_size, page, search_results.length);
+    _createLocalButtons(search_results, page_size, page);
+    _sortResults(search_results, false);
+    _sortResultsDropdown(search_results, false);
+    $('#sort-results').change(() => {_manageTableLocal(search_results, page_size, page)});
+    $('i').click(() => {_manageTableLocal(search_results, page_size, page)});
+    $('#results-per-page').unbind('change').change(function() {changePageLengthLocal(start, search_results)});  
 }
 
 /*
@@ -85,200 +113,14 @@ function renderTable() {
 }
 
 /*
-    Obtain search results and cache them locally while displaying pages one at a time
-    @param {int} page_size - number of results to render per page
-    @param {int} page - page number <-- deprecated?
-    TODO: how do we implement sort with the page by page approach?
-*/
-function renderPageLocal(page_size=50, page=0) {
-    _displayLoading(true);
-    // _clearTable();
-    var query_string = _getQueryString();
-    if(query_string == 'AND)')
-        return;
-    $('.grid-container').show();
-    var search_results = [];
-    // var url = "https://wmsinh.org/airtable?query=" + query_string;
-    var url = "https://wmsinh.org/airtable";
-    // var url = "http://localhost:5000/airtable";
-    $.ajax({
-        type: 'GET',
-        headers: {'Access-Control-Allow-Origin': '*'},
-        url: url,
-        data: {
-            query: query_string
-        }
-    }).done(function(data, status, jqXHR) {
-        search_results=JSON.parse(data);
-        _manageTableLocal(search_results, page_size);
-        _renderFeatures(search_results);
-        _displayLoading(false);
-        document.querySelector('#results').scrollIntoView({ 
-          behavior: 'smooth' 
-        });
-    });
-}
-
-/*
-    Manage locally stored search results. Update sorting, meta data, and buttons
-    as necessary.
-    @param {array} search_results - all results returned by the current search
-    @param {int} page_size - number of results per page
-    @param {int} page - number of the current page
-    @param {boolean} sort - variable to keep sort from always calling this function recursively
-    @private
-*/
-function _manageTableLocal(search_results, page_size, page=0, sort=true) {
-    var start = page*page_size;
-    var end = Math.min((page+1)*page_size, search_results.length);
-    this_page = search_results.slice(start, end); // change this to default first page
-    console.log('rendering search results from index ' + start + ' to ' + end);
-    _clearTable();
-    _buildTable(this_page);
-    _displayMetaData(this_page, page_size, page, search_results.length);
-    _createLocalButtons(search_results, page_size, page);
-    _sortResults(search_results);
-    _sortResultsDropdown(search_results, false);
-    $('#sort-results').change(() => {_manageTableLocal(search_results, page_size, page)});
-    $('#results-per-page').unbind('change').change(function() {changePageLengthLocal(start, search_results)});  
-}
-
-/*
     Add a 'self-led activities' filter on top of any other search filters
     TODO: find a cleaner way to implement this
 */
 function renderSelfLed() {
     $('#self-led').prop('checked', true);
     // renderTable();
-    renderPageLocal();
+    renderPages();
     $('#self-led').prop('checked', false);
-}
-
-/*
-    Change the number of results displayed per page
-    Call renderPage() to load a new page size from Airtable
-    @param {int} start - search_resutls index of the current first activity 
-        (used to find page number)
-    @private
-*/
-function changePageLength(start) {
-    var page_size = $('#results-per-page').val();
-    var page = Math.floor(start/page_size);
-    console.log('new page length ' + page_size +' and page num ' + page);
-    renderPage(page_size, page);
-}
-
-/*
-    Change the number of results displayed per page
-    Call _manageTableLocal() to load a new page of results
-    @param {int} start - search_resutls index of the current first activity 
-        (used to find page number)
-    @param {array} search_results - all activities that match the current search
-    @private
-*/
-function changePageLengthLocal(start, search_results) {
-    var page_size = $('#results-per-page').val();
-    var page = Math.floor(start/page_size);
-    console.log('new page length ' + page_size +' and page num ' + page);
-    _manageTableLocal(search_results, page_size, page);
-}
-
-/*
-    Display results meta data above the table. Meta data includes length of results,
-    results per page, current page number, etc.
-    @param {array} search_results - records returned by airtable
-    @param {int} page_size - max number of records per page
-    @private
-*/
-function _displayMetaData(search_results, page_size, page_num=0, num_results=search_results.length) {
-    // console.log('display meta for page num ' + page_num +', page size ' + page_size + ', num results ' + num_results);
-    $('#results-meta').empty();
-    if(num_results == 0)
-        $('#results-meta').html("We're sorry but your search did not return any results.");
-    else if(num_results == 1)
-        $('#results-meta').html("Displaying " + search_results.length + " Result.");
-    else if(search_results.length < num_results) {         // pagination in effect
-        var start = page_size*page_num + 1;
-        var end = page_size*(page_num + 1) < num_results ? page_size*(page_num + 1) : num_results;
-        $('#results-meta').html("Displaying " + start + "-" + end + " of " + num_results + " Results.");
-    } else {
-        $('#results-meta').html("Displaying " + search_results.length + " Results.");
-    }
-}
-
-/*
-    Attach behavior to Next Page and Last Page buttons
-    Unbind any functions previously attached to those buttons
-    Change styling to reflect (in)active buttons
-    @param {int} page - current page number
-    @param {int} last - index of the last record on the current page
-    @param {int} num_results - total number of results returned by the current search
-    @private
-*/
-function _createButtonFunctions(page, last, num_results) {
-    console.log('creating button functions with page ' + page + ', end ' + last + ', num_results ' + num_results);
-    var next_page = last < num_results ? true : false;
-    var last_page = page > 0 ? true : false;
-    if(next_page) {
-        $('#next-page').unbind('click').click(function() {
-            renderPage(parseInt($('#results-per-page').val()), page+1);
-        });
-    } 
-    if(last_page) {
-        $('#last-page').unbind('click').click(function() {
-            renderPage(parseInt($('#results-per-page').val()), page-1);
-        });
-    } 
-    _buttonCss(next_page, last_page);
-}
-
-/*
-    Attach behavior to Next Page and Last Page buttons using locally stored results
-    Unbind any functions previously attached to those buttons
-    Change styling to reflect (in)active buttons
-    @param {array} search_results - all results that match the current search
-    @param {int} page_size - number of results to render per page
-    @param {int} page - current page number
-    @private
-*/
-function _createLocalButtons(search_results, page_size, page=0) {
-    var next_page = (page+1)*page_size < search_results.length ? true : false;
-    var last_page = page > 0 ? true : false;
-    if(next_page) {
-        $('#next-page').unbind('click').click(function() {
-            _manageTableLocal(search_results, page_size, page+1);
-        });
-    }
-
-    if(last_page) {
-        $('#last-page').unbind('click').click(function() {
-            _manageTableLocal(search_results, page_size, page-1);
-        });
-    }
-
-    _buttonCss(next_page, last_page);
-}
-
-/*
-    Alter CSS for page buttons depending on table state
-    Inactive button is grey and doesn't act like a link
-    @param {boolean} next_page - true if there is a next page in the table
-    @param {boolean} last_page - true if there is a previous page in the table
-    @private
-*/
-function _buttonCss(next_page, last_page) {
-    if(next_page) {
-        $('#next-page').css({'cursor': '', 'color': ''});
-    } else {
-        $('#next-page').unbind('click');
-        $('#next-page').css({'cursor': 'default', 'color': 'grey'});   
-    }
-    if(last_page) {
-        $('#last-page').css({'cursor': '', 'color': ''});
-    } else {
-        $('#last-page').unbind('click');
-        $('#last-page').css({'cursor': 'default', 'color': 'grey'});
-    }
 }
 
 /*
@@ -316,7 +158,6 @@ function _sortResultsDropdown(search_results, build=true) {
     if($('#sort-results').val() != '')
         $('#sort-results').change();
 }
-
 
 /*
     Add features to the top of the page. 
@@ -362,7 +203,6 @@ function _renderFeatures(search_results) {
     }
 }
 
-
 /*
     Create three features to appear above the table. Features can fit whatever criteria we want-
     ideally this would tie in to our rating system. In this version, the features are also rendered
@@ -394,14 +234,6 @@ function _buildFeatureCarousel(features, location) {
     });
     $(location).css('grid-template-columns', 'repeat(' + features.length + ', 240px)');
     _postRatings(features);
-}
-
-/*
-    Clear the table from previous search results
-*/
-function _clearTable() {
-    $('.item').remove();
-    $('.lightbox').remove();
 }
 
 /*
@@ -477,6 +309,32 @@ function renderPage(page_size=50, page=0) {
           behavior: 'smooth' 
         });
     });
+}
+
+/*
+    Attach behavior to Next Page and Last Page buttons
+    Unbind any functions previously attached to those buttons
+    Change styling to reflect (in)active buttons
+    @param {int} page - current page number
+    @param {int} last - index of the last record on the current page
+    @param {int} num_results - total number of results returned by the current search
+    @private
+*/
+function _createButtonFunctions(page, last, num_results) {
+    console.log('creating button functions with page ' + page + ', end ' + last + ', num_results ' + num_results);
+    var next_page = last < num_results ? true : false;
+    var last_page = page > 0 ? true : false;
+    if(next_page) {
+        $('#next-page').unbind('click').click(function() {
+            renderPage(parseInt($('#results-per-page').val()), page+1);
+        });
+    } 
+    if(last_page) {
+        $('#last-page').unbind('click').click(function() {
+            renderPage(parseInt($('#results-per-page').val()), page-1);
+        });
+    } 
+    _buttonCss(next_page, last_page);
 }
 
 /*
@@ -652,16 +510,6 @@ function _getSearchString() {
         search_params.push('tech');
 
     return "q=" + search_params.join('&');
-}
-
-/*
-    Display some text or graphic to show that the resources are still loading
-*/
-function _displayLoading(loading) {
-    if(loading)
-        $('.lds-ring').show();// $('#load-div').show();
-    else
-        $('.lds-ring').hide();//$('#load-div').hide();
 }
 
 /*

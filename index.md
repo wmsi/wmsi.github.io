@@ -1,10 +1,12 @@
-## Can we use Github.io to host our Resource site?
+## STEM Resource Site Testing Page
 
-Currently our [CS Resource Table](https://www.whitemountainscience.org/resource-table) is hosted on Squarespace, which comes with a consistent theme but clunky handling of site files (ie javascript).
 
-<a href="stem_site.html">Click here</a> to see the same site hosted on our github.io.
+<a href="stem_site.html">Click here</a> to see the master branch of our STEM Site in progress
 
 And <a href="dev/stem_site_dev.html">here's another version</a> where we prototype new features.
+
+### CS Site
+Currently our [CS Resource Table](https://www.whitemountainscience.org/resource-table) is hosted on Squarespace, which comes with a consistent theme but clunky handling of site files (ie javascript).
 
 ### Jekyll Themes
 

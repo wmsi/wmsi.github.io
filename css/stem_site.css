@@ -20,8 +20,9 @@
 }
 
 /* overwrite bootstrap styling for headings */
-h3 {
+h3, h4 {
   margin: auto;
+  padding-top: 10px;
 }
 
 .filter-form {
@@ -88,7 +89,7 @@ h3 {
   margin-left: auto;
   margin-right: auto;
   max-width: 240px;
-  padding: 20px;
+  /*padding: 20px;*/
 }
 
 
@@ -123,10 +124,12 @@ hr {
     padding: 0;
 }
 
-.header img {
+.header img, .adapt {
   float: left;
   height: 100px;
 }
+
+
 
 .header h3 {
   position: relative;
@@ -142,6 +145,12 @@ hr {
   margin-left: auto;
   margin-right: auto;
   font-size: 16;
+}
+
+#results-info {
+  grid-column: 1 / -1;
+  display: inline-grid;
+  grid-template-columns: 40% auto auto auto;
 }
 
 /* stars styling for activity ratings */
@@ -241,3 +250,44 @@ hr {
   left: 20;
 }
 
+/*            Loading Spinner                 */
+.lds-ring {
+  display: inline-block;
+  grid-column: 4;
+  position: relative;
+  width: 120px;
+  height: 80px;
+  margin-left: 20px;
+  margin-right: 20px;
+  /*visibility: hidden;*/
+}
+
+.lds-ring div {
+  box-sizing: border-box;
+  /*display: block;*/
+  position: absolute;
+  width: 48px;
+  height: 48px;
+  margin: 8px;
+  border: 8px solid #fff;
+  border-radius: 50%;
+  animation: lds-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+  border-color: black transparent transparent transparent;
+}
+.lds-ring div:nth-child(1) {
+  animation-delay: -0.45s;
+}
+.lds-ring div:nth-child(2) {
+  animation-delay: -0.3s;
+}
+.lds-ring div:nth-child(3) {
+  animation-delay: -0.15s;
+}
+@keyframes lds-ring {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}

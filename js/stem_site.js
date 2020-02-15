@@ -8,10 +8,11 @@ $(document).ready(function(){
     _handleSearch();
 
     $('.grid-container').hide();
-    $('#search').click(function() {renderTable()});
+    $('.lds-ring').hide();
+    $('#search').click(function() {renderPages()});
     $('#reset').click(function() {resetFilters()});
     $('#uncheck-materials').click(function() {
-        $(':checkbox').prop('checked', false);
+        $('#materials-filter').children().prop('checked', false);
     });
 });
 
@@ -45,6 +46,29 @@ function renderTable() {
           behavior: 'smooth' 
         });
     });
+}
+
+/*
+    Manage locally stored search results. Update sorting, meta data, and buttons
+    as necessary.
+    @param {array} search_results - all results returned by the current search
+    @param {int} page_size - number of results per page
+    @param {int} page - number of the current page
+    @param {boolean} sort - variable to keep sort from always calling this function recursively
+    @private
+*/
+function _manageTableLocal(search_results, page_size, page=0, sort=true) {
+    var start = page*page_size;
+    var end = Math.min((page+1)*page_size, search_results.length);
+    this_page = search_results.slice(start, end); // change this to default first page
+    console.log('rendering search results from index ' + start + ' to ' + end);
+    _clearTable();
+    _buildTable(this_page);
+    _displayMetaData(this_page, page_size, page, search_results.length);
+    _createLocalButtons(search_results, page_size, page);
+    _sortResults(search_results, false);
+    $('i').click(() => {_manageTableLocal(search_results, page_size, page)});
+    $('#results-per-page').unbind('change').change(function() {changePageLengthLocal(start, search_results)});  
 }
 
 /*
@@ -119,15 +143,6 @@ function _buildFeatures(features) {
         $(this).append(feature_div);
     });
     _postRatings(features);
-}
-
-/*
-    Clear the table from previous search results
-    @private
-*/
-function _clearTable() {
-    $('.item').remove();
-    $('.ligthbox-grid').remove();
 }
 
 /*                        DEPRECATED                  */

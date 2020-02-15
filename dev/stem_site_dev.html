@@ -46,9 +46,9 @@
             <span class="tooltiptext experience">Experience level is determined by school grade and STEM experience. Early Learners have no STEM experience and are usually in grades K-2. Beginners have little STEM experience and may be in grades 3-5, Intermediate means some experience or grades 6-8, and Advanced for solid STEM knowledge or grades 9+</span>
           </div>
         </div>
-        <div class="filters" id="tech-filters">
+        <div class="filters" id="materials-filter">
           <b>Materials Required: </b><br>
-          <input type="checkbox" id="browser" checked> Device w/ Browser<br>
+          <input type="checkbox" id="browser" checked> Computer w/ Browser<br>
           <input type="checkbox" id="tablet" checked> Tablet<br>
           <input type="checkbox" id="pen-paper" checked> Pen and Paper<br>
           <input type="checkbox" id="craft" checked> Craft Supplies<br>
@@ -64,23 +64,9 @@
         <span class='filter-instructions'>Choose at least one of the options above and then click 'Search for Activities' to load resources.</span>
         <br>
         <hr>
-        <div id="stars-template" hidden>
-            <div class='stars' id="stars-id">
-              <span class="star" id="star5">★</span>
-              <span class="star" id="star4">★</span>
-              <span class="star" id="star3">★</span>
-              <span class="star" id="star2">★</span>
-              <span class="star" id="star1">★</span>
-            </div>
-            <small>rating/5 by num</small>
-        </div>
         <div hidden>
           <input type="checkbox" id="self-led">
         </div>
-      </div>
-      <div id="load-div" style="display: none">
-        Activities will appear here when they load. If nothing happens please wait a minute before refreshing the page.
-        If a problem persists please notify us by clicking on the form link above.
       </div>
       <div style="width: 95vw" id='results' hidden>
         <a class="scroll" id="scroll-left"><</a>
@@ -89,7 +75,7 @@
         <a class="scroll" id="scroll-right">></a>      
       </div>
       <span class="spacer"></span>
-      <div id="content" class="grid-container">
+      <div class="grid-container">
         <div id="results-info">
           <!-- Evaluate dropdown vs sort arrows on column headers
               Dropdown should have no more than 4-6 options to avoid confusion 
@@ -135,6 +121,51 @@
             <span class="sort" id="rating"><i class="up"></i><i class="down"></i></span>
           </span> 
           <span class="item-header">Info</span> 
+        </div>
+      </div>
+
+      <div id="templates" hidden>
+        <div id="stars-template" hidden>
+            <div class='stars' id="stars-id">
+              <span class="star" id="star5">★</span>
+              <span class="star" id="star4">★</span>
+              <span class="star" id="star3">★</span>
+              <span class="star" id="star2">★</span>
+              <span class="star" id="star1">★</span>
+            </div>
+            <small>rating/5 by num</small>
+        </div>
+        <div id="info-lightbox-template">
+          <div class="*class" id="*id" hidden>
+              <a target="_blank" href="*link"><img class="lightbox" src="*img"><span align="center"><h3>*title</h3><span></span></span></a>
+              <br>
+              <span><center>*description</center></span><br><hr>
+              <span>This activity requires the following materials: *materials</span><br>
+              <span>Keyword tags: *tags</span>
+          </div>
+        </div>
+        <div id="adapt-text-template">
+          <hr><h4>Thanks for choosing an Activity for Adaptation!</h4>
+          <br>
+          <p><img class='adapt' src="images/adapt-icon.png">
+          This is a resource that has a lot of potential, but currently does not include a full lesson plan. We consider this activity to be 
+          <b>primed for STEM Education</b> and we believe it could be creatively adapted to fit your classroom needs.
+          <br>
+          If you choose to work with this activity we'd love to collect some information on how it goes! 
+          This will help us cultivate and improve the activities on this page and assist teachers who want 
+          to use this activity in the future. Please <a href="https://www.whitemountainscience.org/resource-table-contact-form">click here</a> 
+          to provide us with feedback or leave a comment on this activity.</p>
+        </div>
+        <div id="adapt-lightbox-template">
+          <span class="*class"><a href="#" target="_blank" data-featherlight="#@id">title</a></span>
+          <div style="display: none"><div id="@id" style="padding: 10px;"><div class="header"><img src="images/adapt-icon.png"><h3>Thank you for choosing one of our activities for adaptation!</h3></div>
+          <br>
+          This is a resource that has a lot of potential, but currently does not include a full lesson plan. We consider this activity to be <b>primed for STEM Education</b> and we believe it could be creatively adapted to fit your classroom needs. You can find the original activity page at the link below.
+          <div style="padding-top: 1em"><span><a target="_blank" href="*link">title</a></span></div>
+              <br>
+              If you choose to work with this activity we'd love to collect some information on how it went! This will help us cultivate and improve the activities on this page and assist teachers who want to use this activity in the future. Please <a href="https://www.whitemountainscience.org/resource-table-contact-form">click here</a> to provide us with feedback.
+              </div>
+          </div>
         </div>
       </div>
       <div id="dev-menu" class="footer footer-left">Dev features menu: 
