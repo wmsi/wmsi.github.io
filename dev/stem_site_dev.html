@@ -21,6 +21,7 @@
         Choose from one of the Featured Activities to the right, or use the options below to start a search.
       </div>
       <div style="width: 75vw" class="top-features">
+          <div class='lds-large'><div></div><div></div><div></div><div></div></div>
         <a class="scroll" id="scroll-left"><</a>
         <ul class="feature-list" id="feature-header">
         </ul>
@@ -117,14 +118,40 @@
           <span class="item-header">Subject
             <span class="sort" id="subject"><i class="up"></i><i class="down"></i></span>
           </span>
-          <span class="item-header">Rating
+          <!-- <span class="item-header">Rating
             <span class="sort" id="rating"><i class="up"></i><i class="down"></i></span>
-          </span> 
+          </span>  -->
           <span class="item-header">Info</span> 
+          <span class="item-header">Comments</span> 
         </div>
       </div>
 
       <div id="templates" hidden>
+        <div id="comments-img">
+          <!-- https://www.visualpharm.com/free-icons/comments-595b40b65ba036ed117d396b -->
+          <div class="tooltip" style='z-index: *pos'><img src='../comments.png' class='comments' title='This is where comments will render.'>
+            <a href='#' data-featherlight='#comments-box@index'><span class="tooltiptext comment">
+              User comments preview:<br>
+              User 1: Great activity!<br>
+              User 2: Could use a better lesson plan.<br>
+              User 3: I liked this activity a lot. One thing I'd like to provide constructive feedback on...<br>
+            </span></a>
+            <div id='comments-box@index' hidden>
+              <div id='comments-text@index'>
+                <h4>Detailed comments and leave your own:</h4><br>
+                User 1: Great activity!<br>
+                User 2: Could use a better lesson plan.<br>
+                User 3: I liked this activity a lot. One thing I'd like to provide constructive feedback on is the Google Doc format. I'd prefer a PDF.<br>
+              </div>
+              <!-- <input type='text' value='Leave a comment here'> -->
+              <div class='comment-form'>
+                <textarea rows='4' cols='60' placeholder="Leave a comment here" id='new-comm@index'></textarea>
+                <!-- <input type='text' id='comm-text-index' value="comment" /> -->
+                <input type="submit" class="submit-comment" id='post-comm@index' />
+              </div>
+            </div>
+          </div>
+        </div>
         <div id="stars-template" hidden>
             <div class='stars' id="stars-id">
               <span class="star" id="star5">★</span>
@@ -137,7 +164,7 @@
         </div>
         <div id="info-lightbox-template">
           <div class="*class" id="*id" hidden>
-              <a target="_blank" href="*link"><img class="lightbox" src="*img"><span align="center"><h3>*title</h3><span></span></span></a>
+              <a target="_blank" href="*link"><img class="lightbox" *img><span align="center"><h3>*title</h3><span></span></span></a>
               <br>
               <span><center>*description</center></span><br><hr>
               <span>This activity requires the following materials: *materials</span><br>

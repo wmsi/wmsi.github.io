@@ -1,15 +1,14 @@
 // When the page loads populate the table with activities and render the dropdown menus.
 // Add a graderange to each activity that JS can interpret
 $(document).ready(function(){
-    // console.log('table length ' + resource_table.Activities.length);
-    // _buildTable();
+    $('.grid-container').hide();
+    $('.lds-ring').hide();
+
     _renderSelects();
     _setupFeatures();
     _handleSearch();
     setupDevMenu();
 
-    $('.grid-container').hide();
-    $('.lds-ring').hide();
     $('#search').click(function() {renderPages()});//renderTable()});
     $('#reset').click(function() {resetFilters()});
     $('#self-led-button').click(function() {renderSelfLed()});
@@ -45,6 +44,65 @@ function setupDevMenu() {
             $('#sort-results').show();
         else 
             $('#sort-results').hide();
+    });
+}
+
+
+/*
+    Generate HTML for all resources returned by a search query. 
+    Called by renderTable()
+    @param {array} search_resutls - resources returned by a query search to airtable
+    @private
+*/
+function _buildTable(search_results) {
+    console.log('building ' + search_results.length + ' resources');
+    var new_elements;
+    var grid_item = "<span class='item'>*</span>";
+    search_results.forEach(function(resource, index) {
+        var activity_link = grid_item.replace('*', '<a target="_blank" href="'+ resource["Resource Link"] +'">'+ resource["Resource Name"] +'</a>');
+        if(resource['Tags'].includes('incomplete')) 
+            activity_link = _adaptActivity(resource, index);
+            // activity_link = _adaptActivity(activity_link.replace(" class='item'",""), index, resource["Resource Name"]);
+        // else
+        //     console.log('building activity with link ' + activity_link);
+        
+        new_elements = activity_link;
+        author_link = '<a target="_blank" href="' + resource["Source Link"] + '">' + resource["Source"] + '</a>'
+        new_elements += grid_item.replace('*', author_link);
+        new_elements += grid_item.replace('*', resource["Duration"]);
+        new_elements += grid_item.replace('*', resource["Experience"]);
+        new_elements += grid_item.replace('*', resource["Subject"]);
+        // new_elements += grid_item.replace('*', _starsMarkup(resource));
+        new_elements += grid_item.replace('*',  "<center><big><a href='#' data-featherlight='#resource" + index + "'>&#9432;</a></big></center>");
+        // new_elements += grid_item.replace('*', _commentSection(resource, index));//      
+        $('#content').append(new_elements); 
+        _addLightbox(resource, index);
+        _commentSection(resource, index);
+    }); 
+    _postRatings(search_results);
+}
+
+function _commentSection(resource, index) {
+    var element = "<span class='item'>" + $('#comments-img').html() + "</span>";
+    // make sure each tooltip positions on top of other elements
+    element = element.replace('*pos', 200-index);
+    element = element.replace(/@index/g, index);
+    $('#content').append(element);
+    var id = '#post-comm' + index;
+    var text_id = '.featherlight-inner #new-comm' + index;
+    $(id).unbind('click').click(function() {
+        var comment = $('.featherlight-inner #new-comm' + index).val();
+        console.log('posting comment: '+ comment +' to airtable');
+        $.ajax({
+                type: 'POST',
+                url: 'https://wmsinh.org/airtable',
+                // url: 'http://localhost:5000/airtable',
+                data: {
+                    "id": resource.id,
+                    "Comment": comment
+                }
+            });
+        $('.featherlight-inner #comments-text'+index).append('username: ' + comment + '<br>');
     });
 }
 
@@ -167,6 +225,7 @@ function _sortResultsDropdown(search_results, build=true) {
 function _setupFeatures() {
     var search_results = [];
     var url = "https://wmsinh.org/airtable?query=AND(NOT({Thumbnail} = ''), NOT(Find('inomplete', Tags)))";
+    $('.lds-large').show();
     $.ajax({
         type: 'GET',
         headers: {'Access-Control-Allow-Origin': '*'},
@@ -175,6 +234,7 @@ function _setupFeatures() {
         search_results=JSON.parse(data);
         feature_list = _buildFeatureList(search_results);
         _buildFeatureCarousel(feature_list, '#feature-header');
+        $('.lds-large').hide();
     });
 }
 
@@ -227,8 +287,7 @@ function _buildFeatureCarousel(features, location) {
                     <b>Subject: </b>`+ subjects +`<br />
                     <b>Materials: </b>`+ features[i]["Materials"] +`<br />
                     <b>Author: </b><a href="`+ features[i]["Source Link"] +`">`+ features[i]["Source"] +`</a><br>   
-                    <b>Rating: </b>` + _starsMarkup(features[i]) + `
-                </div>`;
+                </div>`; // <b>Rating: </b>` + _starsMarkup(features[i]) + `
         $(location).append("<li>" + feature_div + "</li>");
         // $("#featured-activities").append("<div class='thumbnail' list-index='" + features.indexOf(item) + "'>" + feature_div + "</div>");
     });

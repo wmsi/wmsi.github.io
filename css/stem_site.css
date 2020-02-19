@@ -175,6 +175,7 @@ hr {
   display: inline-block;
   border-bottom: 1px dotted black;
   opacity: 100;
+  z-index: 1;
 }
 
 .tooltip .tooltiptext {
@@ -186,7 +187,6 @@ hr {
   border-radius: 6px;
   padding: 5px 0;
   position: absolute;
-  z-index: 1;
 }
 
   /* Position the tooltip */
@@ -240,6 +240,7 @@ hr {
   padding: 5;
   border: 1px solid black;
   background: white;
+  z-index: 10000;
 }
 
 .footer-right {
@@ -251,6 +252,7 @@ hr {
 }
 
 /*            Loading Spinner                 */
+.lds-large,
 .lds-ring {
   display: inline-block;
   grid-column: 4;
@@ -262,6 +264,7 @@ hr {
   /*visibility: hidden;*/
 }
 
+.lds-large div,
 .lds-ring div {
   box-sizing: border-box;
   /*display: block;*/
@@ -274,13 +277,14 @@ hr {
   animation: lds-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
   border-color: black transparent transparent transparent;
 }
-.lds-ring div:nth-child(1) {
+
+.lds-ring div, .lds-large div:nth-child(1) {
   animation-delay: -0.45s;
 }
-.lds-ring div:nth-child(2) {
+.lds-ring div, .lds-large div:nth-child(2) {
   animation-delay: -0.3s;
 }
-.lds-ring div:nth-child(3) {
+.lds-ring div, .lds-large div:nth-child(3) {
   animation-delay: -0.15s;
 }
 @keyframes lds-ring {

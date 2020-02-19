@@ -8,6 +8,45 @@
   grid-column: 1;
 }
 
+.lds-large div {
+  width: 100px;
+  height: 100px;
+  margin: 16px;
+  z-index: 1000;
+}
+
+.comments {
+  width: 60px;
+  display: grid;
+  margin-left: auto;
+  margin-right: auto;
+  z-index: -1;
+}
+
+/* tooltip position */
+.comment {
+  right: 0px;
+  top: 0px;
+  width: 300px !important;
+  z-index: 1000;
+}
+
+textarea {
+  resize: none;
+}
+
+.comment-form {
+  position: relative;
+}
+
+.submit-comment {
+  border-radius: 6px;
+  height: 30px;
+  position: absolute;
+  top: 30%;
+  margin-left: 10px;
+}
+
 #feature-header {
   width: auto;
 }
@@ -43,6 +82,10 @@
   align-self: end;
   font-size: 18px;
   justify-self: stretch;
+}
+
+.grid-container {
+  grid-template-columns: auto 200px auto auto auto 80px 120px;
 }
 
 #results {

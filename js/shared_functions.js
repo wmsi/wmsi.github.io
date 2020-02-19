@@ -38,6 +38,40 @@ function renderPages(page_size=50, page=0) {
     });
 }
 
+/*
+    Generate HTML for all resources returned by a search query. 
+    Called by renderTable()
+    @param {array} search_resutls - resources returned by a query search to airtable
+    @private
+*/
+function _buildTable(search_results) {
+    console.log('building ' + search_results.length + ' resources');
+    var new_elements;
+    var grid_item = "<span class='item'>*</span>";
+    search_results.forEach(function(resource, index) {
+        var activity_link = grid_item.replace('*', '<a target="_blank" href="'+ resource["Resource Link"] +'">'+ resource["Resource Name"] +'</a>');
+        if(resource['Tags'].includes('incomplete')) 
+            activity_link = _adaptActivity(resource, index);
+            // activity_link = _adaptActivity(activity_link.replace(" class='item'",""), index, resource["Resource Name"]);
+        else
+            console.log('building activity with link ' + activity_link);
+        
+        new_elements = activity_link;
+        author_link = '<a target="_blank" href="' + resource["Source Link"] + '">' + resource["Source"] + '</a>'
+        new_elements += grid_item.replace('*', author_link);
+        new_elements += grid_item.replace('*', resource["Duration"]);
+        new_elements += grid_item.replace('*', resource["Experience"]);
+        new_elements += grid_item.replace('*', resource["Subject"]);
+        new_elements += grid_item.replace('*', _starsMarkup(resource));
+        new_elements += grid_item.replace('*',  "<center><big><a href='#' data-featherlight='#resource" + index + "'>&#9432;</a></big></center>");
+        // $('.grid-container').append(new_elements); 
+        $('#content').append(new_elements); 
+        _addLightbox(resource, index);
+    }); 
+    _postRatings(search_results);
+}
+
+
 /* 
     Reset all filters to their default values
 */
@@ -194,7 +228,7 @@ function _sortResults(search_results, build=true) {
     @private
 */
 function _postRatings(search_results) {
-    $('.star').click(function() {
+    $('.star').unbind('click').click(function() {
         var name = $(this).parent().attr('id');
         var rating = $(this).attr('id').split('star')[1];
         if(confirm("Do you want to post a rating of " +rating+"/5 to "+name+"?")) {
@@ -209,6 +243,7 @@ function _postRatings(search_results) {
             $.ajax({
                 type: 'POST',
                 url: 'https://wmsinh.org/airtable',
+                // url: 'http://localhost:5000/airtable',
                 data: {
                     "id": resource.id,
                     "Rating": new_rating,
@@ -217,39 +252,6 @@ function _postRatings(search_results) {
             });
         }
     });
-}
-
-/*
-    Generate HTML for all resources returned by a search query. 
-    Called by renderTable()
-    @param {array} search_resutls - resources returned by a query search to airtable
-    @private
-*/
-function _buildTable(search_results) {
-    console.log('building ' + search_results.length + ' resources');
-    var new_elements;
-    var grid_item = "<span class='item'>*</span>";
-    search_results.forEach(function(resource, index) {
-        var activity_link = grid_item.replace('*', '<a target="_blank" href="'+ resource["Resource Link"] +'">'+ resource["Resource Name"] +'</a>');
-        if(resource['Tags'].includes('incomplete')) 
-            activity_link = _adaptActivity(resource, index);
-            // activity_link = _adaptActivity(activity_link.replace(" class='item'",""), index, resource["Resource Name"]);
-        else
-            console.log('building activity with link ' + activity_link);
-        
-        new_elements = activity_link;
-        author_link = '<a target="_blank" href="' + resource["Source Link"] + '">' + resource["Source"] + '</a>'
-        new_elements += grid_item.replace('*', author_link);
-        new_elements += grid_item.replace('*', resource["Duration"]);
-        new_elements += grid_item.replace('*', resource["Experience"]);
-        new_elements += grid_item.replace('*', resource["Subject"]);
-        new_elements += grid_item.replace('*', _starsMarkup(resource));
-        new_elements += grid_item.replace('*',  "<center><big><a href='#' data-featherlight='#resource" + index + "'>&#9432;</a></big></center>");
-        // $('.grid-container').append(new_elements); 
-        $('#content').append(new_elements); 
-        _addLightbox(resource, index);
-    }); 
-    _postRatings(search_results);
 }
 
 /*
@@ -271,7 +273,7 @@ function _addLightbox(resource, index) {
     html_template = html_template.replace('*link', resource["Resource Link"]);
     html_template = html_template.replace('*title', resource["Resource Name"]);
     if(resource.Thumbnail != undefined) 
-        html_template = html_template.replace('*img',resource.Thumbnail[0].url);
+        html_template = html_template.replace('*img','src="' + resource.Thumbnail[0].url + '"');
     // else generic thumbnail image
     html_template = html_template.replace('*description', resource["Description"]);
     html_template = html_template.replace('*materials', resource["Materials"]);
