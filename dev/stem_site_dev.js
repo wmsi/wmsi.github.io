@@ -88,21 +88,45 @@ function _commentSection(resource, index) {
     element = element.replace('*pos', 200-index);
     element = element.replace(/@index/g, index);
     $('#content').append(element);
+
+    // resource.Comments.forEach(comment =>  {
+    if(resource.Comments != undefined) {
+        console.log('parsing comments for ' + resource["Resource Name"] + ': ' + resource.Comments);
+        var comments = JSON.parse('['+resource.Comments+']');
+        comments.forEach(comment =>  {
+            console.log(comment);
+            $('#comments-text'+index).append(comment[0] + ': ' + comment[1] + '<br>');
+        });
+    }
+
     var id = '#post-comm' + index;
-    var text_id = '.featherlight-inner #new-comm' + index;
+    var text_id = '#new-comment' + index; //.featherlight-inner 
+    var form_id = '.featherlight-inner #comment-form'+index;
+    $(form_id).hide();
+    // $('#new-comment'+index).click(function() {$(form_id).show()});//console.log('$("' + form_id + '").show()')});
+    $(text_id).unbind('focus').focus(function() {
+        $(this).css('height','90px');
+        $(form_id).show()}
+    );
+    // $(text_id).unbind('focusout').focusout(function() {$(form_id).hide()});
+
     $(id).unbind('click').click(function() {
-        var comment = $('.featherlight-inner #new-comm' + index).val();
-        console.log('posting comment: '+ comment +' to airtable');
-        $.ajax({
-                type: 'POST',
-                url: 'https://wmsinh.org/airtable',
-                // url: 'http://localhost:5000/airtable',
-                data: {
-                    "id": resource.id,
-                    "Comment": comment
-                }
-            });
-        $('.featherlight-inner #comments-text'+index).append('username: ' + comment + '<br>');
+        var comment = $('.featherlight-inner #new-comment' + index).val();
+        var user = $('.featherlight-inner #comment-name' + index).val();
+        user = (user == "" ? "Anonymous" : user);
+        if(comment != '') {
+            console.log('posting comment: '+ comment +' to airtable from user ' + user);
+            $.ajax({
+                    type: 'POST',
+                    url: 'https://wmsinh.org/airtable',
+                    // url: 'http://localhost:5000/airtable',
+                    data: {
+                        "id": resource.id,
+                        "Comment": '["' + user + '", "' + comment + '"]'//comment
+                    }
+                });
+            $('.featherlight-inner #comments-text'+index).append(user + ': ' + comment + '<br>');
+        }
     });
 }
 

@@ -33,18 +33,27 @@
 
 textarea {
   resize: none;
+  width: 90%;
+  margin: 10px;
 }
+
+/*textarea:focus {
+  height: 90px;
+}*/
 
 .comment-form {
   position: relative;
+  padding: 10px;
 }
 
 .submit-comment {
   border-radius: 6px;
   height: 30px;
-  position: absolute;
+  width: 90%;
+  margin-top: 10px;
+  /*position: absolute;
   top: 30%;
-  margin-left: 10px;
+  margin-left: 10px;*/
 }
 
 #feature-header {

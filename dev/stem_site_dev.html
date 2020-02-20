@@ -138,16 +138,17 @@
             </span></a>
             <div id='comments-box@index' hidden>
               <div id='comments-text@index'>
-                <h4>Detailed comments and leave your own:</h4><br>
+                <h4>Comments sample:</h4><br>
                 User 1: Great activity!<br>
                 User 2: Could use a better lesson plan.<br>
                 User 3: I liked this activity a lot. One thing I'd like to provide constructive feedback on is the Google Doc format. I'd prefer a PDF.<br>
               </div>
               <!-- <input type='text' value='Leave a comment here'> -->
-              <div class='comment-form'>
-                <textarea rows='4' cols='60' placeholder="Leave a comment here" id='new-comm@index'></textarea>
+              <textarea rows='2' placeholder="Write a comment" id='new-comment@index'></textarea><br>
+              <div class='comment-form' id='comment-form@index' style="display: none">
                 <!-- <input type='text' id='comm-text-index' value="comment" /> -->
-                <input type="submit" class="submit-comment" id='post-comm@index' />
+                Name/ Organization: <input type='text' placeholder="Anonymous" id='comment-name@index' /><br>
+                <button class="submit-comment" id='post-comm@index'>Post Comment</button>
               </div>
             </div>
           </div>
