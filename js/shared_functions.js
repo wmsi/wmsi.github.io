@@ -375,7 +375,22 @@ function _clearTable() {
     $('.ligthbox-grid').remove();
 }
 
-
+/*
+    Re-set the tab indexes in lightbox functions so they don't all
+    have tabindex=-1. This is a known bug with featherlight as referenced here:
+    https://github.com/noelboss/featherlight/issues/285
+    TODO: make our own lightboxes to avoid dealing with this
+    @private
+*/
+function _fixTabIndex() {
+    $.featherlight.defaults.afterOpen = function() {
+        var count = 1;
+        new_lightbox = this;
+        this.$instance.find('input, textarea, button').each(function() {
+            $(this).attr('tabindex', count++);
+        });
+    };
+}
 
 
 

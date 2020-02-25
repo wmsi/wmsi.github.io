@@ -23,6 +23,15 @@
   z-index: -1;
 }
 
+.comments-box {
+  width: 60vw;
+}
+
+.comments-box span {
+  width: 90%;
+  display: inline-block;
+}
+
 /* tooltip position */
 .comment {
   right: 0px;
@@ -94,7 +103,8 @@ textarea {
 }
 
 .grid-container {
-  grid-template-columns: auto 200px auto auto auto 80px 120px;
+  /*grid-template-columns: auto 200px auto auto auto 80px 120px;*/
+  grid-template-columns: 25% 15% 8% 15% 15% 6% 12%; /* 4% */
 }
 
 #results {

@@ -16,10 +16,13 @@ $(document).ready(function(){
         $('#materials-filter').children().prop('checked', false);
     });
     _bindScrollClicks();
+    _fixTabIndex();
 });
 
 /*
-    Handle events related to dev features menu in bottom left of page
+    Handle events related to dev features menu footer #dev-menu
+    Users can click checkbox to toggle dev features on and off,
+    allowing for easier comparison of appearance/ behavior
 */
 function setupDevMenu() {
     $('#top-carousel-toggle').click(function() {
@@ -45,6 +48,10 @@ function setupDevMenu() {
         else 
             $('#sort-results').hide();
     });
+    $('#hover-comments').click(function() {
+        $('.comment-tooltip').toggleClass('tooltip');
+        $('.comment').toggle();
+    })
 }
 
 
@@ -82,24 +89,38 @@ function _buildTable(search_results) {
     _postRatings(search_results);
 }
 
+/*
+    Render the comments section for an activity. At this point
+    comments may be displayed as a preview (tooltip) with mouse hover,
+    or as a ligthbox with full comments and form to leave your own 
+    (triggered on mouse click).
+    @param {object} resource - resource to render comments for
+    @param {int} index - index of the resource for creating IDs
+    @pricate
+*/
 function _commentSection(resource, index) {
-    var element = "<span class='item'>" + $('#comments-img').html() + "</span>";
+    var element = "<span class='item'>" + $('#comments-template').html() + "</span>";
     // make sure each tooltip positions on top of other elements
     element = element.replace('*pos', 200-index);
     element = element.replace(/@index/g, index);
     $('#content').append(element);
+    var comments_markup = '';
 
     // resource.Comments.forEach(comment =>  {
     if(resource.Comments != undefined) {
-        console.log('parsing comments for ' + resource["Resource Name"] + ': ' + resource.Comments);
         var comments = JSON.parse('['+resource.Comments+']');
         comments.forEach(comment =>  {
-            console.log(comment);
-            $('#comments-text'+index).append(comment[0] + ': ' + comment[1] + '<br>');
+            comments_markup += comment[0] + ': ' + comment[1] + '<br>';
+            // $('#comments-text'+index).append(comment[0] + ': ' + comment[1] + '<br>');
         });
+        var comments_preview = comments_markup.slice(0, 160) + '...';
+        $('#comment-hover'+index).find('b').nextAll().remove();
+        $('#comment-hover'+index).find('b').after(comments_preview);
+        $('#comments-text'+index).find('h4').nextAll().remove();
+        $('#comments-text'+index).find('h4').after(comments_markup);
     }
 
-    var id = '#post-comm' + index;
+    // var id = '#post-comm' + index;
     var text_id = '#new-comment' + index; //.featherlight-inner 
     var form_id = '.featherlight-inner #comment-form'+index;
     $(form_id).hide();
@@ -109,20 +130,29 @@ function _commentSection(resource, index) {
         $(form_id).show()}
     );
     // $(text_id).unbind('focusout').focusout(function() {$(form_id).hide()});
+    _postComment(index, resource);
+}
 
+function _postComment(index, resource) {
+    var id = '#post-comm' + index;
     $(id).unbind('click').click(function() {
         var comment = $('.featherlight-inner #new-comment' + index).val();
         var user = $('.featherlight-inner #comment-name' + index).val();
         user = (user == "" ? "Anonymous" : user);
         if(comment != '') {
+            var formatted_comment = '["' + user + '", "' + comment + '"]';
             console.log('posting comment: '+ comment +' to airtable from user ' + user);
+            if(resource.Comments)
+                resource.Comments = resource.Comments + ', ' + formatted_comment;
+            else
+                resource.Comments = formatted_comment
             $.ajax({
                     type: 'POST',
                     url: 'https://wmsinh.org/airtable',
                     // url: 'http://localhost:5000/airtable',
                     data: {
                         "id": resource.id,
-                        "Comment": '["' + user + '", "' + comment + '"]'//comment
+                        "Comment": formatted_comment
                     }
                 });
             $('.featherlight-inner #comments-text'+index).append(user + ': ' + comment + '<br>');
