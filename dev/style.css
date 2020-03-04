@@ -52,6 +52,11 @@
   justify-self: stretch;
 }
 
+.item-header small {
+  font-weight: normal;
+  font-size: 10px;
+}
+
 #results {
   position: relative;
 }
