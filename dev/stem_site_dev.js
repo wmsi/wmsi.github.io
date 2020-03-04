@@ -113,11 +113,16 @@ function _commentSection(resource, index) {
             comments_markup += comment[0] + ': ' + comment[1] + '<br>';
             // $('#comments-text'+index).append(comment[0] + ': ' + comment[1] + '<br>');
         });
-        var comments_preview = comments_markup.slice(0, 160) + '...';
-        $('#comment-hover'+index).find('b').nextAll().remove();
-        $('#comment-hover'+index).find('b').after(comments_preview);
-        $('#comments-text'+index).find('h4').nextAll().remove();
-        $('#comments-text'+index).find('h4').after(comments_markup);
+        var comments_preview = '<b>User comments preview:</b><br>' + comments_markup.slice(0, 160) + '...';
+        $('#comment-hover'+index).children().remove();
+        $('#comment-hover'+index).append(comments_preview);
+        $('#comments-text'+index).children().remove();
+        $('#comments-text'+index).append('<h4>User Comments:</h4><br>' + comments_markup);
+
+        // $('#comment-hover'+index).find('b').nextAll().remove();
+        // $('#comment-hover'+index).find('b').after(comments_preview);
+        // $('#comments-text'+index).find('h4').nextAll().remove();
+        // $('#comments-text'+index).find('h4').after(comments_markup);
     }
 
     // var id = '#post-comm' + index;
