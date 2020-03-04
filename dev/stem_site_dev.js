@@ -118,11 +118,6 @@ function _commentSection(resource, index) {
         $('#comment-hover'+index).append(comments_preview);
         $('#comments-text'+index).children().remove();
         $('#comments-text'+index).append('<h4>User Comments:</h4><br>' + comments_markup);
-
-        // $('#comment-hover'+index).find('b').nextAll().remove();
-        // $('#comment-hover'+index).find('b').after(comments_preview);
-        // $('#comments-text'+index).find('h4').nextAll().remove();
-        // $('#comments-text'+index).find('h4').after(comments_markup);
     }
 
     // var id = '#post-comm' + index;

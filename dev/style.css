@@ -114,14 +114,6 @@ textarea {
 #sort-results {
   width: 300px;
 }
-
-#results-meta {
-  grid-column: 2;
-  padding-left: 20px; 
-  font-weight: bold;
-  align-self: center;
-}
-
 #results-per-page {
   grid-column: -1;
 
