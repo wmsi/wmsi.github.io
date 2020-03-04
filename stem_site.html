@@ -106,26 +106,38 @@
       <span class="item-header">Subject
         <span class="sort" id="subject"><i class="up"></i><i class="down"></i></span>
       </span>
-      <span class="item-header">Rating
-        <span class="sort" id="rating"><i class="up"></i><i class="down"></i></span>
-      </span> 
       <span class="item-header">Info</span> 
+      <span class="item-header">Comments</span> 
     </div>
   </div>
   <div id="templates" hidden>
-    <div id="stars-template" hidden>
-        <span class='stars' id="stars-id">
-          <span class="star" id="star5">★</span>
-          <span class="star" id="star4">★</span>
-          <span class="star" id="star3">★</span>
-          <span class="star" id="star2">★</span>
-          <span class="star" id="star1">★</span>
-        </span>
-        <small class="item-center">rating/5 by num</small>
+    <div id="comment-template">
+      <!-- https://www.visualpharm.com/free-icons/comments-595b40b65ba036ed117d396b -->
+      <div class="comment-tooltip" style='z-index: *pos'>
+        <a href='#' data-featherlight='#comment-box@index'>
+          <img src='images/comments.png' class='comment-img'>
+          <span class="badge" id='comment-badge@index'></span>
+          <!-- <span class="tooltiptext comment" id="comment-hover@index">
+            <span><b>User Comments will appear here</b></span>
+          </span> -->
+        </a>
+        <div class="comment-box" id='comment-box@index' hidden>
+          <div id='comment-text@index'>
+            <h4>Be the first to add a comment!</h4><br>
+          </div>
+          <!-- <input type='text' value='Leave a comment here'> -->
+          <textarea rows='2' placeholder="Write a comment" id='new-comment@index' tabindex="1"></textarea><br>
+          <div class='comment-form' id='comment-form@index' style="display: none">
+            <!-- <input type='text' id='comm-text-index' value="comment" /> -->
+            Name/ Organization: <input type='text' placeholder="Anonymous" id='comment-name@index' tabindex="2"/><br>
+            <button class="submit-comment" id='post-comment@index' tabindex="3">Post Comment</button>
+          </div>
+        </div>
+      </div>
     </div>
     <div id="info-lightbox-template">
       <div class="*class" id="*id" hidden>
-          <a target="_blank" href="*link"><img class="lightbox" src="*img"><span align="center"><h3>*title</h3><span></span></span></a>
+          <a target="_blank" href="*link"><img class="lightbox" *img><span align="center"><h3>*title</h3><span></span></span></a>
           <br>
           <span><center>*description</center></span><br><hr>
           <span>This activity requires the following materials: *materials</span><br>

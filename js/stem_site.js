@@ -138,11 +138,12 @@ function _buildFeatures(features) {
                     <b>Subject: </b>`+ subjects +`<br />
                     <b>Materials: </b>`+ features[i]["Materials"] +`<br />
                     <b>Author: </b><a href="`+ features[i]["Source Link"] +`">`+ features[i]["Source"] +`</a><br>   
-                    <b>Rating: </b>` + _starsMarkup(features[i]) + `
                 </div>`;
+                    // <b>Rating: </b>` + _starsMarkup(features[i]) + `
+                
         $(this).append(feature_div);
     });
-    _postRatings(features);
+    // _postRatings(features);
 }
 
 /*                        DEPRECATED                  */

@@ -13,8 +13,8 @@
   grid-column: 1 / -1;
   /*grid-column-gap: 10px;*/
   grid-row-gap: 10px;
-  grid-template-columns: auto 200px auto auto auto 110px 80px;
-  /*grid-template-columns: 15% 10% 8% 10% 15% 8% 10%;*/
+  /*grid-template-columns: auto 200px auto auto auto 110px 80px;*/
+  grid-template-columns: 25% 15% 8% 15% 15% 6% 12%; /* 4% */
   /*background-color: #2196F3;*/
   padding: 20px;
 }
@@ -66,6 +66,13 @@ h3, h4 {
   padding-left: 10px;
 }
 
+#results-meta {
+  grid-column: 2;
+  padding-left: 20px; 
+  font-weight: bold;
+  align-self: center;
+}
+
 .item-header {
   font-weight: bold;
   font-size: 18px;
@@ -83,6 +90,16 @@ h3, h4 {
 
 .item-center {
   justify-self: center;
+}
+
+.badge {
+  position: absolute;
+  top: 10%;
+  right: 10%;
+  padding: 5px 10px;
+  border-radius: 50%;
+  background: red;
+  color: white;
 }
 
 .featherlight-content {
@@ -158,48 +175,6 @@ hr {
   grid-template-columns: 40% auto auto auto;
 }
 
-/* stars styling for activity ratings */
-.stars {
-  display: inline-block;
-  direction: rtl;
-  justify-self: center;
-}
-
-.star {
-  color: #ddd;
-  cursor: pointer;
-  font-size: 14px;
-}
-.star:hover,
-.star:hover ~ span {
-  color: #f1c40f;
-}
-
-.tooltip {
-  position: relative;
-  display: inline-block;
-  border-bottom: 1px dotted black;
-  opacity: 100;
-  z-index: 1;
-}
-
-.tooltip .tooltiptext {
-  visibility: hidden;
-  width: 240px;
-  background-color: black;
-  color: #fff;
-  text-align: center;
-  border-radius: 6px;
-  padding: 5px 0;
-  position: absolute;
-}
-
-  /* Position the tooltip */
-.experience {
-  top: -100px;
-  right: 105%;
-}
-
 .item-header {
   position: relative;
 }
@@ -230,6 +205,33 @@ hr {
   bottom: 30%;
 }
 
+/*            Tooltip Text              */
+
+.tooltip {
+  position: relative;
+  display: inline-block;
+  border-bottom: 1px dotted black;
+  opacity: 100;
+  z-index: 1;
+}
+
+.tooltip .tooltiptext {
+  visibility: hidden;
+  width: 240px;
+  background-color: black;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 5px 0;
+  position: absolute;
+}
+
+  /* Position the tooltip */
+.experience {
+  top: -100px;
+  right: 105%;
+}
+
 .self-led {
   left: -5px;
   top: 20px;
@@ -239,6 +241,57 @@ hr {
   visibility: visible;
 }
 
+/*            Comments              */
+.comment-tooltip {
+  position: relative;
+  width: 100px;
+  margin: auto;
+}
+
+.comment-img {
+  width: 60px;
+  display: grid;
+  margin-left: auto;
+  margin-right: auto;
+  z-index: -1;
+}
+
+.comment-box {
+  width: 60vw;
+}
+
+.comment-box span {
+  width: 90%;
+  display: inline-block;
+}
+
+/* tooltip position */
+.comment {
+  right: 0px;
+  top: 0px;
+  width: 300px !important;
+  z-index: 1000;
+}
+
+textarea {
+  resize: none;
+  width: 90%;
+  margin: 10px;
+}
+
+.comment-form {
+  position: relative;
+  padding: 10px;
+}
+
+.submit-comment {
+  border-radius: 6px;
+  height: 30px;
+  width: 90%;
+  margin-top: 10px;
+}
+
+/*          Footer              */
 .footer {
   position: fixed;
   bottom: 5;
@@ -299,4 +352,21 @@ hr {
   100% {
     transform: rotate(360deg);
   }
+}
+
+/*        Stars for Ratings DEPRECATED        */
+.stars {
+  display: inline-block;
+  direction: rtl;
+  justify-self: center;
+}
+
+.star {
+  color: #ddd;
+  cursor: pointer;
+  font-size: 14px;
+}
+.star:hover,
+.star:hover ~ span {
+  color: #f1c40f;
 }

@@ -53,8 +53,8 @@ function _buildTable(search_results) {
         if(resource['Tags'].includes('incomplete')) 
             activity_link = _adaptActivity(resource, index);
             // activity_link = _adaptActivity(activity_link.replace(" class='item'",""), index, resource["Resource Name"]);
-        else
-            console.log('building activity with link ' + activity_link);
+        // else
+        //     console.log('building activity with link ' + activity_link);
         
         new_elements = activity_link;
         author_link = '<a target="_blank" href="' + resource["Source Link"] + '">' + resource["Source"] + '</a>'
@@ -62,15 +62,89 @@ function _buildTable(search_results) {
         new_elements += grid_item.replace('*', resource["Duration"]);
         new_elements += grid_item.replace('*', resource["Experience"]);
         new_elements += grid_item.replace('*', resource["Subject"]);
-        new_elements += grid_item.replace('*', _starsMarkup(resource));
+        // new_elements += grid_item.replace('*', _starsMarkup(resource));
         new_elements += grid_item.replace('*',  "<center><big><a href='#' data-featherlight='#resource" + index + "'>&#9432;</a></big></center>");
         // $('.grid-container').append(new_elements); 
         $('#content').append(new_elements); 
         _addLightbox(resource, index);
+        _commentSection(resource, index);
     }); 
-    _postRatings(search_results);
+    // _postRatings(search_results);
 }
 
+/*
+    Render the comments section for an activity. At this point
+    comments may be displayed as a preview (tooltip) with mouse hover,
+    or as a ligthbox with full comments and form to leave your own 
+    (triggered on mouse click).
+    @param {object} resource - resource to render comments for
+    @param {int} index - index of the resource for creating IDs
+    @pricate
+*/
+function _commentSection(resource, index) {
+    var element = "<span class='item'>" + $('#comment-template').html() + "</span>";
+    
+    // make sure each tooltip positions on top of other elements
+    element = element.replace('*pos', 200-index);
+    element = element.replace(/@index/g, index);
+    $('#content').append(element);
+    var comments_markup = '';
+
+    if(resource.Comments != undefined) {
+        var comments = JSON.parse('['+resource.Comments+']');
+        comments.forEach(comment => {comments_markup += comment[0] + ': ' + comment[1] + '<br>'});
+        var comments_preview = '<b>User comments preview:</b><br>' + comments_markup.slice(0, 160) + '...';
+        $('#comment-hover'+index).children().remove();
+        $('#comment-hover'+index).append(comments_preview);
+        $('#comment-text'+index).children().remove();
+        $('#comment-text'+index).append('<h4>User Comments:</h4><br>' + comments_markup);
+        $('#comment-badge'+index).html(comments.length.toString());
+    }
+
+    var text_id = '#new-comment' + index; 
+    var form_id = '.featherlight-inner #comment-form'+index;
+    $(form_id).hide();
+    $(text_id).unbind('focus').focus(function() {
+        $(this).css('height','90px');
+        $(form_id).show()}
+    );
+    _postComment(index, resource);
+}
+
+/*
+    Handle the event of a user posting a new comment on an activity
+    When a user clicks the Post Comment button parse the comment text 
+    and send it to Airtable
+    @param {int} index - index of activity in the table, used to make IDs
+    @param {object} resource - resource object to post comment for
+    @private
+*/
+function _postComment(index, resource) {
+    var id = '#post-comment' + index;
+    $(id).unbind('click').click(function() {
+        var comment = $('.featherlight-inner #new-comment' + index).val();
+        var user = $('.featherlight-inner #comment-name' + index).val();
+        user = (user == "" ? "Anonymous" : user);
+        if(comment != '') {
+            var formatted_comment = '["' + user + '", "' + comment + '"]';
+            console.log('posting comment: '+ comment +' to airtable from user ' + user);
+            if(resource.Comments)
+                resource.Comments = resource.Comments + ', ' + formatted_comment;
+            else
+                resource.Comments = formatted_comment
+            $.ajax({
+                    type: 'POST',
+                    url: 'https://wmsinh.org/airtable',
+                    // url: 'http://localhost:5000/airtable',
+                    data: {
+                        "id": resource.id,
+                        "Comment": formatted_comment
+                    }
+                });
+            $('.featherlight-inner #comment-text'+index).append(user + ': ' + comment + '<br>');
+        }
+    });
+}
 
 /* 
     Reset all filters to their default values
@@ -295,7 +369,7 @@ function _adaptLightbox(resource) {
     @private
 */
 function _adaptActivity(resource, index) {
-    console.log('adapting template for ' + resource["Resource Name"]);
+    // console.log('adapting template for ' + resource["Resource Name"]);
     var markup = $('#adapt-lightbox-template').html();
     markup = markup.replace(/@id/g, 'adapt'+index);
     markup = markup.replace('*class', 'item');
