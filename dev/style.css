@@ -15,6 +15,7 @@
   z-index: 1000;
 }
 
+/*      Featured Activities      */
 #feature-header {
   width: auto;
 }
@@ -52,24 +53,22 @@
   justify-self: stretch;
 }
 
+/*      Item Header sub text        */
 .item-header small {
   font-weight: normal;
   font-size: 10px;
 }
 
-#results {
-  position: relative;
-}
-
+/* sizing for sort drop down menu */
 #sort-results {
   width: 300px;
 }
 
-#results-per-page {
+/*#results-per-page {
   grid-column: -1;
+}*/
 
-}
-
+/*        Scroll Arrows for Carousel        */
 .scroll {
   font-size: 40px;
   position: absolute;
@@ -92,7 +91,7 @@
   top: 120px;
 }
 
-.filter-row-stretch {
+/*.filter-row-stretch {
   grid-row: 1 / span 2;
   grid-column: 4;
-}
+}*/

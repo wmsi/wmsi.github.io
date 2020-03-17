@@ -7,7 +7,6 @@
     Obtain search results and cache them locally while displaying pages one at a time
     @param {int} page_size - number of results to render per page
     @param {int} page - page number <-- deprecated?
-    TODO: how do we implement sort with the page by page approach?
 */
 function renderPages(page_size=50, page=0) {
     var query_string = _getQueryString();
@@ -79,10 +78,13 @@ function _buildTable(search_results) {
     (triggered on mouse click).
     @param {object} resource - resource to render comments for
     @param {int} index - index of the resource for creating IDs
-    @pricate
+    @private
+    TODO: simplify comment adding conditional to be more like _addFeatureComments
 */
 function _commentSection(resource, index) {
     var element = "<span class='item'>" + $('#comment-template').html() + "</span>";
+    var text_id = '#new-comment' + index; 
+    var form_id = '.featherlight-inner #comment-form'+index;
     
     // make sure each tooltip positions on top of other elements
     element = element.replace('*pos', 200-index);
@@ -100,14 +102,11 @@ function _commentSection(resource, index) {
         $('#comment-text'+index).append('<h4>User Comments:</h4><br>' + comments_markup);
         $('#comment-badge'+index).html(comments.length.toString());
     }
-
-    var text_id = '#new-comment' + index; 
-    var form_id = '.featherlight-inner #comment-form'+index;
-    $(form_id).hide();
+    // $(form_id).hide();
     $(text_id).unbind('focus').focus(function() {
         $(this).css('height','90px');
-        $(form_id).show()}
-    );
+        $(form_id).show();
+    });
     _postComment(index, resource);
 }
 
@@ -142,6 +141,9 @@ function _postComment(index, resource) {
                     }
                 });
             $('.featherlight-inner #comment-text'+index).append(user + ': ' + comment + '<br>');
+            console.log('clearing fields');
+            $('.featherlight-inner #new-comment'+index).val('');
+            $('.featherlight-inner #comment-name'+index).val('');
         }
     });
 }
