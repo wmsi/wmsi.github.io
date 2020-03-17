@@ -141,7 +141,6 @@ function _postComment(index, resource) {
                     }
                 });
             $('.featherlight-inner #comment-text'+index).append(user + ': ' + comment + '<br>');
-            console.log('clearing fields');
             $('.featherlight-inner #new-comment'+index).val('');
             $('.featherlight-inner #comment-name'+index).val('');
         }
