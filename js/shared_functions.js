@@ -447,7 +447,7 @@ function _displayLoading(loading) {
 */
 function _clearTable() {
     $('.item').remove();
-    $('.ligthbox-grid').remove();
+    $('.lightbox-grid').remove();
 }
 
 /*
