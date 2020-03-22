@@ -88,6 +88,8 @@ function _commentSection(resource, index) {
     
     // make sure each tooltip positions on top of other elements
     element = element.replace('*pos', 200-index);
+    element = element.replace('*title', resource["Resource Name"]);
+    element = element.replace('*title', 200-index);
     element = element.replace(/@index/g, index);
     $('#content').append(element);
     var comments_markup = '';
@@ -143,6 +145,75 @@ function _postComment(index, resource) {
             $('.featherlight-inner #comment-text'+index).append(user + ': ' + comment + '<br>');
             $('.featherlight-inner #new-comment'+index).val('');
             $('.featherlight-inner #comment-name'+index).val('');
+        }
+    });
+}
+
+/*
+    Add Comment section to the bottom of a feature lightbox from the carousel
+    Comment form remains hidden until user clicks on the comment box
+    @param {object} resource - activity to build comments section for
+    @param {int} index - index of the resource in the features carousel
+    @private
+*/
+function _addFeatureComments(resource, index) {
+    // var comments = "";
+    var id = '#feature'+index;
+    // var comments = $('#comment-template .comment-box').html();
+    var comments = $('#feature-comment-template').html().replace(/@index/g, index);
+    var form_id = '.featherlight-inner #feature-comment-form'+index;
+    console.log('append comments' + comments +' to ' + id);
+    $(id).append(comments);
+    if(resource.Comments != undefined) {
+        // comments += "<b>User Comments: "
+        $(id + ' h4').empty().html("User Comments: ");
+        var comments = JSON.parse('['+resource.Comments+']');
+        console.log('appending ' + comments + ' to ' + id);
+        comments.forEach(comment => {$('#feature-comment-text' + index).append(comment[0] + ': ' + comment[1] + '<br>')});
+    } 
+
+    $('#feature-new-comment'+index).unbind('focus').focus(function() {
+        $(this).css('height','90px');
+        console.log('show '+form_id);
+        $(form_id).show();
+    });
+    _postFeatureComment(resource, index);
+}
+
+/*
+    Handle the event of a user posting a new comment on a featured activity
+    When a user clicks the Post Comment button parse the comment text 
+    and send it to Airtable
+    @param {int} index - index of activity in the table, used to make IDs
+    @param {object} resource - resource object to post comment for
+    @private
+    TODO: integrate this with _postComment()
+*/
+function _postFeatureComment(resource, index) {
+    var id = '#feature-post-comment' + index;
+    $(id).unbind('click').click(function() {
+        var comment = $('.featherlight-inner #feature-new-comment' + index).val();
+        var user = $('.featherlight-inner #feature-comment-name' + index).val();
+        user = (user == "" ? "Anonymous" : user);
+        if(comment != '') {
+            var formatted_comment = '["' + user + '", "' + comment + '"]';
+            console.log('posting comment: '+ comment +' to airtable from user ' + user);
+            if(resource.Comments)
+                resource.Comments = resource.Comments + ', ' + formatted_comment;
+            else
+                resource.Comments = formatted_comment
+            $.ajax({
+                    type: 'POST',
+                    url: 'https://wmsinh.org/airtable',
+                    // url: 'http://localhost:5000/airtable',
+                    data: {
+                        "id": resource.id,
+                        "Comment": formatted_comment
+                    }
+                });
+            $('.featherlight-inner #feature-comment-text'+index).append(user + ': ' + comment + '<br>');
+            $('.featherlight-inner #feature-new-comment'+index).val('');
+            $('.featherlight-inner #feature-comment-name'+index).val('');
         }
     });
 }

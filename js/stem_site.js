@@ -14,6 +14,7 @@ $(document).ready(function(){
     $('#uncheck-materials').click(function() {
         $('#materials-filter').children().prop('checked', false);
     });
+    _fixTabIndex();
 });
 
 /*
@@ -142,6 +143,7 @@ function _buildFeatures(features) {
                     // <b>Rating: </b>` + _starsMarkup(features[i]) + `
                 
         $(this).append(feature_div);
+        _addFeatureComments(features[i], i+1);
     });
     // _postRatings(features);
 }
