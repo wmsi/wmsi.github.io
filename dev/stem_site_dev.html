@@ -46,15 +46,20 @@
           <!-- <br /> -->
           <div class="tooltip">More info on Experience Level
             <span class="tooltiptext experience">Experience level is determined by school grade and STEM experience. Early Learners have no STEM experience and are usually in grades K-2. Beginners have little STEM experience and may be in grades 3-5, Intermediate means some experience or grades 6-8, and Advanced for solid STEM knowledge or grades 9+</span>
-          </div>
+          </div><br>
+          <div id="self-led-checkbox" class='tooltip' style="display: none;"><!-- self-led'-->
+          <input type='checkbox' id='self-led'>Search only Self Led Activities
+          <span class="tooltiptext self-led">Click here to search for activities that students should be able to run on their own.</span>
+        </div>
         </div>
         <div class="filters" id="materials-filter">
           <b>Materials Required: </b><br>
           <input type="checkbox" id="browser" checked> Computer w/ Browser<br>
           <input type="checkbox" id="tablet" checked> Tablet<br>
           <input type="checkbox" id="pen-paper" checked> Pen and Paper<br>
-          <input type="checkbox" id="craft" checked> Craft Supplies<br>
+          <input type="checkbox" id="craft" checked> Crafting Supplies<br>
           <input type="checkbox" id="robotics" checked> Robotics<br>
+          <input type="checkbox" id="lab-materials" checked> Lab Materials<br> 
           <button id="uncheck-materials">Uncheck All</button>
         </div>
         <div class="filters filter-row-stretch">
@@ -70,7 +75,7 @@
           <input type="checkbox" id="self-led">
         </div>
       </div>
-      <div style="width: 95vw" id='results' hidden>
+      <div style="width: 95vw" id='feature-container' hidden>
         <a class="scroll" id="scroll-left"><</a>
         <ul class="feature-list" id="feature-results">
         </ul>
@@ -92,8 +97,8 @@
           </select>
           <span id='results-meta'></span>
           <div id='page-buttons' class='page-controls'>
-            <button id='last-page'>Previous Page</button>
-            <button id='next-page'>Next Page</button>
+            <button class='last-page'>Previous Page</button>
+            <button class='next-page'>Next Page</button>
           </div>
           <select class="form-control form-control-lg page-controls" id="results-per-page">
             <option value="50">Results per Page</option>  <!-- default is 50 per page --> 
@@ -126,6 +131,32 @@
           <span class="item-header">Comments<br><small>Click to add comment</small></span> 
         </div>
       </div>
+      <div id='bottom-spacer'></div>
+      <div id='bottom-page-buttons' class='page-controls' style="display: none">
+        <button class='last-page'>Previous Page</button>
+        <button class='next-page'>Next Page</button>
+      </div>
+
+      <div id="dev-menu" class="footer footer-left"><span>Dev features menu: </span>
+        <span><input type="checkbox" id="top-carousel-toggle" checked> <label>Top Features Carousel</label></span>
+        <!-- <input type="checkbox" id="pages-toggle" checked> Paged Results -->
+        <span><input type="checkbox" id="sort-toggle" checked> <label>Sort Dropdown</label></span>
+        <span><input type="checkbox" id="hover-comments" checked> <label>Hover Comments</label></span>
+        <span></span>
+        <span><input type="checkbox" id="self-led-toggle" checked> <label>Self Led Button</label></span>
+        <span><input type="checkbox" id="features-toggle" checked> <label>Feature Carousel</label></span>
+      </div>
+
+      <div class="footer footer-right"><i>Find a broken link? Please <a href="https://www.whitemountainscience.org/contact-us" target="_blank">let us know</a> so we can fix it!</i></div>
+
+
+
+
+
+
+
+
+
 
       <div id="templates" hidden>
         <div id="comment-template">
@@ -144,7 +175,7 @@
                 <h4>Be the first to add a comment!</h4><br>
               </div>
               <!-- <input type='text' value='Leave a comment here'> -->
-              <textarea rows='2' placeholder="Write a comment" id='new-comment@index' tabindex="1"></textarea><br>
+              <textarea rows='2' class='comment-text' placeholder="Write a comment" id='new-comment@index' tabindex="1"></textarea><br>
               <div class='comment-form' id='comment-form@index' style="display: none">
                 <!-- <input type='text' id='comm-text-index' value="comment" /> -->
                 <b>Name/ Organization: </b><input type='text' placeholder="Anonymous" id='comment-name@index' tabindex="2"/><br>
@@ -200,15 +231,8 @@
           </div>
         </div>
       </div>
-      <div id="dev-menu" class="footer footer-left">Dev features menu: 
-        <input type="checkbox" id="top-carousel-toggle" checked> Top Features Carousel
-        <!-- <input type="checkbox" id="pages-toggle" checked> Paged Results -->
-        <input type="checkbox" id="sort-toggle" checked> Sort Dropdown
-        <input type="checkbox" id="hover-comments" checked> Hover Comments<br>
-        <input type="checkbox" id="self-led-toggle" checked> Self Led Filter
-        <input type="checkbox" id="features-toggle" checked> Featured Activities Carousel
-      </div>
-      <div class="footer footer-right"><i>Find a broken link? Please <a href="https://www.whitemountainscience.org/contact-us" target="_blank">let us know</a> so we can fix it!</i></div>
+
+
     <script src="https://code.jquery.com/jquery-latest.js"></script>
     <script type="text/javascript" src="https://netdna.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
     <script src="../js/featherlight.js"></script>

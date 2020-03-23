@@ -27,8 +27,8 @@ $(document).ready(function(){
 function renderTable() {
     _clearTable();
     var query_string = _getQueryString();
-    if(query_string == 'AND)')
-        return;
+    // if(query_string == 'AND)')
+    //     return;
     console.log('filter by formula: ' + query_string);
     $('.grid-container').show();
     var search_results = [];
@@ -73,26 +73,6 @@ function _manageTableLocal(search_results, page_size, page=0, sort=true) {
 }
 
 /*
-    Render 3 Featured Activities at the top of the page. 
-    Call helper function to build ordered list of relevant features 
-    based on ratings and other criteria.
-    @param {array} search_results - list of activites returned based on a user search
-
-    TODO: Refine selection criteria, limit duplicate Source
-*/
-function _renderFeatures(search_results) {
-    console.log('rendering features');
-    feature_list = _buildFeatureList(search_results);
-    // console.log('building ' + feature_list.length + ' features');
-    if(feature_list.length == 0)
-        $('#feature-container').hide();
-    else {
-        $('#feature-container').show();
-        _buildFeatures(feature_list);
-    }
-}
-
-/*
     Add 3 features to the top of the page. 
     For now these can be any activities with thumbnails in the base.
     @private
@@ -113,39 +93,6 @@ function _setupFeatures() {
         console.log('building from ' + feature_list.length + ' features');
         _buildFeatures(feature_list);
     });
-}
-
-/*
-    Create three features to appear above the table. Features can fit whatever criteria we want-
-    Right now the first one always comes from a list of 'best authors' and the other two are random
-    @param {array} features - a list of activities that could be used as features. Currently this
-        is all activities with an "Img URL" field
-    @private
-*/
-function _buildFeatures(features) {
-    $(".featured-activity").each(function(i) {
-        $(this).empty();
-        if(!features[i])
-            return true;
-        var feature_id = 'feature' + (i + 1);
-        var subjects = Array.isArray(features[i]["Subject"]) ? features[i]["Subject"].join(", ") : features[i]["Subject"];
-        var feature_div = `
-            <a href="#" data-featherlight="#`+ feature_id +`"><div class="feature"><img class="feature" src="`+ features[i]["Thumbnail"][0].url +`" /></div><br />
-            <span>`+ features[i]["Resource Name"] +`</span></a>
-                <div style="display: none"><div id="`+ feature_id +`" style="padding: 10px;">
-                    <h3><a target="_blank" href="`+ features[i]["Resource Link"] +`">`+ features[i]["Resource Name"] +`</a></h3>
-                    <br />`+ features[i]["Description"] +`<br /><br />
-                    <b>Experience: </b>`+ features[i]["Experience"] +`<br />
-                    <b>Subject: </b>`+ subjects +`<br />
-                    <b>Materials: </b>`+ features[i]["Materials"] +`<br />
-                    <b>Author: </b><a href="`+ features[i]["Source Link"] +`">`+ features[i]["Source"] +`</a><br>   
-                </div>`;
-                    // <b>Rating: </b>` + _starsMarkup(features[i]) + `
-                
-        $(this).append(feature_div);
-        _addFeatureComments(features[i], i+1);
-    });
-    // _postRatings(features);
 }
 
 /*                        DEPRECATED                  */

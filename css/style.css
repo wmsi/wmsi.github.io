@@ -1,23 +1,4 @@
-#feature-container {
-  padding-bottom: 20px;
-}
 
-.features {
-  display: inline-grid;
-  grid-template-columns: auto auto auto;
-  width: 100%;
-}
-
-.featured-activity span {
-  justify-self: start;
-}
-
-.self-led {
-  /*margin-bottom: 20px;*/
-  /*left: -5px;*/
-  top: -10px;
-  left: -150%;
-}
 
 /* DEPRECATED */
 

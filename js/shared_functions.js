@@ -1,7 +1,7 @@
 // Shared functions between different versions of the STEM Resource Table (ie master and dev branches)
 //TODO: reorder functions from most- to least-used
 
-
+var fav_sources = ["WMSI", "STEAM Discovery Lab", "NASA", "code.org"];
 
 /*
     Obtain search results and cache them locally while displaying pages one at a time
@@ -31,7 +31,7 @@ function renderPages(page_size=50, page=0) {
         _manageTableLocal(search_results, page_size);
         _renderFeatures(search_results);
         _displayLoading(false);
-        document.querySelector('#results').scrollIntoView({ 
+        document.querySelector('#feature-container').scrollIntoView({ 
           behavior: 'smooth' 
         });
     });
@@ -85,14 +85,15 @@ function _commentSection(resource, index) {
     var element = "<span class='item'>" + $('#comment-template').html() + "</span>";
     var text_id = '#new-comment' + index; 
     var form_id = '.featherlight-inner #comment-form'+index;
+    var comments_markup = '';
     
     // make sure each tooltip positions on top of other elements
     element = element.replace('*pos', 200-index);
     element = element.replace('*title', resource["Resource Name"]);
     element = element.replace('*title', 200-index);
     element = element.replace(/@index/g, index);
+
     $('#content').append(element);
-    var comments_markup = '';
 
     if(resource.Comments != undefined) {
         var comments = JSON.parse('['+resource.Comments+']');
@@ -109,22 +110,27 @@ function _commentSection(resource, index) {
         $(this).css('height','90px');
         $(form_id).show();
     });
-    _postComment(index, resource);
+    _postComment(resource, index);
 }
 
 /*
-    Handle the event of a user posting a new comment on an activity
+    Handle the event of a user posting a new comment on a featured activity
     When a user clicks the Post Comment button parse the comment text 
     and send it to Airtable
     @param {int} index - index of activity in the table, used to make IDs
     @param {object} resource - resource object to post comment for
     @private
+    TODO: integrate this with _postComment(), shorter ID names?
 */
-function _postComment(index, resource) {
-    var id = '#post-comment' + index;
+function _postComment(resource, index, feature = false) {
+    // var id = '#feature-post-comment' + index;
+    var id = (feature ? '#feature-post-comment' + index : '#post-comment' + index);
+    var comment_id = (feature ? '#feature-new-comment' + index : '#new-comment' + index);
+    var user_id = (feature ? '#feature-comment-name' + index : '#comment-name' + index);
+
     $(id).unbind('click').click(function() {
-        var comment = $('.featherlight-inner #new-comment' + index).val();
-        var user = $('.featherlight-inner #comment-name' + index).val();
+        var comment = $('.featherlight-inner ' + comment_id).val();
+        var user = $('.featherlight-inner ' + user_id).val();
         user = (user == "" ? "Anonymous" : user);
         if(comment != '') {
             var formatted_comment = '["' + user + '", "' + comment + '"]';
@@ -139,13 +145,70 @@ function _postComment(index, resource) {
                     // url: 'http://localhost:5000/airtable',
                     data: {
                         "id": resource.id,
-                        "Comment": formatted_comment
+                        "New Comment": formatted_comment
                     }
                 });
-            $('.featherlight-inner #comment-text'+index).append(user + ': ' + comment + '<br>');
-            $('.featherlight-inner #new-comment'+index).val('');
-            $('.featherlight-inner #comment-name'+index).val('');
+            // Wait for approval on new comments. Show some kind of success message that comment was received
+            var markup_id = '.featherlight-inner ' + (feature ? '#feature-' : '#') + 'comment-text' + index;
+            console.log('markup id: ' + markup_id);
+            $(markup_id).append('<b>Thanks for posting a comment! We will review your comment soon and put it right here.');
+            // $('.featherlight-inner #feature-comment-text'+index).append(user + ': ' + comment + '<br>');
+            $('.featherlight-inner ' + comment_id).val('');
+            $('.featherlight-inner ' + user_id).val('');
         }
+    });
+}
+
+/*
+    Render 3 Featured Activities at the top of the page. 
+    Call helper function to build ordered list of relevant features 
+    based on ratings and other criteria.
+    @param {array} search_results - list of activites returned based on a user search
+
+    TODO: Refine selection criteria, limit duplicate Source
+*/
+function _renderFeatures(search_results) {
+    console.log('rendering features');
+    feature_list = _buildFeatureList(search_results);
+    // console.log('building ' + feature_list.length + ' features');
+    if(feature_list.length == 0)
+        $('#feature-container').hide();
+    else {
+        $('#feature-container').show();
+        _buildFeatures(feature_list);
+    }
+}
+
+/*
+    Create three features to appear above the table. Features can fit whatever criteria we want-
+    Right now the first one always comes from a list of 'best authors' and the other two are random
+    @param {array} features - a list of activities that could be used as features. Currently this
+        is all activities with an "Img URL" field
+    @private
+    TODO: Use a template to make this cleaner
+*/
+function _buildFeatures(features) {
+    features = features.slice(0,3);
+    $('.features').empty();
+    features.map(function(item, i) {
+        var feature_id = 'feature' + i;
+        var subjects = Array.isArray(item["Subject"]) ? item["Subject"].join(", ") : item["Subject"];
+        var resource_link = '<a target="_blank" href="'+ item["Resource Link"] +'">'+ item["Resource Name"] +'</a>';
+        var feature_div = `
+        <div class='featured-activity' id='featurediv`+i+`'>
+        <a href="#" data-featherlight="#`+ feature_id +`"><div class="feature"><img class="feature" src="` + item.Thumbnail[0].url + `" /></div><br>
+            <span class="feature-link">`+ item["Resource Name"] +`</span></a>
+            <div style="display: none"><div id="`+ feature_id +`" style="padding: 10px;">
+                <h3>` + resource_link + `</h3>
+                <br />`+ item["Description"] +`<br /><br />
+                <b>Experience Level: </b>`+ item["Experience"] +`<br />
+                <b>Subject: </b>`+ subjects +`<br />
+                <b>Materials: </b>`+ features[i]["Materials"] +`<br />
+                <b>Author: </b><a href="`+ features[i]["Source Link"] +`">`+ features[i]["Source"] +`</a><br>   
+            </div>
+        </div>`; 
+        $('.features').append(feature_div);
+        _addFeatureComments(item, i);
     });
 }
 
@@ -162,60 +225,20 @@ function _addFeatureComments(resource, index) {
     // var comments = $('#comment-template .comment-box').html();
     var comments = $('#feature-comment-template').html().replace(/@index/g, index);
     var form_id = '.featherlight-inner #feature-comment-form'+index;
-    console.log('append comments' + comments +' to ' + id);
     $(id).append(comments);
     if(resource.Comments != undefined) {
         // comments += "<b>User Comments: "
         $(id + ' h4').empty().html("User Comments: ");
         var comments = JSON.parse('['+resource.Comments+']');
-        console.log('appending ' + comments + ' to ' + id);
+        // console.log('appending ' + comments + ' to ' + id);
         comments.forEach(comment => {$('#feature-comment-text' + index).append(comment[0] + ': ' + comment[1] + '<br>')});
     } 
 
     $('#feature-new-comment'+index).unbind('focus').focus(function() {
         $(this).css('height','90px');
-        console.log('show '+form_id);
         $(form_id).show();
     });
-    _postFeatureComment(resource, index);
-}
-
-/*
-    Handle the event of a user posting a new comment on a featured activity
-    When a user clicks the Post Comment button parse the comment text 
-    and send it to Airtable
-    @param {int} index - index of activity in the table, used to make IDs
-    @param {object} resource - resource object to post comment for
-    @private
-    TODO: integrate this with _postComment()
-*/
-function _postFeatureComment(resource, index) {
-    var id = '#feature-post-comment' + index;
-    $(id).unbind('click').click(function() {
-        var comment = $('.featherlight-inner #feature-new-comment' + index).val();
-        var user = $('.featherlight-inner #feature-comment-name' + index).val();
-        user = (user == "" ? "Anonymous" : user);
-        if(comment != '') {
-            var formatted_comment = '["' + user + '", "' + comment + '"]';
-            console.log('posting comment: '+ comment +' to airtable from user ' + user);
-            if(resource.Comments)
-                resource.Comments = resource.Comments + ', ' + formatted_comment;
-            else
-                resource.Comments = formatted_comment
-            $.ajax({
-                    type: 'POST',
-                    url: 'https://wmsinh.org/airtable',
-                    // url: 'http://localhost:5000/airtable',
-                    data: {
-                        "id": resource.id,
-                        "Comment": formatted_comment
-                    }
-                });
-            $('.featherlight-inner #feature-comment-text'+index).append(user + ': ' + comment + '<br>');
-            $('.featherlight-inner #feature-new-comment'+index).val('');
-            $('.featherlight-inner #feature-comment-name'+index).val('');
-        }
-    });
+    _postComment(resource, index, true);
 }
 
 /* 
@@ -233,6 +256,8 @@ function resetFilters() {
     Build a query string for the Airtable API. This query will take into account all filters 
     and the text-based search.
     @private
+
+    TODO: Do we want to require at least one search criteria?
 */
 function _getQueryString() {
     var query = "AND(";
@@ -253,8 +278,11 @@ function _getQueryString() {
 
     var split_index = query.lastIndexOf(',');
     query = query.slice(0, split_index) + ")";
+    
+    // Bring this back if we want to require search criteria (e.g. base gets large)
     if(query == "AND)")
-        alert('Please use at least one search option to find resources.');
+        query = "NOT({Resource Name}='')"
+    //     alert('Please use at least one search option to find resources.');
     return query;
 }
 
@@ -262,20 +290,34 @@ function _getQueryString() {
     Helper function for _getQueryString
     Compile all the materials checkboxes into part of the Airtable query
     @private
+
+    TODO: handle if user doesn't check any boxes, ask them to check at least one
 */
 function _getMaterialsQuery() {
     var query = "OR(";
+    var all_materials = true;
+    
+    // Check to see if all materials are selected
+    $('#materials-filter :checkbox').each(function(i, el) {
+        all_materials = $(this).is(':checked');
+        return all_materials;
+    });
+
+    if(all_materials)
+        return "";
 
     if($('#browser').is(':checked'))
         query += "Find('Computer w/ Browser', Materials), ";
     if($('#pen-paper').is(':checked'))
         query += "Find('Pen and Paper', Materials), ";
     if($('#craft').is(':checked'))
-        query += "Find('Craft Supplies', Materials), ";
+        query += "Find('Crafting Materials', Materials), ";
     if($('#tablet').is(':checked'))
         query += "Find('Tablet', Materials), ";
     if($('#robotics').is(':checked'))
         query += "Find('Robotics', Materials), ";
+    if($('#lab-materials').is(':checked'))
+        query += "Find('Lab Materials', Materials), ";
 
     if(query == "OR(")
         return "";
@@ -293,34 +335,42 @@ function _getMaterialsQuery() {
             Ideally we end up with one sort() and one filter()
 
     @param {list} search_results - list of resource objects returned from airtable search
+    @param {int} max - max number of features to return
     @returns {list} feature_list - featured activities sorted with most relevant towards the top
     @private
 */
-function _buildFeatureList(search_results) {
+function _buildFeatureList(search_results, max=100) {
     var feature_list = [];
+    var top_features = [];
+    search_results.sort(() => Math.random()-0.5);
+
     search_results.forEach(function(resource) {
+        // save Top Features from favorite sources
+        if(fav_sources.includes(resource.Source))
+            top_features.push(resource);
         // push all items to list that have a thumbnail and are not incomplete
-        if(resource.Thumbnail != undefined && !resource.Tags.includes('incomplete'))
+        else if(resource.Thumbnail != undefined && !resource.Tags.includes('incomplete'))
             feature_list.push(resource);
     });
 
-    // sort by rating
-    feature_list.sort(function(a, b) {
-        var a_rating = a.Rating == undefined ? 0 : a.Rating;
-        var b_rating = b.Rating == undefined ? 0 : b.Rating;
-        // take number of votes into account?
-
-        return b_rating - a_rating;
-    });
+    // randomize the results
+    // feature_list.sort(() => Math.random() -0.5);
 
     // no duplicate sources next to each other
-    return feature_list.filter(function(resource, i, feature_list) {
+    feature_list = feature_list.filter(function(resource, i, feature_list) {
         if(i == 0)
             return true;
         return !(resource.Source == feature_list[i-1].Source);
     });
 
-    // return feature_list;
+    // add Top Feature to beginning (just one for now)
+    if(top_features.length)
+        feature_list.unshift(top_features[0]);
+
+    if(max < feature_list.length)
+        feature_list = feature_list.slice(0, max);
+
+    return feature_list;
 }
 
 /*
@@ -365,39 +415,6 @@ function _sortResults(search_results, build=true) {
         return true;
     else
         return false;
-}
-
-/*
-    Handle an event when stars are clicked in order to post a new rating to Airtable
-    Post ratings using Ajax request to a secure API proxy, in order to hide API key
-    @param {array} search_results - list of resources returned by Airtable from a user-generated search
-    @private
-*/
-function _postRatings(search_results) {
-    $('.star').unbind('click').click(function() {
-        var name = $(this).parent().attr('id');
-        var rating = $(this).attr('id').split('star')[1];
-        if(confirm("Do you want to post a rating of " +rating+"/5 to "+name+"?")) {
-            var resource = search_results.find(x => x["Resource Name"] == name);
-            var votes = (resource.Votes == undefined ? 0 : resource.Votes);
-            var new_rating = (resource.Rating*votes + parseInt(rating))/(++votes);
-            if(resource.Rating == undefined) 
-                new_rating = parseInt(rating);
-            console.log('posting rating of ' + new_rating + ' based on ' + votes + ' votes');
-            _updateStars(this, name, new_rating, votes);
-
-            $.ajax({
-                type: 'POST',
-                url: 'https://wmsinh.org/airtable',
-                // url: 'http://localhost:5000/airtable',
-                data: {
-                    "id": resource.id,
-                    "Rating": new_rating,
-                    "Votes": votes
-                }
-            });
-        }
-    });
 }
 
 /*
@@ -459,25 +476,6 @@ function _adaptActivity(resource, index) {
 function showLightbox(index) {
     var id = '#resource' + index;
     $(id).show();
-}
-
-/*
-    Add rating column for an activity. As of 1/12/20 this feature is being
-    rendered as responsive stars to click for a rating and a number/10 
-    existing rating.
-    @param {object} resrouce - Airtable resource object
-    @private
-*/
-function _starsMarkup(resource) {
-    var markup = $('#stars-template').html().replace('stars-id', resource["Resource Name"]);
-    if(resource.Rating == undefined)
-        markup = markup.replace('rating/5 by num','');
-    else {
-        markup = markup.replace('rating', Number.isInteger(resource.Rating) ? resource.Rating : resource.Rating.toFixed(2));
-        markup = markup.replace('num', resource.Votes + (resource.Votes == 1 ? ' vote' : ' votes'));
-    }
-
-    return markup;
 }
 
 /*
@@ -606,16 +604,27 @@ function _createLocalButtons(search_results, page_size, page=0) {
     var next_page = (page+1)*page_size < search_results.length ? true : false;
     var last_page = page > 0 ? true : false;
     if(next_page) {
-        $('#next-page').unbind('click').click(function() {
+        $('.next-page').unbind('click').click(function() {
             _manageTableLocal(search_results, page_size, page+1);
+            document.querySelector('#feature-container').scrollIntoView({ 
+              behavior: 'smooth' 
+            });
         });
     }
 
     if(last_page) {
-        $('#last-page').unbind('click').click(function() {
+        $('.last-page').unbind('click').click(function() {
             _manageTableLocal(search_results, page_size, page-1);
+            document.querySelector('#feature-container').scrollIntoView({ 
+              behavior: 'smooth' 
+            });
         });
     }
+
+    if(next_page || last_page) 
+        $('#bottom-page-buttons').show();
+    else
+        $('#bottom-page-buttons').hide();
 
     _buttonCss(next_page, last_page);
 }
@@ -697,23 +706,6 @@ function _sortExperience(search_results, ascending) {
             return exp.indexOf(a_experience) - exp.indexOf(b_experience);
         else
             return exp.indexOf(b_experience) - exp.indexOf(a_experience);
-    });
-}
-
-/*
-    Sort results by Rating from high to low
-    Currently this is the default if no other sort is selected
-    @param {array} search_results - Airtable activities based on search options
-    @private
-*/
-function _sortRating(search_results, ascending=false) {
-    search_results.sort(function(a, b) {
-        var a_rating = a.Rating == undefined ? 0 : a.Rating;
-        var b_rating = b.Rating == undefined ? 0 : b.Rating;
-        if(ascending)
-            return a_rating - b_rating;
-        else
-            return b_rating - a_rating;
     });
 }
 
@@ -818,7 +810,156 @@ function _handleSearch() {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
 ////////////////////////////// DEPRECATED ////////////////////////////////////////
+
+/*
+    Handle the event of a user posting a new comment on an activity
+    When a user clicks the Post Comment button parse the comment text 
+    and send it to Airtable
+    @param {int} index - index of activity in the table, used to make IDs
+    @param {object} resource - resource object to post comment for
+    @private
+
+    Deprecated - new function posts to 'New Comments' pending approval and combines with features
+*/
+function _postCommentDEPRECATED(index, resource) {
+    var id = '#post-comment' + index;
+    $(id).unbind('click').click(function() {
+        var comment = $('.featherlight-inner #new-comment' + index).val();
+        var user = $('.featherlight-inner #comment-name' + index).val();
+        user = (user == "" ? "Anonymous" : user);
+        if(comment != '') {
+            var formatted_comment = '["' + user + '", "' + comment + '"]';
+            console.log('posting comment: '+ comment +' to airtable from user ' + user);
+            if(resource.Comments)
+                resource.Comments = resource.Comments + ', ' + formatted_comment;
+            else
+                resource.Comments = formatted_comment
+            $.ajax({
+                    type: 'POST',
+                    url: 'https://wmsinh.org/airtable',
+                    // url: 'http://localhost:5000/airtable',
+                    data: {
+                        "id": resource.id,
+                        "Comment": formatted_comment
+                    }
+                });
+            $('.featherlight-inner #comment-text'+index).append(user + ': ' + comment + '<br>');
+            $('.featherlight-inner #new-comment'+index).val('');
+            $('.featherlight-inner #comment-name'+index).val('');
+        }
+    });
+}
+
+/*
+    Handle an event when stars are clicked in order to post a new rating to Airtable
+    Post ratings using Ajax request to a secure API proxy, in order to hide API key
+    @param {array} search_results - list of resources returned by Airtable from a user-generated search
+    @private
+*/
+function _postRatings(search_results) {
+    $('.star').unbind('click').click(function() {
+        var name = $(this).parent().attr('id');
+        var rating = $(this).attr('id').split('star')[1];
+        if(confirm("Do you want to post a rating of " +rating+"/5 to "+name+"?")) {
+            var resource = search_results.find(x => x["Resource Name"] == name);
+            var votes = (resource.Votes == undefined ? 0 : resource.Votes);
+            var new_rating = (resource.Rating*votes + parseInt(rating))/(++votes);
+            if(resource.Rating == undefined) 
+                new_rating = parseInt(rating);
+            console.log('posting rating of ' + new_rating + ' based on ' + votes + ' votes');
+            _updateStars(this, name, new_rating, votes);
+
+            $.ajax({
+                type: 'POST',
+                url: 'https://wmsinh.org/airtable',
+                // url: 'http://localhost:5000/airtable',
+                data: {
+                    "id": resource.id,
+                    "Rating": new_rating,
+                    "Votes": votes
+                }
+            });
+        }
+    });
+}
+
+/*
+    Add rating column for an activity. As of 1/12/20 this feature is being
+    rendered as responsive stars to click for a rating and a number/10 
+    existing rating.
+    @param {object} resrouce - Airtable resource object
+    @private
+*/
+function _starsMarkup(resource) {
+    var markup = $('#stars-template').html().replace('stars-id', resource["Resource Name"]);
+    if(resource.Rating == undefined)
+        markup = markup.replace('rating/5 by num','');
+    else {
+        markup = markup.replace('rating', Number.isInteger(resource.Rating) ? resource.Rating : resource.Rating.toFixed(2));
+        markup = markup.replace('num', resource.Votes + (resource.Votes == 1 ? ' vote' : ' votes'));
+    }
+
+    return markup;
+}
+
+
+/*
+    Sort results by Rating from high to low
+    Currently this is the default if no other sort is selected
+    @param {array} search_results - Airtable activities based on search options
+    @private
+*/
+function _sortRating(search_results, ascending=false) {
+    search_results.sort(function(a, b) {
+        var a_rating = a.Rating == undefined ? 0 : a.Rating;
+        var b_rating = b.Rating == undefined ? 0 : b.Rating;
+        if(ascending)
+            return a_rating - b_rating;
+        else
+            return b_rating - a_rating;
+    });
+}
+
+function _buildFeaturesDEP(features) {
+    $(".featured-activity").each(function(i) {
+        $(this).empty();
+        if(!features[i])
+            return true;
+        var feature_id = 'feature' + (i + 1);
+        var subjects = Array.isArray(features[i]["Subject"]) ? features[i]["Subject"].join(", ") : features[i]["Subject"];
+        var feature_div = `
+            <a href="#" data-featherlight="#`+ feature_id +`"><div class="feature"><img class="feature" src="`+ features[i]["Thumbnail"][0].url +`" /></div><br />
+            <span>`+ features[i]["Resource Name"] +`</span></a>
+                <div style="display: none"><div id="`+ feature_id +`" style="padding: 10px;">
+                    <h3><a target="_blank" href="`+ features[i]["Resource Link"] +`">`+ features[i]["Resource Name"] +`</a></h3>
+                    <br />`+ features[i]["Description"] +`<br /><br />
+                    <b>Experience: </b>`+ features[i]["Experience"] +`<br />
+                    <b>Subject: </b>`+ subjects +`<br />
+                    <b>Materials: </b>`+ features[i]["Materials"] +`<br />
+                    <b>Author: </b><a href="`+ features[i]["Source Link"] +`">`+ features[i]["Source"] +`</a><br>   
+                </div>`;
+                    // <b>Rating: </b>` + _starsMarkup(features[i]) + `
+                
+        $(this).append(feature_div);
+        _addFeatureComments(features[i], i+1);
+    });
+    // _postRatings(features);
+}
+
 /*
     Create a lightbox to house the "More Info" text for an activity
     This includes a thumbnail if the activity has one, link to the activity,

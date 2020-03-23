@@ -1,3 +1,4 @@
+/*    Elements in top section of page  */
 .page-layout {
   grid-template-columns: 240px auto;
 }
@@ -12,11 +13,6 @@
   grid-column: 1 / -1;
 }
 
-/*    Styling for Dev Menu, phase this out        */
-#self-led-toggle {
-  margin-left: 124px;
-}
-
 .lds-large div {
   width: 100px;
   height: 100px;
@@ -25,6 +21,10 @@
 }
 
 /*      Featured Activities      */
+.top-features {
+  position: relative;
+}
+
 #feature-header {
   width: auto;
 }
@@ -62,21 +62,6 @@
   justify-self: stretch;
 }
 
-/*      Item Header sub text        */
-.item-header small {
-  font-weight: normal;
-  font-size: 10px;
-}
-
-/* sizing for sort drop down menu */
-#sort-results {
-  width: 300px;
-}
-
-/*#results-per-page {
-  grid-column: -1;
-}*/
-
 /*        Scroll Arrows for Carousel        */
 .scroll {
   font-size: 40px;
@@ -100,7 +85,39 @@
   top: 120px;
 }
 
-/*.filter-row-stretch {
-  grid-row: 1 / span 2;
-  grid-column: 4;
-}*/
+/*      Item Header sub text        */
+.item-header small {
+  font-weight: normal;
+  font-size: 10px;
+}
+
+/* sizing for sort drop down menu */
+#sort-results {
+  width: 300px;
+}
+
+#bottom-page-buttons {
+  grid-column: 2;
+  margin-right: 380px;
+}
+
+#bottom-spacer {
+  padding-bottom: 100px;
+}
+
+/*      Dev Menu Styling      */
+.footer-left {
+  left: 20;
+  /*grid-template-columns: 150px 150px 150px 150px;*/
+  display: grid;
+  grid-template-columns: 140px auto auto auto;
+}
+
+.footer-left span {
+  display: block;
+  padding-left: 10px;
+}
+
+.footer-left label {
+  font-weight: normal;
+}

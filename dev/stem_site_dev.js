@@ -27,8 +27,8 @@ $(document).ready(function(){
 */
 function renderPages(page_size=50, page=0) {
     var query_string = _getQueryString();
-    if(query_string == 'AND)')
-        return;
+    // if(query_string == 'AND)')
+    //     return;
     _displayLoading(true);
     // console.log('getting query ' + query_string);
     $('.grid-container').show();
@@ -47,9 +47,9 @@ function renderPages(page_size=50, page=0) {
     }).done(function(data, status, jqXHR) {
         search_results=JSON.parse(data);
         _manageTableLocal(search_results, page_size);
-        _renderFeatures(search_results);
+        _renderFeatureCarousel(search_results);
         _displayLoading(false);
-        document.querySelector('#results').scrollIntoView({ 
+        document.querySelector('#feature-container').scrollIntoView({ 
           behavior: 'smooth' 
         });
     });
@@ -58,12 +58,12 @@ function renderPages(page_size=50, page=0) {
 /*
     Handle the event of a user posting a new comment on an activity
     When a user clicks the Post Comment button parse the comment text 
-    and send it to Airtable
+    and send it to Airtable through a new HTTP Proxy servcice (not the linode)
     @param {int} index - index of activity in the table, used to make IDs
     @param {object} resource - resource object to post comment for
     @private
 */
-function _postComment(index, resource) {
+function _postCommentNewProxy(index, resource) {
     var id = '#post-comment' + index;
     $(id).unbind('click').click(function() {
         var comment = $('.featherlight-inner #new-comment' + index).val();
@@ -125,8 +125,33 @@ function setupDevMenu() {
     $('#hover-comments').click(function() {
         $('.comment-tooltip').toggleClass('tooltip');
         $('.comment').toggle();
-    })
+    });
+    $('#self-led-toggle').click(function() {
+        $('#self-led-button').toggle();
+        $('#self-led-checkbox').toggle();
+    });
+    $('#features-toggle').click(function() {
+        // switch carousel to 3 top features
+        _swapFeaturesMarkup();
+        renderPages();
+    });
 }
+
+function _swapFeaturesMarkup() {
+    var carousel = `
+        <a class="scroll" id="scroll-left"><</a>
+        <ul class="feature-list" id="feature-results">
+        </ul>
+        <a class="scroll" id="scroll-right">></a>`;
+    var static = `<br /><h3>Featured Activities:</h3><br />
+      <div class="features">`;
+
+    if($('#features-toggle').is(':checked'))
+        $('#feature-container').html(carousel);
+    else
+        $('#feature-container').html(static);
+}
+
 
 /*
     Manage locally stored search results. Update sorting, meta data, and buttons
@@ -180,13 +205,13 @@ function renderTable() {
         }
     }).done(function(data, status) {
         search_results=JSON.parse(data);
-        _renderFeatures(search_results);
+        _renderFeatureCarousel(search_results);
         _buildTable(search_results);
         _displayLoading(false);
         _displayMetaData(search_results, search_results.length);
         _sortResults(search_results);
         _sortResultsDropdown(search_results);
-        document.querySelector('#results').scrollIntoView({ 
+        document.querySelector('#feature-container').scrollIntoView({ 
           behavior: 'smooth' 
         });
     });
@@ -265,7 +290,7 @@ function _setupFeatures() {
     Features are chosen using the _buildFeatureList function
     @private
 */
-function _renderFeatures(search_results) {
+function _renderFeatureCarousel(search_results) {
     $('#feature-results').empty();
     //TODO: do this differently or remove, depending on final carousel location
     if($('.welcome').length) {
@@ -277,10 +302,13 @@ function _renderFeatures(search_results) {
     var feature_list = _buildFeatureList(search_results);
     console.log('rendering ' + feature_list.length + ' new features');
     if(feature_list.length == 0)
-        $('#results').hide();
+        $('#feature-container').hide();
     else {
-        _buildFeatureCarousel(feature_list, '#feature-results');
-        $('#results').show();
+        if($('#features-toggle').is(':checked'))
+            _buildFeatureCarousel(feature_list, '#feature-results');
+        else
+            _renderFeatures(search_results);
+        $('#feature-container').show();
     }
 
 }
@@ -309,10 +337,10 @@ function _buildFeatureCarousel(features, location) {
                     <b>Subject: </b>`+ subjects +`<br />
                     <b>Materials: </b>`+ features[i]["Materials"] +`<br />
                     <b>Author: </b><a href="`+ features[i]["Source Link"] +`">`+ features[i]["Source"] +`</a><br>   
-                </div>`; // <b>Rating: </b>` + _starsMarkup(features[i]) + `
-        // feature_div += _addFeatureComments(item);
+                </div>`; 
         $(location).append("<li>" + feature_div + "</li>");
-        _addFeatureComments(item, i);
+        if(location != '#feature-header')
+            _addFeatureComments(item, i);
         // $("#featured-activities").append("<div class='thumbnail' list-index='" + features.indexOf(item) + "'>" + feature_div + "</div>");
     });
     $(location).css('grid-template-columns', 'repeat(' + features.length + ', 240px)');
@@ -380,7 +408,7 @@ function renderPage(page_size=50, page=0) {
     }).done(function(data, status, jqXHR) {
         search_results=data;//JSON.parse(data);
         var num_results = parseInt(jqXHR.getResponseHeader('num_results'));
-        _renderFeatures(search_results);
+        _renderFeatureCarousel(search_results);
         _buildTable(search_results);
         _displayLoading(false);
         // test = jqXHR;
@@ -389,7 +417,7 @@ function renderPage(page_size=50, page=0) {
         _createButtonFunctions(page, (page+1)*page_size, num_results);
         _sortResults(search_results);
         _sortResultsDropdown(search_results);
-        document.querySelector('#results').scrollIntoView({ 
+        document.querySelector('#feature-container').scrollIntoView({ 
           behavior: 'smooth' 
         });
     });
