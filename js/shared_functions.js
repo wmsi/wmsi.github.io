@@ -79,30 +79,27 @@ function _buildTable(search_results) {
     @param {object} resource - resource to render comments for
     @param {int} index - index of the resource for creating IDs
     @private
-    TODO: simplify comment adding conditional to be more like _addFeatureComments
 */
 function _commentSection(resource, index) {
     var element = "<span class='item'>" + $('#comment-template').html() + "</span>";
     var text_id = '#new-comment' + index; 
     var form_id = '.featherlight-inner #comment-form'+index;
-    var comments_markup = '';
     
     // make sure each tooltip positions on top of other elements
-    element = element.replace('*pos', 200-index);
-    element = element.replace('*title', resource["Resource Name"]);
-    element = element.replace('*title', 200-index);
+    element = element.replace('*pos', 200-index).replace('*title', resource["Resource Name"]).replace('*link', resource["Resource Link"]);
     element = element.replace(/@index/g, index);
 
     $('#content').append(element);
 
     if(resource.Comments != undefined) {
         var comments = JSON.parse('['+resource.Comments+']');
+        var comments_markup = '<br>';
+
         comments.forEach(comment => {comments_markup += comment[0] + ': ' + comment[1] + '<br>'});
-        var comments_preview = '<b>User comments preview:</b><br>' + comments_markup.slice(0, 160) + '...';
-        $('#comment-hover'+index).children().remove();
-        $('#comment-hover'+index).append(comments_preview);
-        $('#comment-text'+index).children().remove();
-        $('#comment-text'+index).append('<h4>User Comments:</h4><br>' + comments_markup);
+        var comments_preview = '<br>' + comments_markup.slice(0, 160) + '...';
+
+        $('#comment-hover'+index + ' b').empty().html('User comments preview:').after(comments_preview);
+        $('#comment-text'+index + ' h4').empty().html('User Comments:').after(comments_markup);
         $('#comment-badge'+index).html(comments.length.toString());
     }
     // $(form_id).hide();
@@ -114,13 +111,42 @@ function _commentSection(resource, index) {
 }
 
 /*
+    Add Comment section to the bottom of a feature lightbox from the carousel
+    Comment form remains hidden until user clicks on the comment box
+    @param {object} resource - activity to build comments section for
+    @param {int} index - index of the resource in the features carousel
+    @private
+*/
+function _addFeatureComments(resource, index) {
+    // var comments = "";
+    var id = '#feature'+index;
+    // var comments = $('#comment-template .comment-box').html();
+    var element = $('#feature-comment-template').html().replace(/@index/g, index);
+    var form_id = '.featherlight-inner #feature-comment-form'+index;
+    $(id).append(element);
+    if(resource.Comments != undefined) {
+        // comments += "<b>User Comments: "
+        $(id + ' h4').empty().html("User Comments: ");
+        var comments = JSON.parse('['+resource.Comments+']');
+        // console.log('appending ' + comments + ' to ' + id);
+        comments.forEach(comment => {$('#feature-comment-text' + index).append(comment[0] + ': ' + comment[1] + '<br>')});
+    } 
+
+    $('#feature-new-comment'+index).unbind('focus').focus(function() {
+        $(this).css('height','90px');
+        $(form_id).show();
+    });
+    _postComment(resource, index, true);
+}
+
+/*
     Handle the event of a user posting a new comment on a featured activity
     When a user clicks the Post Comment button parse the comment text 
     and send it to Airtable
     @param {int} index - index of activity in the table, used to make IDs
     @param {object} resource - resource object to post comment for
     @private
-    TODO: integrate this with _postComment(), shorter ID names?
+    TODO: shorter ID names?
 */
 function _postComment(resource, index, feature = false) {
     // var id = '#feature-post-comment' + index;
@@ -150,7 +176,7 @@ function _postComment(resource, index, feature = false) {
                 });
             // Wait for approval on new comments. Show some kind of success message that comment was received
             var markup_id = '.featherlight-inner ' + (feature ? '#feature-' : '#') + 'comment-text' + index;
-            console.log('markup id: ' + markup_id);
+            // console.log('markup id: ' + markup_id);
             $(markup_id).append('<b>Thanks for posting a comment! We will review your comment soon and put it right here.');
             // $('.featherlight-inner #feature-comment-text'+index).append(user + ': ' + comment + '<br>');
             $('.featherlight-inner ' + comment_id).val('');
@@ -212,35 +238,6 @@ function _buildFeatures(features) {
     });
 }
 
-/*
-    Add Comment section to the bottom of a feature lightbox from the carousel
-    Comment form remains hidden until user clicks on the comment box
-    @param {object} resource - activity to build comments section for
-    @param {int} index - index of the resource in the features carousel
-    @private
-*/
-function _addFeatureComments(resource, index) {
-    // var comments = "";
-    var id = '#feature'+index;
-    // var comments = $('#comment-template .comment-box').html();
-    var comments = $('#feature-comment-template').html().replace(/@index/g, index);
-    var form_id = '.featherlight-inner #feature-comment-form'+index;
-    $(id).append(comments);
-    if(resource.Comments != undefined) {
-        // comments += "<b>User Comments: "
-        $(id + ' h4').empty().html("User Comments: ");
-        var comments = JSON.parse('['+resource.Comments+']');
-        // console.log('appending ' + comments + ' to ' + id);
-        comments.forEach(comment => {$('#feature-comment-text' + index).append(comment[0] + ': ' + comment[1] + '<br>')});
-    } 
-
-    $('#feature-new-comment'+index).unbind('focus').focus(function() {
-        $(this).css('height','90px');
-        $(form_id).show();
-    });
-    _postComment(resource, index, true);
-}
-
 /* 
     Reset all filters to their default values
 */
@@ -250,6 +247,54 @@ function resetFilters() {
     $(':checkbox').prop('checked',true);
     $('#self-led').prop('checked', false);
     $('input[type="search"]').val("");
+}
+
+
+/*
+    Build an ordered list of featured activities based on search results
+    Most relevant/ highly rated activities sort towards the top of list.
+    TODO: Continue to refine criteria for sorting/ filtering
+            Ideally we end up with one sort() and one filter()
+
+    @param {list} search_results - list of resource objects returned from airtable search
+    @param {int} max - max number of features to return
+    @returns {list} feature_list - featured activities sorted with most relevant towards the top
+    @private
+    TODO: time permitting, improve selection algorithm to create a 'short list' of best features
+        for user search, then randomize
+*/
+function _buildFeatureList(search_results, max=100) {
+    var feature_list = [];
+    var top_features = [];
+
+    // randomize the results
+    search_results.sort(() => Math.random()-0.5);
+
+    search_results.forEach(function(resource) {
+        // save Top Features from favorite sources
+        if(fav_sources.includes(resource.Source))
+            top_features.push(resource);
+
+        // push all items to list that have a thumbnail and are not incomplete
+        else if(resource.Thumbnail != undefined && !resource.Tags.includes('incomplete'))
+            feature_list.push(resource);
+    });
+
+    // no duplicate sources next to each other
+    feature_list = feature_list.filter(function(resource, i, feature_list) {
+        if(i == 0)
+            return true;
+        return !(resource.Source == feature_list[i-1].Source);
+    });
+
+    // add Top Feature to beginning (just one for now)
+    if(top_features.length)
+        feature_list.unshift(top_features[0]);
+
+    if(max < feature_list.length)
+        feature_list = feature_list.slice(0, max);
+
+    return feature_list;
 }
 
 /*
@@ -295,8 +340,8 @@ function _getQueryString() {
 */
 function _getMaterialsQuery() {
     var query = "OR(";
+
     var all_materials = true;
-    
     // Check to see if all materials are selected
     $('#materials-filter :checkbox').each(function(i, el) {
         all_materials = $(this).is(':checked');
@@ -326,51 +371,6 @@ function _getMaterialsQuery() {
     var split_index = query.lastIndexOf(',');
     query = query.slice(0, split_index) + "), ";
     return query;
-}
-
-/*
-    Build an ordered list of featured activities based on search results
-    Most relevant/ highly rated activities sort towards the top of list.
-    TODO: Continue to refine criteria for sorting/ filtering
-            Ideally we end up with one sort() and one filter()
-
-    @param {list} search_results - list of resource objects returned from airtable search
-    @param {int} max - max number of features to return
-    @returns {list} feature_list - featured activities sorted with most relevant towards the top
-    @private
-*/
-function _buildFeatureList(search_results, max=100) {
-    var feature_list = [];
-    var top_features = [];
-    search_results.sort(() => Math.random()-0.5);
-
-    search_results.forEach(function(resource) {
-        // save Top Features from favorite sources
-        if(fav_sources.includes(resource.Source))
-            top_features.push(resource);
-        // push all items to list that have a thumbnail and are not incomplete
-        else if(resource.Thumbnail != undefined && !resource.Tags.includes('incomplete'))
-            feature_list.push(resource);
-    });
-
-    // randomize the results
-    // feature_list.sort(() => Math.random() -0.5);
-
-    // no duplicate sources next to each other
-    feature_list = feature_list.filter(function(resource, i, feature_list) {
-        if(i == 0)
-            return true;
-        return !(resource.Source == feature_list[i-1].Source);
-    });
-
-    // add Top Feature to beginning (just one for now)
-    if(top_features.length)
-        feature_list.unshift(top_features[0]);
-
-    if(max < feature_list.length)
-        feature_list = feature_list.slice(0, max);
-
-    return feature_list;
 }
 
 /*
