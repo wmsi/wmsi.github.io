@@ -41,19 +41,18 @@ function renderPages(page_size=50, page=0) {
     Generate HTML for all resources returned by a search query. 
     Called by renderTable()
     @param {array} search_resutls - resources returned by a query search to airtable
+    @param {string} env - current deployment denvironment
     @private
+    TODO: phase out env argument for production
 */
-function _buildTable(search_results) {
-    console.log('building ' + search_results.length + ' resources');
+function _buildTable(search_results, env='production') {
+    // console.log('building ' + search_results.length + ' resources');
     var new_elements;
     var grid_item = "<span class='item'>*</span>";
     search_results.forEach(function(resource, index) {
         var activity_link = grid_item.replace('*', '<a target="_blank" href="'+ resource["Resource Link"] +'">'+ resource["Resource Name"] +'</a>');
         if(resource['Tags'].includes('incomplete')) 
             activity_link = _adaptActivity(resource, index);
-            // activity_link = _adaptActivity(activity_link.replace(" class='item'",""), index, resource["Resource Name"]);
-        // else
-        //     console.log('building activity with link ' + activity_link);
         
         new_elements = activity_link;
         author_link = '<a target="_blank" href="' + resource["Source Link"] + '">' + resource["Source"] + '</a>'
@@ -61,14 +60,12 @@ function _buildTable(search_results) {
         new_elements += grid_item.replace('*', resource["Duration"]);
         new_elements += grid_item.replace('*', resource["Experience"]);
         new_elements += grid_item.replace('*', resource["Subject"]);
-        // new_elements += grid_item.replace('*', _starsMarkup(resource));
         new_elements += grid_item.replace('*',  "<center><big><a href='#' data-featherlight='#resource" + index + "'>&#9432;</a></big></center>");
-        // $('.grid-container').append(new_elements); 
+
         $('#content').append(new_elements); 
         _addLightbox(resource, index);
-        _commentSection(resource, index);
+        (env == 'dev') ? _commentSection(resource, index, 'Test Comments') : _commentSection(resource, index);;
     }); 
-    // _postRatings(search_results);
 }
 
 /*
@@ -78,9 +75,10 @@ function _buildTable(search_results) {
     (triggered on mouse click).
     @param {object} resource - resource to render comments for
     @param {int} index - index of the resource for creating IDs
+    @param {string} key - field in Airtable to draw comments from
     @private
 */
-function _commentSection(resource, index) {
+function _commentSection(resource, index, key='Comments') {
     var element = "<span class='item'>" + $('#comment-template').html() + "</span>";
     var text_id = '#new-comment' + index; 
     var form_id = '.featherlight-inner #comment-form'+index;
@@ -91,15 +89,15 @@ function _commentSection(resource, index) {
 
     $('#content').append(element);
 
-    if(resource.Comments != undefined) {
-        var comments = JSON.parse('['+resource.Comments+']');
-        var comments_markup = '<br>';
+    if(resource[key] != undefined) {
+        var comments = JSON.parse('['+resource[key]+']');
+        var markup = '<br>';
 
-        comments.forEach(comment => {comments_markup += comment[0] + ': ' + comment[1] + '<br>'});
-        var comments_preview = '<br>' + comments_markup.slice(0, 160) + '...';
+        comments.forEach(comment => {markup += comment[0] + ': ' + comment[1] + '<br>'});
+        var preview = '<br>' + (markup.length > 60 ? markup.slice(0, 60) + '...' : markup);
 
-        $('#comment-hover'+index + ' b').empty().html('User comments preview:').after(comments_preview);
-        $('#comment-text'+index + ' h4').empty().html('User Comments:').after(comments_markup);
+        $('#comment-hover'+index + ' b').empty().html('User comments preview:').after(preview);
+        $('#comment-text'+index + ' h4').empty().html('User Comments:').after(markup);
         $('#comment-badge'+index).html(comments.length.toString());
     }
     // $(form_id).hide();
@@ -167,8 +165,8 @@ function _postComment(resource, index, feature = false) {
                 resource.Comments = formatted_comment
             $.ajax({
                     type: 'POST',
-                    url: 'https://wmsinh.org/airtable',
-                    // url: 'http://localhost:5000/airtable',
+                    // url: 'https://wmsinh.org/airtable',
+                    url: 'http://localhost:5000/airtable',
                     data: {
                         "id": resource.id,
                         "New Comment": formatted_comment
@@ -177,7 +175,7 @@ function _postComment(resource, index, feature = false) {
             // Wait for approval on new comments. Show some kind of success message that comment was received
             var markup_id = '.featherlight-inner ' + (feature ? '#feature-' : '#') + 'comment-text' + index;
             // console.log('markup id: ' + markup_id);
-            $(markup_id).append('<b>Thanks for posting a comment! We will review your comment soon and put it right here.');
+            $(markup_id).append('<b>Thanks for posting a comment! We will review your comment within the next 1-2 weeks and put it right here.');
             // $('.featherlight-inner #feature-comment-text'+index).append(user + ': ' + comment + '<br>');
             $('.featherlight-inner ' + comment_id).val('');
             $('.featherlight-inner ' + user_id).val('');
@@ -211,30 +209,25 @@ function _renderFeatures(search_results) {
     @param {array} features - a list of activities that could be used as features. Currently this
         is all activities with an "Img URL" field
     @private
-    TODO: Use a template to make this cleaner
 */
 function _buildFeatures(features) {
     features = features.slice(0,3);
+
     $('.features').empty();
-    features.map(function(item, i) {
-        var feature_id = 'feature' + i;
-        var subjects = Array.isArray(item["Subject"]) ? item["Subject"].join(", ") : item["Subject"];
-        var resource_link = '<a target="_blank" href="'+ item["Resource Link"] +'">'+ item["Resource Name"] +'</a>';
-        var feature_div = `
-        <div class='featured-activity' id='featurediv`+i+`'>
-        <a href="#" data-featherlight="#`+ feature_id +`"><div class="feature"><img class="feature" src="` + item.Thumbnail[0].url + `" /></div><br>
-            <span class="feature-link">`+ item["Resource Name"] +`</span></a>
-            <div style="display: none"><div id="`+ feature_id +`" style="padding: 10px;">
-                <h3>` + resource_link + `</h3>
-                <br />`+ item["Description"] +`<br /><br />
-                <b>Experience Level: </b>`+ item["Experience"] +`<br />
-                <b>Subject: </b>`+ subjects +`<br />
-                <b>Materials: </b>`+ features[i]["Materials"] +`<br />
-                <b>Author: </b><a href="`+ features[i]["Source Link"] +`">`+ features[i]["Source"] +`</a><br>   
-            </div>
-        </div>`; 
-        $('.features').append(feature_div);
-        _addFeatureComments(item, i);
+    features.map(function(resource, i) {
+        var template = $('#featured-activity-template').html();
+
+        template = template.replace(/@index/g, i);
+        template = template.replace(/@title/g, resource["Resource Name"]);
+        template = template.replace('*link', resource["Resource Link"]);
+        template = template.replace('*img', 'src="'+resource.Thumbnail[0].url+'"');
+        template = template.replace('*description', resource['Description']);
+        template = template.replace('*subjects', resource['Subject']);//(Array.isArray(item["Subject"]) ? item["Subject"].join(", ") : item["Subject"]));
+        template = template.replace('*materials', resource['Materials']);
+        template = template.replace('*source', resource['Source']);
+        template = template.replace('*source_link', resource['Source Link']);
+        $('.features').append(template);
+        _addFeatureComments(resource, i);
     });
 }
 
@@ -268,11 +261,11 @@ function _buildFeatureList(search_results, max=100) {
     var top_features = [];
 
     // randomize the results
-    search_results.sort(() => Math.random()-0.5);
+    search_results.sort(() => Math.random() - 0.5);
 
     search_results.forEach(function(resource) {
         // save Top Features from favorite sources
-        if(fav_sources.includes(resource.Source))
+        if(fav_sources.includes(resource.Source) || resource.Tags.includes('favorite'))
             top_features.push(resource);
 
         // push all items to list that have a thumbnail and are not incomplete
@@ -318,8 +311,10 @@ function _getQueryString() {
 
     query += _getMaterialsQuery();
 
+    // split search text on spaces (and punctuation?) then use AND() to add them to query
     if($('input[type="search"]').val() != '')
-        query += "Find('" + $('input[type="search"]').val().toLowerCase() + "', {Search Text}), ";
+        query += "AND(Find('" + $('input[type="search"]').val().toLowerCase().split(' ').join("', {Search Text}), Find('") + "', {Search Text})), ";
+        // query += "Find('" + $('input[type="search"]').val().toLowerCase() + "', {Search Text}), ";
 
     var split_index = query.lastIndexOf(',');
     query = query.slice(0, split_index) + ")";
@@ -328,6 +323,7 @@ function _getQueryString() {
     if(query == "AND)")
         query = "NOT({Resource Name}='')"
     //     alert('Please use at least one search option to find resources.');
+
     return query;
 }
 
@@ -383,7 +379,7 @@ function _getMaterialsQuery() {
         search_results
 */
 function _sortResults(search_results, build=true) {
-    $('i').unbind('click').click(function() {
+    $('.item-header i').unbind('click').click(function() {
         var ascending = $(this).attr('class') == 'up' ? true : false;
         var field = $(this).parent().attr('id');
         
@@ -418,6 +414,16 @@ function _sortResults(search_results, build=true) {
 }
 
 /*
+    Show the Scroll to Top Button when the user scrolls the filters out of view.
+*/
+function scrollTopButton() {
+    if($(window).scrollTop() > 670) 
+        $('.scroll-top').show();
+    else
+        $('.scroll-top').hide();
+}
+
+/*
     Modify html template to create a lightbox with "Info" for an activity
     This includes a thumbnail if the activity has one, link to the activity,
     activity description, and activity tags.
@@ -427,7 +433,7 @@ function _sortResults(search_results, build=true) {
     @private
 
     TODO: create lightbox with generic thumbnail image if no thumbnail exists. 
-        continue to evaluate what content fits best here (comments?)
+        continue to evaluate what content fits best here
 */
 function _addLightbox(resource, index) {
     var html_template = $('#info-lightbox-template').html();
@@ -442,11 +448,15 @@ function _addLightbox(resource, index) {
     html_template = html_template.replace('*materials', resource["Materials"]);
     html_template = html_template.replace('*tags', resource.Tags);
     if(resource["Tags"].includes("incomplete"))  
-        html_template = html_template.slice(0,html_template.indexOf('</div>')) +  _adaptLightbox(resource);
+        html_template = html_template.slice(0,html_template.indexOf('</div>')) +  _adaptLightbox();
     $('#content').append(html_template);
 }
 
-function _adaptLightbox(resource) {
+/*
+    Add the Adaptation Activity template to an activity lightbox.
+    @private
+*/
+function _adaptLightbox() {
     return $('#adapt-text-template').html() + '</div>';
 } 
 
@@ -577,6 +587,7 @@ function changePageLengthLocal(start, search_results) {
 */
 function _displayMetaData(search_results, page_size, page_num=0, num_results=search_results.length) {
     // console.log('display meta for page num ' + page_num +', page size ' + page_size + ', num results ' + num_results);
+
     $('#results-meta').empty();
     if(num_results == 0)
         $('#results-meta').html("We're sorry but your search did not return any results.");
@@ -603,8 +614,11 @@ function _displayMetaData(search_results, page_size, page_num=0, num_results=sea
 function _createLocalButtons(search_results, page_size, page=0) {
     var next_page = (page+1)*page_size < search_results.length ? true : false;
     var last_page = page > 0 ? true : false;
+    $('.next-page').unbind('click');
+    $('.last-page').unbind('click');
+
     if(next_page) {
-        $('.next-page').unbind('click').click(function() {
+        $('.next-page').click(function() {
             _manageTableLocal(search_results, page_size, page+1);
             document.querySelector('#feature-container').scrollIntoView({ 
               behavior: 'smooth' 
@@ -613,7 +627,7 @@ function _createLocalButtons(search_results, page_size, page=0) {
     }
 
     if(last_page) {
-        $('.last-page').unbind('click').click(function() {
+        $('.last-page').click(function() {
             _manageTableLocal(search_results, page_size, page-1);
             document.querySelector('#feature-container').scrollIntoView({ 
               behavior: 'smooth' 
@@ -637,17 +651,18 @@ function _createLocalButtons(search_results, page_size, page=0) {
     @private
 */
 function _buttonCss(next_page, last_page) {
+    // console.log('modifying button css with next ' + next_page + ' and last ' + last_page);
     if(next_page) {
-        $('#next-page').css({'cursor': '', 'color': ''});
+        $('.next-page').css({'cursor': '', 'color': ''});
     } else {
-        $('#next-page').unbind('click');
-        $('#next-page').css({'cursor': 'default', 'color': 'grey'});   
+        $('.next-page').unbind('click');
+        $('.next-page').css({'cursor': 'default', 'color': 'grey'});   
     }
     if(last_page) {
-        $('#last-page').css({'cursor': '', 'color': ''});
+        $('.last-page').css({'cursor': '', 'color': ''});
     } else {
-        $('#last-page').unbind('click');
-        $('#last-page').css({'cursor': 'default', 'color': 'grey'});
+        $('.last-page').unbind('click');
+        $('.last-page').css({'cursor': 'default', 'color': 'grey'});
     }
 }
 

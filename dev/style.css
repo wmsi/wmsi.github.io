@@ -49,9 +49,10 @@
   height: 100%;
 }
 
+/*    important flags to overwrite SS rules   */
 .feature-list img {
-  max-width: 240px;
-  max-height: 200px;
+  max-width: 240px !important;
+  max-height: 200px !important;
   padding-bottom: 15px;
   align-self: center;
 }
@@ -59,7 +60,7 @@
 .feature-link {
   align-self: end;
   font-size: 18px;
-  justify-self: stretch;
+  justify-self: center;
 }
 
 /*        Scroll Arrows for Carousel        */
@@ -93,7 +94,7 @@
 
 /* sizing for sort drop down menu */
 #sort-results {
-  width: 300px;
+  width: 100%;
 }
 
 #bottom-page-buttons {
@@ -104,6 +105,7 @@
 #bottom-spacer {
   padding-bottom: 100px;
 }
+
 
 /*      Dev Menu Styling      */
 .footer-left {

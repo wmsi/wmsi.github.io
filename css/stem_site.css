@@ -5,7 +5,7 @@
 /*          General layout containers and spacer          */
 .page-layout {
   display: inline-grid;
-  padding-left: 20px;
+  /*padding-left: 20px;*/
   width: 100%;
 }
 
@@ -63,7 +63,7 @@ h3, h4 {
 .filter-instructions {
   /*position: absolute;*/
   grid-column-start: 1;
-  grid-column-end: 3; 
+  grid-column-end: 4; 
   text-align: left;
   padding-left: 10px;
 }
@@ -102,6 +102,7 @@ h3, h4 {
 #feature-container {
   position: relative;
   padding-bottom: 20px;
+  font-size: 16px;
 }
 
 .features {
@@ -110,9 +111,9 @@ h3, h4 {
   width: 100%;
 }
 
-.featured-activity span {
+/*.featured-activity span {
   justify-self: start;
-}
+}*/
 
 .feature-container {
   padding-left: 80px; 
@@ -130,9 +131,10 @@ h3, h4 {
   padding: 5px 7px;
 }
 
+/*    important flags to overwrite SS rules   */
 .feature img {
-  max-height: 20vw;
-  max-width: 30vw;
+  max-height: 20vw !important;
+  max-width: 30vw !important;
   object-fit: contain;
 }
 /*      Meta Data for results appears above activity grid     */
@@ -146,14 +148,14 @@ h3, h4 {
 #results-info {
   grid-column: 1 / -1;
   display: inline-grid;
-  grid-template-columns: 40% auto auto auto;
+  grid-template-columns: 30% auto auto auto;
 }
 
 
 /*        Grid items and headers      */
 .item-header {
   font-weight: bold;
-  font-size: 18px;
+  font-size: 16px;
   border: 1px solid black;
   text-align: center;
   padding: 10px;
@@ -165,6 +167,7 @@ h3, h4 {
   border-bottom: 1px solid black;
   padding: 5px;
   display: grid;
+  font-size: 16px;
 }
 
 .item-center {
@@ -199,8 +202,6 @@ h3, h4 {
 .header {
   padding-bottom: 10px;
 }
-
-
 
 
 .sort {
@@ -323,18 +324,37 @@ textarea {
   margin-right: 400px;
 }
 
+
+/*      Scroll to Top Button      */
+.scroll-top {
+  width: 50px;
+  height: 50px;
+  position: fixed;
+  bottom: 40px;
+  right: 20px;
+  background: teal;
+  border-radius: 10px;
+  display: none;
+}
+.scroll-top i {
+  display: inline-block;
+  color: #fff;
+  font-size: 30px;
+}
+
+
 /*          Footer              */
 .footer {
   position: fixed;
-  bottom: 5;
-  padding: 5;
+  bottom: 5px;
+  padding: 5px;
   border: 1px solid black;
   background: white;
   z-index: 10000;
 }
 
 .footer-right {
-  right: 20;
+  right: 20px;
 }
 
 /*            Loading Spinner                 */

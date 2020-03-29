@@ -8,51 +8,126 @@ $(document).ready(function(){
     _setupFeatures();
     _handleSearch();
     setupDevMenu();
-
-    $('#search').click(function() {renderPages()});//renderTable()});
-    $('#reset').click(function() {resetFilters()});
-    $('#self-led-button').click(function() {renderSelfLed()});
-    $('#uncheck-materials').click(function() {
-        $('#materials-filter').children().prop('checked', false);
-    });
     _bindScrollClicks();
     _fixTabIndex();
+
+    $(window).scroll(() => scrollTopButton());
+    $('#scroll-top-btn').click(() => $("html, body").animate({scrollTop: '125'}, 600));
+    $('#search').click(() => renderPages());//renderTable()});
+    $('#reset').click(() => resetFilters());
+    $('#self-led-button').click(() => renderSelfLed());
+    $('#uncheck-materials').click(() => $('#materials-filter').children().prop('checked', false));
 });
 
 /*
     Obtain search results and cache them locally while displaying pages one at a time
     @param {int} page_size - number of results to render per page
     @param {int} page - page number <-- deprecated?
-    DEV: prototype using Azure functions as HTTP proxy
+    DEV: prototype using serverless HTTP proxy
+    TODO: add error handling for ajax .fail(...), remove arguments?
 */
 function renderPages(page_size=50, page=0) {
     var query_string = _getQueryString();
-    // if(query_string == 'AND)')
-    //     return;
+    // get page_size from dropdown
+    page_size = parseInt($('#results-per-page').val());
     _displayLoading(true);
     // console.log('getting query ' + query_string);
     $('.grid-container').show();
     var search_results = [];
+
     // var url = "https://wmsinh.org/airtable?query=" + query_string;
-    var url = "https://wmsinh.org/airtable";
+    // var url = "https://wmsinh.org/airtable";
     // var url = "http://localhost:7071/api/MyHttpTrigger"
-    // var url = "http://localhost:5000/airtable";
-    $.ajax({
-        type: 'GET',
-        headers: {'Access-Control-Allow-Origin': '*'},
-        url: url,
-        data: {
-            query: query_string
-        }
-    }).done(function(data, status, jqXHR) {
-        search_results=JSON.parse(data);
-        _manageTableLocal(search_results, page_size);
+    var url = "http://localhost:5000/airtable";
+
+    // Chain AJAX requests so that we load the remaining results after the first page has rendered
+    first_page = _getResults(url, {query: query_string, page_size: page_size});
+    first_page.then((data, status, xhr) => search_results = _multiPageLoad(data, xhr, search_results, true));
+    
+
+    var remaining = first_page.then(() => _getResults(url, {query: query_string, offset: page_size}));
+    remaining.then((data, status, xhr) => (remaining ? _multiPageLoad(data, xhr, search_results) : null));
+}
+
+/*     
+    Execute AJAX GET request and return response data
+    @param {string} url - URL to request from
+    @param {object} data - includes Airtable query and page_size or offset
+    @private
+*/
+function _getResults(url, data) {
+    return $.ajax({
+        data: data,
+        url: url
+    });
+}
+
+/*
+    Render the first page when it loads, then add subsequent data to search_results
+    When all data has loaded hand off management to _manageTableLocal()
+    @param {object} data - response data from AJAX GET
+    @param {object} xhr - response object including headers and status
+    @param {array} search_results - array to contain all search resutls from Airtable
+    @param {boolean} first - true if this is the first page
+    @private
+*/
+function _multiPageLoad(data, xhr, search_results, first=false) {
+    Array.prototype.push.apply(search_results, data);
+    var num_results = xhr.getResponseHeader('num_results');
+    if(first) {
+        // console.log('handle first page with num results ' + num_results);
         _renderFeatureCarousel(search_results);
+        // call _manageTableLocal() here?
+        _clearTable();
+        _buildTable(search_results, 'dev');
+        _displayMetaData(search_results, search_results.length, 0, num_results);
         _displayLoading(false);
         document.querySelector('#feature-container').scrollIntoView({ 
           behavior: 'smooth' 
         });
-    });
+        return search_results;
+        // consider using something like below in a wrapper succes function for first page to avoid second call if unnecessary
+        // if(search_results.length < num_results) {
+        //     var url = "http://localhost:5000/airtable";
+        //     var remaining = first_page.then(() => _getResults(url, {query: query_string, offset: page_size}));
+        //     remaining.then((data, status, xhr) => _multiPageLoad(data, xhr, search_results));
+        // }
+    } else {
+        // remaining_data = data;
+        var page_size = xhr.getResponseHeader('page_size');
+        // console.log('handle remaining with page size ' + page_size);
+        _manageTableLocal(search_results, page_size, 0, false);
+    }
+}
+
+/*
+    Manage locally stored search results. Update sorting, meta data, and buttons
+    as necessary.
+    @param {array} search_results - all results returned by the current search
+    @param {int} page_size - number of results per page
+    @param {int} page - number of the current page
+    @private
+    TODO: add handling for if build=false, ie not the first page so don't run any extra functions
+*/
+function _manageTableLocal(search_results, page_size, page=0, build=true) {
+    var start = page*page_size;
+    var end = Math.min((page+1)*page_size, search_results.length);
+    this_page = search_results.slice(start, end); // change this to default first page
+    // console.log('rendering search results from index ' + start + ' to ' + end);
+    if(build) {
+        _clearTable();
+        _buildTable(this_page, 'dev');
+        _displayMetaData(this_page, page_size, page, search_results.length);
+    } 
+
+    _createLocalButtons(search_results, page_size, page);
+    _sortResults(search_results, false);
+    _sortResultsDropdown(search_results, false);
+
+    // could some of these be run once by using global variables?
+    $('#sort-results').unbind('change').change(() => {_manageTableLocal(search_results, page_size, page)});
+    $('i').click(() => {_manageTableLocal(search_results, page_size, page)});
+    $('#results-per-page').unbind('change').change(function() {changePageLengthLocal(start, search_results)});  
 }
 
 /*
@@ -137,6 +212,11 @@ function setupDevMenu() {
     });
 }
 
+/* 
+    Change out the Featured Activities Carousel for static Features
+    when user toggles this feature in the Dev Menu
+    @private
+*/
 function _swapFeaturesMarkup() {
     var carousel = `
         <a class="scroll" id="scroll-left"><</a>
@@ -152,31 +232,6 @@ function _swapFeaturesMarkup() {
         $('#feature-container').html(static);
 }
 
-
-/*
-    Manage locally stored search results. Update sorting, meta data, and buttons
-    as necessary.
-    @param {array} search_results - all results returned by the current search
-    @param {int} page_size - number of results per page
-    @param {int} page - number of the current page
-    @param {boolean} sort - variable to keep sort from always calling this function recursively
-    @private
-*/
-function _manageTableLocal(search_results, page_size, page=0, sort=true) {
-    var start = page*page_size;
-    var end = Math.min((page+1)*page_size, search_results.length);
-    this_page = search_results.slice(start, end); // change this to default first page
-    console.log('rendering search results from index ' + start + ' to ' + end);
-    _clearTable();
-    _buildTable(this_page);
-    _displayMetaData(this_page, page_size, page, search_results.length);
-    _createLocalButtons(search_results, page_size, page);
-    _sortResults(search_results, false);
-    _sortResultsDropdown(search_results, false);
-    $('#sort-results').change(() => {_manageTableLocal(search_results, page_size, page)});
-    $('i').click(() => {_manageTableLocal(search_results, page_size, page)});
-    $('#results-per-page').unbind('change').change(function() {changePageLengthLocal(start, search_results)});  
-}
 
 /*
     Render STEM Resource table based on search parameters
@@ -300,7 +355,7 @@ function _renderFeatureCarousel(search_results) {
     }
 
     var feature_list = _buildFeatureList(search_results);
-    console.log('rendering ' + feature_list.length + ' new features');
+    // console.log('rendering ' + feature_list.length + ' new features');
     if(feature_list.length == 0)
         $('#feature-container').hide();
     else {
@@ -323,24 +378,22 @@ function _renderFeatureCarousel(search_results) {
     @private
 */
 function _buildFeatureCarousel(features, location) {
-    features.map(function(item, i) {
-        var feature_id = 'feature' + i;
-        var subjects = Array.isArray(item["Subject"]) ? item["Subject"].join(", ") : item["Subject"];
-        var resource_link = '<a target="_blank" href="'+ item["Resource Link"] +'">'+ item["Resource Name"] +'</a>';
-        var feature_div = `
-        <a href="#" data-featherlight="#`+ feature_id +`"><img src="` + item.Thumbnail[0].url + `" />
-            <span class="feature-link">`+ item["Resource Name"] +`</span></a>
-                <div style="display: none"><div id="`+ feature_id +`" style="padding: 10px;">
-                    <h3>` + resource_link + `</h3>
-                    <br />`+ item["Description"] +`<br /><br />
-                    <b>Experience Level: </b>`+ item["Experience"] +`<br />
-                    <b>Subject: </b>`+ subjects +`<br />
-                    <b>Materials: </b>`+ features[i]["Materials"] +`<br />
-                    <b>Author: </b><a href="`+ features[i]["Source Link"] +`">`+ features[i]["Source"] +`</a><br>   
-                </div>`; 
-        $(location).append("<li>" + feature_div + "</li>");
+    features.map(function(resource, i) {
+        var template = $('#featured-activity-template').html();
+
+        template = template.replace(/@index/g, i);
+        template = template.replace(/@title/g, resource["Resource Name"]);
+        template = template.replace('*link', resource["Resource Link"]);
+        template = template.replace('*img', 'src="'+resource.Thumbnail[0].url+'"');
+        template = template.replace('*description', resource['Description']);
+        template = template.replace('*subjects', resource['Subject']);//(Array.isArray(item["Subject"]) ? item["Subject"].join(", ") : item["Subject"]));
+        template = template.replace('*materials', resource['Materials']);
+        template = template.replace('*source', resource['Source']);
+        template = template.replace('*source_link', resource['Source Link']);
+
+        $(location).append("<li>" + template + "</li>");
         if(location != '#feature-header')
-            _addFeatureComments(item, i);
+            _addFeatureComments(resource, i);
         // $("#featured-activities").append("<div class='thumbnail' list-index='" + features.indexOf(item) + "'>" + feature_div + "</div>");
     });
     $(location).css('grid-template-columns', 'repeat(' + features.length + ', 240px)');

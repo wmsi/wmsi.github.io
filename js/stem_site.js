@@ -7,6 +7,8 @@ $(document).ready(function(){
     _setupFeatures();
     _handleSearch();
 
+    $(window).scroll(() => scrollTopButton());
+    $('#scroll-top-btn').click(() => $("html, body").animate({scrollTop: '320'}, 600));
     $('.grid-container').hide();
     $('.lds-ring').hide();
     $('#search').click(function() {renderPages()});

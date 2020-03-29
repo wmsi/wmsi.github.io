@@ -13,6 +13,9 @@
     <link rel="stylesheet" type="text/css" href="css/featherlight.css">
     <link rel="stylesheet" type="text/css" href="css/style.css">
 
+    <!-- Font Awesome for buttons. Considering switching to local files before production -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
     <title>Master Branch</title>
 </head>
 
@@ -115,7 +118,10 @@
     </div>
   </div>
 
-
+  <!-- Scroll to Top Button -->
+  <button class="scroll-top" id="scroll-top-btn">
+    <i class="fa fa-chevron-up"></i>
+  </button>
  
   <div class="footer footer-right"><i>Find a broken link? Please <a href="https://www.whitemountainscience.org/contact-us" target="_blank">let us know</a> so we can fix it!</i></div>
   
@@ -123,7 +129,7 @@
 
 
 
-
+<!-- TODO: load template images from Airtable for ease of use with SS -->
   <div id="templates" hidden>
     <div id="comment-template">
       <!-- https://www.visualpharm.com/free-icons/comments-595b40b65ba036ed117d396b -->
@@ -150,6 +156,7 @@
         </div>
       </div>
     </div>
+
     <div id='feature-comment-template'>
       <div class="comment-box" id='feature-comment-box@index'>
         <div id='feature-comment-text@index'>
@@ -164,6 +171,24 @@
         </div>
       </div>
     </div>
+
+    <div id="featured-activity-template">
+      <div class='featured-activity' id='featurediv@index'>
+        <a href="#" data-featherlight="#feature@index"><div class="feature"><img class="feature" *img></div><br>
+        <span class="feature-link">@title</span></a>
+        <div style="display: none">
+          <div id="feature@index" style="padding: 10px;">
+            <a href="*link" target="_blank"><h3>@title</h3></a>
+            <br>*description<br><br>
+            <b>Experience Level: </b>*experience<br>
+            <b>Subject: </b>*subjects<br>
+            <b>Materials: </b>*materials<br>
+            <b>Author: </b><a href="*source_link">*source</a><br>   
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div id="info-lightbox-template">
       <div class="*class" id="*id" hidden>
           <a target="_blank" href="*link"><img class="lightbox" *img><span align="center"><h3>*title</h3><span></span></span></a>
@@ -173,6 +198,7 @@
           <span>Keyword tags: *tags</span>
       </div>
     </div>
+
     <div id="adapt-text-template">
       <hr><h4>Thanks for choosing an Activity for Adaptation!</h4>
       <br>
@@ -185,24 +211,27 @@
       to use this activity in the future. Please <a href="https://www.whitemountainscience.org/resource-table-contact-form">click here</a> 
       to provide us with feedback or leave a comment on this activity.</p>
     </div>
+
     <div id="adapt-lightbox-template">
-          <span class="*class"><a href="#" target="_blank" data-featherlight="#@id">title</a></span>
-          <div style="display: none"><div id="@id" style="padding: 10px;"><div class="header"><img src="images/adapt-icon.png"><h3>Thank you for choosing one of our activities for adaptation!</h3></div>
+      <span class="*class"><a href="#" target="_blank" data-featherlight="#@id">title</a></span>
+      <div style="display: none">
+        <div id="@id" style="padding: 10px;">
+          <div class="header"><img src="images/adapt-icon.png"><h3>Thank you for choosing one of our activities for adaptation!</h3></div>
           <br>
           This is a resource that we believe can be helpful, but currently does include a full lesson plan. We consider this activity to be <b>primed for CS Ed</b> and we believe it could be creatively adapted to fit your classroom needs. You can find the original activity page at the link below.
           <div style="padding-top: 1em"><span><a target="_blank" href="*link">title</a></span></div>
-              <br>
-              If you choose to work with this activity we'd love to collect some information on how it went! This will help us cultivate and improve the activities on this page and assist teachers who want to use this activity in the future. Please <a href="https://www.whitemountainscience.org/resource-table-contact-form">click here</a> to provide us with feedback.
-              </div>
-          </div>
+          <br>
+          If you choose to work with this activity we'd love to collect some information on how it went! This will help us cultivate and improve the activities on this page and assist teachers who want to use this activity in the future. Please <a href="https://www.whitemountainscience.org/resource-table-contact-form">click here</a> to provide us with feedback.
         </div>
       </div>
+    </div>
+  </div>
   <script src="https://code.jquery.com/jquery-latest.js"></script>
-  <script type="text/javascript" src="https://netdna.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
+  <!-- <script type="text/javascript" src="https://netdna.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script> -->
   <script src="js/featherlight.js"></script>
-  <script src="js/airtable.browser.js"></script>
+  <!-- <script src="js/airtable.browser.js"></script> -->
 
-  <script src="credentials.js"></script>
+  <!-- <script src="credentials.js"></script> -->
   <script src="js/shared_functions.js"></script>
   <script src="js/stem_site.js"></script>
 </body>
