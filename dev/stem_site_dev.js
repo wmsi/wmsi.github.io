@@ -74,7 +74,7 @@ function _getResults(url, data) {
     @private
 */
 function _multiPageLoad(data, xhr, search_results, first=false) {
-    console.log('search_results length: ' + search_results.length + ', appending new results: ' + data.length);
+    // console.log('search_results length: ' + search_results.length + ', appending new results: ' + data.length);
     Array.prototype.push.apply(search_results, data);
     var num_results = xhr.getResponseHeader('num_results');
     var page_size = xhr.getResponseHeader('page_size');
