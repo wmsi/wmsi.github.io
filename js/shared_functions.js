@@ -614,6 +614,7 @@ function _displayMetaData(search_results, page_size, page_num=0, num_results=sea
 function _createLocalButtons(search_results, page_size, page=0) {
     var next_page = (page+1)*page_size < search_results.length ? true : false;
     var last_page = page > 0 ? true : false;
+    console.log('create buttons with next '+ next_page + ' and last ' + last_page);
     $('.next-page').unbind('click');
     $('.last-page').unbind('click');
 

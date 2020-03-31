@@ -70,7 +70,7 @@ function _manageTableLocal(search_results, page_size, page=0, sort=true) {
     _displayMetaData(this_page, page_size, page, search_results.length);
     _createLocalButtons(search_results, page_size, page);
     _sortResults(search_results, false);
-    $('i').click(() => {_manageTableLocal(search_results, page_size, page)});
+    $('.item-header i').click(() => {_manageTableLocal(search_results, page_size, page)});
     $('#results-per-page').unbind('change').change(function() {changePageLengthLocal(start, search_results)});  
 }
 

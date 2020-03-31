@@ -21,32 +21,33 @@ $(document).ready(function(){
 
 /*
     Obtain search results and cache them locally while displaying pages one at a time
-    @param {int} page_size - number of results to render per page
-    @param {int} page - page number <-- deprecated?
     DEV: prototype using serverless HTTP proxy
-    TODO: add error handling for ajax .fail(...), remove arguments?
+    TODO: add error handling for ajax .fail(...)
 */
-function renderPages(page_size=50, page=0) {
+function renderPages() {
     var query_string = _getQueryString();
-    // get page_size from dropdown
-    page_size = parseInt($('#results-per-page').val());
-    _displayLoading(true);
-    // console.log('getting query ' + query_string);
-    $('.grid-container').show();
+    var page_size = parseInt($('#results-per-page').val());
     var search_results = [];
+    var num_results = 0;
+    var data = {query: query_string, page_size: page_size, offset: false};
 
     // var url = "https://wmsinh.org/airtable?query=" + query_string;
     // var url = "https://wmsinh.org/airtable";
     // var url = "http://localhost:7071/api/MyHttpTrigger"
     var url = "http://localhost:5000/airtable";
 
-    // Chain AJAX requests so that we load the remaining results after the first page has rendered
-    first_page = _getResults(url, {query: query_string, page_size: page_size});
-    first_page.then((data, status, xhr) => search_results = _multiPageLoad(data, xhr, search_results, true));
-    
 
-    var remaining = first_page.then(() => _getResults(url, {query: query_string, offset: page_size}));
-    remaining.then((data, status, xhr) => (remaining ? _multiPageLoad(data, xhr, search_results) : null));
+    _displayLoading(true);
+    $('.grid-container').show();        // put this elsewhere?
+    $('#sort-results').val('');
+
+    // Chain AJAX requests so that we load the remaining results after the first page has rendered
+    // make these more readable
+    first_page = _getResults(url, data);
+    first_page.then((data, status, xhr) => num_results = _multiPageLoad(data, xhr, search_results, true));
+    data.offset = true;
+    var remaining = first_page.then(() => (search_results.length < num_results ? _getResults(url, data) : false));
+    remaining.then((data, status, xhr) => (search_results.length < num_results  ? _multiPageLoad(data, xhr, search_results) : null));
 }
 
 /*     
@@ -69,15 +70,16 @@ function _getResults(url, data) {
     @param {object} xhr - response object including headers and status
     @param {array} search_results - array to contain all search resutls from Airtable
     @param {boolean} first - true if this is the first page
+    @returns {int} num_results - total number of results that match the search criteria
     @private
 */
 function _multiPageLoad(data, xhr, search_results, first=false) {
+    console.log('search_results length: ' + search_results.length + ', appending new results: ' + data.length);
     Array.prototype.push.apply(search_results, data);
     var num_results = xhr.getResponseHeader('num_results');
+    var page_size = xhr.getResponseHeader('page_size');
     if(first) {
-        // console.log('handle first page with num results ' + num_results);
         _renderFeatureCarousel(search_results);
-        // call _manageTableLocal() here?
         _clearTable();
         _buildTable(search_results, 'dev');
         _displayMetaData(search_results, search_results.length, 0, num_results);
@@ -85,19 +87,11 @@ function _multiPageLoad(data, xhr, search_results, first=false) {
         document.querySelector('#feature-container').scrollIntoView({ 
           behavior: 'smooth' 
         });
-        return search_results;
-        // consider using something like below in a wrapper succes function for first page to avoid second call if unnecessary
-        // if(search_results.length < num_results) {
-        //     var url = "http://localhost:5000/airtable";
-        //     var remaining = first_page.then(() => _getResults(url, {query: query_string, offset: page_size}));
-        //     remaining.then((data, status, xhr) => _multiPageLoad(data, xhr, search_results));
-        // }
-    } else {
-        // remaining_data = data;
-        var page_size = xhr.getResponseHeader('page_size');
-        // console.log('handle remaining with page size ' + page_size);
+    } 
+    if(search_results.length == num_results) {
         _manageTableLocal(search_results, page_size, 0, false);
     }
+    return num_results;
 }
 
 /*
@@ -107,13 +101,12 @@ function _multiPageLoad(data, xhr, search_results, first=false) {
     @param {int} page_size - number of results per page
     @param {int} page - number of the current page
     @private
-    TODO: add handling for if build=false, ie not the first page so don't run any extra functions
 */
 function _manageTableLocal(search_results, page_size, page=0, build=true) {
     var start = page*page_size;
     var end = Math.min((page+1)*page_size, search_results.length);
     this_page = search_results.slice(start, end); // change this to default first page
-    // console.log('rendering search results from index ' + start + ' to ' + end);
+
     if(build) {
         _clearTable();
         _buildTable(this_page, 'dev');
@@ -125,8 +118,8 @@ function _manageTableLocal(search_results, page_size, page=0, build=true) {
     _sortResultsDropdown(search_results, false);
 
     // could some of these be run once by using global variables?
-    $('#sort-results').unbind('change').change(() => {_manageTableLocal(search_results, page_size, page)});
-    $('i').click(() => {_manageTableLocal(search_results, page_size, page)});
+    $('#sort-results').change(() => {_manageTableLocal(search_results, page_size, page)});
+    $('.item-header i').click(() => {_manageTableLocal(search_results, page_size, page)});
     $('#results-per-page').unbind('change').change(function() {changePageLengthLocal(start, search_results)});  
 }
 
@@ -293,7 +286,6 @@ function renderSelfLed() {
 function _sortResultsDropdown(search_results, build=true) {
     $('#sort-results').unbind('change').change(function(event) {
         event.stopPropagation();
-        console.log('sort results triggered');
         var sort = $(this).val();
         if(sort == "")
             _sortText(search_results, "Resource Name", true);
@@ -386,10 +378,11 @@ function _buildFeatureCarousel(features, location) {
         template = template.replace('*link', resource["Resource Link"]);
         template = template.replace('*img', 'src="'+resource.Thumbnail[0].url+'"');
         template = template.replace('*description', resource['Description']);
+        template = template.replace('*experience', resource['Experience']);
         template = template.replace('*subjects', resource['Subject']);//(Array.isArray(item["Subject"]) ? item["Subject"].join(", ") : item["Subject"]));
         template = template.replace('*materials', resource['Materials']);
         template = template.replace('*source', resource['Source']);
-        template = template.replace('*source_link', resource['Source Link']);
+        template = template.replace('*src_link', resource['Source Link']);
 
         $(location).append("<li>" + template + "</li>");
         if(location != '#feature-header')
