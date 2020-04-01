@@ -225,7 +225,7 @@ function _buildFeatures(features) {
         template = template.replace('*subjects', resource['Subject']);//(Array.isArray(item["Subject"]) ? item["Subject"].join(", ") : item["Subject"]));
         template = template.replace('*materials', resource['Materials']);
         template = template.replace('*source', resource['Source']);
-        template = template.replace('*source_link', resource['Source Link']);
+        template = template.replace('*src_link', resource['Source Link']);
         $('.features').append(template);
         _addFeatureComments(resource, i);
     });
@@ -264,13 +264,15 @@ function _buildFeatureList(search_results, max=100) {
     search_results.sort(() => Math.random() - 0.5);
 
     search_results.forEach(function(resource) {
-        // save Top Features from favorite sources
-        if(fav_sources.includes(resource.Source) || resource.Tags.includes('favorite'))
-            top_features.push(resource);
+        if(resource.Thumbnail != undefined && !resource.Tags.includes('incomplete')) {
+            // save Top Features from favorite sources
+            if(fav_sources.includes(resource.Source) || resource.Tags.includes('favorite'))
+                top_features.push(resource);
 
-        // push all items to list that have a thumbnail and are not incomplete
-        else if(resource.Thumbnail != undefined && !resource.Tags.includes('incomplete'))
-            feature_list.push(resource);
+            // push all other items to list that have a thumbnail and are not incomplete
+            else 
+                feature_list.push(resource);
+        }
     });
 
     // no duplicate sources next to each other

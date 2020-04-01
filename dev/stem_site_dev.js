@@ -11,6 +11,7 @@ $(document).ready(function(){
     _bindScrollClicks();
     _fixTabIndex();
 
+
     $(window).scroll(() => scrollTopButton());
     $('#scroll-top-btn').click(() => $("html, body").animate({scrollTop: '125'}, 600));
     $('#search').click(() => renderPages());//renderTable()});

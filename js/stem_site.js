@@ -17,9 +17,27 @@ $(document).ready(function(){
         $('#materials-filter').children().prop('checked', false);
     });
     _fixTabIndex();
+    initialLoad();
 });
 
-/*
+function initialLoad() {
+    var url = "https://wmsinh.org/airtable?query=NOT({Resource Name}='')";
+    var page_size = 50;
+    _displayLoading(true);
+    $('.grid-container').show();
+    var search_results = [];
+
+    $.ajax({
+        type: 'GET',
+        headers: {'Access-Control-Allow-Origin': '*'},
+        url: url
+    }).done(function(data, status, jqXHR) {
+        search_results=JSON.parse(data);
+        _manageTableLocal(search_results, page_size);
+        _renderFeatures(search_results);
+        _displayLoading(false);
+    });
+}
 
 /*
     Render STEM Resource table based on search parameters
@@ -31,7 +49,7 @@ function renderTable() {
     var query_string = _getQueryString();
     // if(query_string == 'AND)')
     //     return;
-    console.log('filter by formula: ' + query_string);
+    // console.log('filter by formula: ' + query_string);
     $('.grid-container').show();
     var search_results = [];
     var url = "https://wmsinh.org/airtable?query=" + query_string;
