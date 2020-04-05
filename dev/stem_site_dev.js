@@ -1,4 +1,4 @@
-
+var final_load = false;
 $(document).ready(function(){
     $('.grid-container').hide();
     $('.lds-ring').hide();
@@ -36,7 +36,10 @@ function initialLoad() {
         _manageTableLocal(search_results, page_size);
         _renderFeatures(search_results);
         _displayLoading(false);
-        console.log("Initial load time: ", Date.now() - window.performance.timing.navigationStart);
+        if(final_load)
+            console.log("Initial load time: ", Date.now() - window.performance.timing.navigationStart);
+        else
+            final_load = true;
     });
 }
 /*
@@ -321,7 +324,10 @@ function _setupFeatures() {
         feature_list = _buildFeatureList(search_results);
         _buildFeatureCarousel(feature_list, '#feature-header');
         $('.lds-large').hide();
-        console.log("Initial load time: ", Date.now() - window.performance.timing.navigationStart);
+        if(final_load)
+            console.log("Initial load time: ", Date.now() - window.performance.timing.navigationStart);
+        else
+            final_load = true;
     });
 }
 
