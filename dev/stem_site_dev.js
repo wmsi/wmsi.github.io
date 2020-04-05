@@ -16,9 +16,29 @@ $(document).ready(function(){
     $('#reset').click(() => resetFilters());
     $('#self-led-button').click(() => renderSelfLed());
     $('#uncheck-materials').click(() => $('#materials-filter').children().prop('checked', false));
+    initialLoad();
 });
 $(window).load(() => console.log("Window load time: ", window.performance.timing.domComplete - window.performance.timing.navigationStart));
 
+function initialLoad() {
+    // var url = "https://wmsinh.org/airtable";
+    // var url = "https://us-central1-sigma-tractor-235320.cloudfunctions.net/http-proxy";
+    var query = "NOT({Resource Name}='')";
+    var page_size = 50;
+    var search_results = [];
+
+    _displayLoading(true);
+    $('.grid-container').show();
+    
+    _getResults(url, {query: query}).done(function(data, status, jqXHR) {
+        if(!_safeParse(data, search_results))
+            return _handleSearchFail();
+        _manageTableLocal(search_results, page_size);
+        _renderFeatures(search_results);
+        _displayLoading(false);
+        console.log("Initial load time: ", Date.now() - window.performance.timing.navigationStart);
+    });
+}
 /*
     Obtain search results and cache them locally while displaying pages one at a time
     DEV: prototype using serverless HTTP proxy
@@ -34,7 +54,7 @@ function renderPages() {
 
     // var url = "https://wmsinh.org/airtable?query=" + query_string;
     // var url = "https://wmsinh.org/airtable";
-    var url = "https://us-central1-sigma-tractor-235320.cloudfunctions.net/http-proxy";
+    // var url = "https://us-central1-sigma-tractor-235320.cloudfunctions.net/http-proxy";
     // data = {query: query_string};
     // var url = "http://localhost:5000/airtable";
 
@@ -102,6 +122,7 @@ function _multiPageLoad(data, xhr, search_results, first=false) {
     @param {array} search_results - all results returned by the current search
     @param {int} page_size - number of results per page
     @param {int} page - number of the current page
+    @param {boolean} build - defaults to true, false means initial build has already happened
     @private
 */
 function _manageTableLocal(search_results, page_size, page=0, build=true) {
@@ -293,11 +314,7 @@ function _setupFeatures() {
     var data = {query: "AND(NOT({Thumbnail} = ''), NOT(Find('incomplete', Tags)))"};
 
     $('.lds-large').show();
-    // $.ajax({
-    //     type: 'GET',
-    //     headers: {'Access-Control-Allow-Origin': '*'},
-    //     url: url
-    // })
+
     _getResults(url, data).done(function(data, status) {
         // search_results=JSON.parse(data);
         _safeParse(data, search_results);
