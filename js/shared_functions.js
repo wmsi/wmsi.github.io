@@ -491,8 +491,8 @@ function _addLightbox(resource, index) {
     html_template = html_template.replace('*class', 'lightbox-grid');
     html_template = html_template.replace('*link', resource["Resource Link"]);
     html_template = html_template.replace('*title', resource["Resource Name"]);
-    // if(resource.Thumbnail != undefined) 
-    //     html_template = html_template.replace('*img','src="' + resource.Thumbnail[0].url + '"');
+    if(resource.Thumbnail != undefined) 
+        html_template = html_template.replace('*img','src="' + resource.Thumbnail[0].url + '"');
     // else generic thumbnail image
     html_template = html_template.replace('*description', resource["Description"]);
     html_template = html_template.replace('*materials', resource["Materials"]);
