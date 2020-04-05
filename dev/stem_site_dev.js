@@ -1,5 +1,4 @@
-// When the page loads populate the table with activities and render the dropdown menus.
-// Add a graderange to each activity that JS can interpret
+
 $(document).ready(function(){
     $('.grid-container').hide();
     $('.lds-ring').hide();
@@ -11,7 +10,6 @@ $(document).ready(function(){
     _bindScrollClicks();
     _fixTabIndex();
 
-
     $(window).scroll(() => scrollTopButton());
     $('#scroll-top-btn').click(() => $("html, body").animate({scrollTop: '125'}, 600));
     $('#search').click(() => renderPages());//renderTable()});
@@ -19,6 +17,7 @@ $(document).ready(function(){
     $('#self-led-button').click(() => renderSelfLed());
     $('#uncheck-materials').click(() => $('#materials-filter').children().prop('checked', false));
 });
+$(window).load(() => console.log("Window load time: ", window.performance.timing.domComplete - window.performance.timing.navigationStart));
 
 /*
     Obtain search results and cache them locally while displaying pages one at a time
@@ -26,6 +25,7 @@ $(document).ready(function(){
     TODO: add error handling for ajax .fail(...)
 */
 function renderPages() {
+    var timer = Date.now();
     var query_string = _getQueryString();
     var page_size = parseInt($('#results-per-page').val());
     var search_results = [];
@@ -34,8 +34,9 @@ function renderPages() {
 
     // var url = "https://wmsinh.org/airtable?query=" + query_string;
     // var url = "https://wmsinh.org/airtable";
-    // var url = "http://localhost:7071/api/MyHttpTrigger"
-    var url = "http://localhost:5000/airtable";
+    var url = "https://us-central1-sigma-tractor-235320.cloudfunctions.net/http-proxy";
+    // data = {query: query_string};
+    // var url = "http://localhost:5000/airtable";
 
 
     _displayLoading(true);
@@ -43,30 +44,30 @@ function renderPages() {
     $('#sort-results').val('');
 
     // Chain AJAX requests so that we load the remaining results after the first page has rendered
-    // make these more readable
-    first_page = _getResults(url, data);
+    var first_page = _getResults(url, data).fail(() => _handleSearchFail());
     first_page.then((data, status, xhr) => num_results = _multiPageLoad(data, xhr, search_results, true));
+
+    // offset lets the HTTP proxy know to omit the first page
     data.offset = true;
     var remaining = first_page.then(() => (search_results.length < num_results ? _getResults(url, data) : false));
+    first_page.done(() => console.log("Activities displayed time: ", Date.now() - timer));
+    // var remaining = first_page.then(function() {
+    //         console.log("Activities displayed time: ", Date.now() - timer);
+    //         search_results.length < num_results ? _getResults(url, data) : false;
+    //     });
+    remaining.fail(() => _handleSearchFail());
     remaining.then((data, status, xhr) => (search_results.length < num_results  ? _multiPageLoad(data, xhr, search_results) : null));
-}
-
-/*     
-    Execute AJAX GET request and return response data
-    @param {string} url - URL to request from
-    @param {object} data - includes Airtable query and page_size or offset
-    @private
-*/
-function _getResults(url, data) {
-    return $.ajax({
-        data: data,
-        url: url
-    });
+    remaining.then(function(data, status, xhr) {
+            // console.log("remaining.then with xhr ", xhr);
+            search_results.length < num_results  ? _multiPageLoad(data, xhr, search_results) : null;
+            console.log("Render results time: ", Date.now() - timer);
+        });
 }
 
 /*
     Render the first page when it loads, then add subsequent data to search_results
     When all data has loaded hand off management to _manageTableLocal()
+    This can also be used to handle a large single load
     @param {object} data - response data from AJAX GET
     @param {object} xhr - response object including headers and status
     @param {array} search_results - array to contain all search resutls from Airtable
@@ -75,8 +76,8 @@ function _getResults(url, data) {
     @private
 */
 function _multiPageLoad(data, xhr, search_results, first=false) {
-    // console.log('search_results length: ' + search_results.length + ', appending new results: ' + data.length);
-    Array.prototype.push.apply(search_results, data);
+    if(!_safeParse(data, search_results))
+        return _handleSearchFail();
     var num_results = xhr.getResponseHeader('num_results');
     var page_size = xhr.getResponseHeader('page_size');
     if(first) {
@@ -90,7 +91,7 @@ function _multiPageLoad(data, xhr, search_results, first=false) {
         });
     } 
     if(search_results.length == num_results) {
-        _manageTableLocal(search_results, page_size, 0, false);
+        _manageTableLocal(search_results, page_size, 0, !first);
     }
     return num_results;
 }
@@ -124,40 +125,48 @@ function _manageTableLocal(search_results, page_size, page=0, build=true) {
     $('#results-per-page').unbind('change').change(function() {changePageLengthLocal(start, search_results)});  
 }
 
+
 /*
-    Handle the event of a user posting a new comment on an activity
+    Handle the event of a user posting a new comment on a featured activity
     When a user clicks the Post Comment button parse the comment text 
-    and send it to Airtable through a new HTTP Proxy servcice (not the linode)
+    and send it to Airtable
     @param {int} index - index of activity in the table, used to make IDs
     @param {object} resource - resource object to post comment for
     @private
+    TODO: shorter ID names?
 */
-function _postCommentNewProxy(index, resource) {
-    var id = '#post-comment' + index;
+function _postComment(resource, index, feature = false) {
+    // var id = '#feature-post-comment' + index;
+    var id = (feature ? '#feature-post-comment' + index : '#post-comment' + index);
+    var comment_id = (feature ? '#feature-new-comment' + index : '#new-comment' + index);
+    var user_id = (feature ? '#feature-comment-name' + index : '#comment-name' + index);
+
     $(id).unbind('click').click(function() {
-        var comment = $('.featherlight-inner #new-comment' + index).val();
-        var user = $('.featherlight-inner #comment-name' + index).val();
+        var comment = $('.featherlight-inner ' + comment_id).val();
+        var user = $('.featherlight-inner ' + user_id).val();
         user = (user == "" ? "Anonymous" : user);
         if(comment != '') {
             var formatted_comment = '["' + user + '", "' + comment + '"]';
             console.log('posting comment: '+ comment +' to airtable from user ' + user);
-            if(resource.Comments)
-                resource.Comments = resource.Comments + ', ' + formatted_comment;
-            else
-                resource.Comments = formatted_comment
-            console.log('posting comment to azure local');
             $.ajax({
-                    type: 'GET',
-                    headers: {'Access-Control-Allow-Origin': '*'},
-                    url: 'https://wmsinh.org/airtable',
-                    // url: "http://localhost:7071/api/MyHttpTrigger",
-                    // url: 'http://localhost:5000/airtable',
-                    data: {
-                        id: resource.id,
-                        comment: formatted_comment
-                    }
-                });
-            $('.featherlight-inner #comment-text'+index).append(user + ': ' + comment + '<br>');
+                type: 'POST',
+                // url: 'https://wmsinh.org/airtable',
+                // url: 'http://localhost:5000/airtable',
+                url: "https://us-central1-sigma-tractor-235320.cloudfunctions.net/http-proxy",
+                data: {
+                    "id": resource.id,
+                    "New Comment": formatted_comment
+                }
+            }).fail(function(jqXHR, textStatus, errorThrown) {
+                console.log("post comment failed :( \n" + textStatus + ': ' + errorThrown);
+            });
+
+            // Wait for approval on new comments. Show some kind of success message that comment was received
+            var markup_id = '.featherlight-inner ' + (feature ? '#feature-' : '#') + 'comment-text' + index;
+            $(markup_id).empty().append('<b>Thanks for posting a comment! We will review your comment within the next 1-2 weeks and put it right here.');
+            // $('.featherlight-inner #feature-comment-text'+index).append(user + ': ' + comment + '<br>');
+            $('.featherlight-inner ' + comment_id).val('');
+            $('.featherlight-inner ' + user_id).val('');
         }
     });
 }
@@ -226,46 +235,6 @@ function _swapFeaturesMarkup() {
         $('#feature-container').html(static);
 }
 
-
-/*
-    Render STEM Resource table based on search parameters
-    Generate a query and send it to the API proxy on our Linode
-    (wmsinh.org), then handle the response
-    DOES NOT use pages, ie renders all results at once
-*/
-function renderTable() {
-    _displayLoading(true);
-    _clearTable();
-    var query_string = _getQueryString();
-    if(query_string == 'AND)')
-        return;
-    console.log('filter by formula: ' + query_string);
-    $('.grid-container').show();
-    search_results = [];
-    // var url = "https://wmsinh.org/airtable?query=" + query_string;
-    var url = "https://wmsinh.org/airtable";
-    // var url = "http://localhost:5000/airtable";
-    $.ajax({
-        type: 'GET',
-        headers: {'Access-Control-Allow-Origin': '*'},
-        url: url,
-        data: {
-            query: query_string
-        }
-    }).done(function(data, status) {
-        search_results=JSON.parse(data);
-        _renderFeatureCarousel(search_results);
-        _buildTable(search_results);
-        _displayLoading(false);
-        _displayMetaData(search_results, search_results.length);
-        _sortResults(search_results);
-        _sortResultsDropdown(search_results);
-        document.querySelector('#feature-container').scrollIntoView({ 
-          behavior: 'smooth' 
-        });
-    });
-}
-
 /*
     Add a 'self-led activities' filter on top of any other search filters
     TODO: find a cleaner way to implement this
@@ -319,17 +288,23 @@ function _sortResultsDropdown(search_results, build=true) {
 */
 function _setupFeatures() {
     var search_results = [];
-    var url = "https://wmsinh.org/airtable?query=AND(NOT({Thumbnail} = ''), NOT(Find('inomplete', Tags)))";
+    // var url = "https://wmsinh.org/airtable";
+    var url = "https://us-central1-sigma-tractor-235320.cloudfunctions.net/http-proxy";
+    var data = {query: "AND(NOT({Thumbnail} = ''), NOT(Find('incomplete', Tags)))"};
+
     $('.lds-large').show();
-    $.ajax({
-        type: 'GET',
-        headers: {'Access-Control-Allow-Origin': '*'},
-        url: url
-    }).done(function(data, status) {
-        search_results=JSON.parse(data);
+    // $.ajax({
+    //     type: 'GET',
+    //     headers: {'Access-Control-Allow-Origin': '*'},
+    //     url: url
+    // })
+    _getResults(url, data).done(function(data, status) {
+        // search_results=JSON.parse(data);
+        _safeParse(data, search_results);
         feature_list = _buildFeatureList(search_results);
         _buildFeatureCarousel(feature_list, '#feature-header');
         $('.lds-large').hide();
+        console.log("Initial load time: ", Date.now() - window.performance.timing.navigationStart);
     });
 }
 
@@ -462,6 +437,45 @@ function renderPage(page_size=50, page=0) {
         _displayMetaData(search_results, page_size, page, num_results);
         $('#results-per-page').unbind('change').change(function() {changePageLength(page_size*page)});
         _createButtonFunctions(page, (page+1)*page_size, num_results);
+        _sortResults(search_results);
+        _sortResultsDropdown(search_results);
+        document.querySelector('#feature-container').scrollIntoView({ 
+          behavior: 'smooth' 
+        });
+    });
+}
+
+/*
+    Render STEM Resource table based on search parameters
+    Generate a query and send it to the API proxy on our Linode
+    (wmsinh.org), then handle the response
+    DOES NOT use pages, ie renders all results at once
+*/
+function renderTable() {
+    _displayLoading(true);
+    _clearTable();
+    var query_string = _getQueryString();
+    if(query_string == 'AND)')
+        return;
+    console.log('filter by formula: ' + query_string);
+    $('.grid-container').show();
+    search_results = [];
+    // var url = "https://wmsinh.org/airtable?query=" + query_string;
+    var url = "https://wmsinh.org/airtable";
+    // var url = "http://localhost:5000/airtable";
+    $.ajax({
+        type: 'GET',
+        headers: {'Access-Control-Allow-Origin': '*'},
+        url: url,
+        data: {
+            query: query_string
+        }
+    }).done(function(data, status) {
+        search_results=JSON.parse(data);
+        _renderFeatureCarousel(search_results);
+        _buildTable(search_results);
+        _displayLoading(false);
+        _displayMetaData(search_results, search_results.length);
         _sortResults(search_results);
         _sortResultsDropdown(search_results);
         document.querySelector('#feature-container').scrollIntoView({ 

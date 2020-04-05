@@ -1,6 +1,6 @@
 // Shared functions between different versions of the STEM Resource Table (ie master and dev branches)
 //TODO: reorder functions from most- to least-used
-
+var url = "https://us-central1-sigma-tractor-235320.cloudfunctions.net/http-proxy";
 var fav_sources = ["WMSI", "STEAM Discovery Lab", "NASA", "code.org"];
 
 /*
@@ -9,32 +9,81 @@ var fav_sources = ["WMSI", "STEAM Discovery Lab", "NASA", "code.org"];
     @param {int} page - page number <-- deprecated?
 */
 function renderPages(page_size=50, page=0) {
+    var timer = Date.now();
     var query_string = _getQueryString();
-    if(query_string == 'AND)')
-        return;
-    _displayLoading(true);
-    // console.log('getting query ' + query_string);
-    $('.grid-container').show();
+    var page_size = parseInt($('#results-per-page').val());
+    var data = {query: query_string};
     var search_results = [];
+    
     // var url = "https://wmsinh.org/airtable?query=" + query_string;
-    var url = "https://wmsinh.org/airtable";
+    // var url = "https://wmsinh.org/airtable";
+    // var url = "https://us-central1-sigma-tractor-235320.cloudfunctions.net/http-proxy";
     // var url = "http://localhost:5000/airtable";
-    $.ajax({
-        type: 'GET',
-        headers: {'Access-Control-Allow-Origin': '*'},
-        url: url,
-        data: {
-            query: query_string
-        }
-    }).done(function(data, status, jqXHR) {
-        search_results=JSON.parse(data);
+
+    _displayLoading(true);
+    $('.grid-container').show();
+
+    _getResults(url, data).then(function(data, status, jqXHR) {
+        if(!_safeParse(data, search_results))
+            return _handleSearchFail();
         _manageTableLocal(search_results, page_size);
         _renderFeatures(search_results);
         _displayLoading(false);
         document.querySelector('#feature-container').scrollIntoView({ 
           behavior: 'smooth' 
         });
+        console.log("Render results time: ", Date.now() - timer);
+    }).fail(() => _handleSearchFail());
+}
+
+/*     
+    Execute AJAX GET request and return response data
+    @param {string} url - URL to request from
+    @param {object} data - includes Airtable query and page_size or offset
+    @private
+*/
+function _getResults(url, data) {
+    return $.ajax({
+        data: data,
+        // headers: {'Access-Control-Allow-Origin': '*'},
+        url: url
     });
+}
+
+
+/*
+    Parse the response data or push it directly if it is an array
+    @param {object} data - response data from http proxy
+    @param {array} search_results - array to append search results onto
+    @private
+    TODO: expand exception handling to include other cases.
+*/
+function _safeParse(data, search_results) {
+    try {
+        // var new_results=JSON.parse(data);
+        Array.prototype.push.apply(search_results, JSON.parse(data));
+    } catch (err) {
+        // console.log('parse failed, attempting push', err);
+        try {
+            Array.prototype.push.apply(search_results, data);
+        } catch {
+            // console.log('cannot parse search results', err);
+            return false;
+        }
+    }
+    return true;
+}
+
+/*
+    Display a message to users if a search fails. This could have to do with a bad
+    HTTP request, connectivity issues, or unforeseen problems.
+    @private
+*/
+function _handleSearchFail() {
+    _displayLoading(false);
+    $('#results-meta').html(`We're sorry but there was an error loading your search.  
+                            Please refresh the page and try again. 
+                            If the problem persists, click the "Broken Link" button on the bottom right.`);
 }
 
 /*
@@ -159,23 +208,22 @@ function _postComment(resource, index, feature = false) {
         if(comment != '') {
             var formatted_comment = '["' + user + '", "' + comment + '"]';
             console.log('posting comment: '+ comment +' to airtable from user ' + user);
-            if(resource.Comments)
-                resource.Comments = resource.Comments + ', ' + formatted_comment;
-            else
-                resource.Comments = formatted_comment
             $.ajax({
-                    type: 'POST',
-                    // url: 'https://wmsinh.org/airtable',
-                    url: 'http://localhost:5000/airtable',
-                    data: {
-                        "id": resource.id,
-                        "New Comment": formatted_comment
-                    }
-                });
+                type: 'POST',
+                // url: 'https://wmsinh.org/airtable',
+                // url: 'http://localhost:5000/airtable',
+                // url: "https://us-central1-sigma-tractor-235320.cloudfunctions.net/http-proxy",
+                data: {
+                    "id": resource.id,
+                    "New Comment": formatted_comment
+                }
+            }).fail(function(jqXHR, textStatus, errorThrown) {
+                console.log("post comment failed :( \n" + textStatus + ': ' + errorThrown);
+            });
+
             // Wait for approval on new comments. Show some kind of success message that comment was received
             var markup_id = '.featherlight-inner ' + (feature ? '#feature-' : '#') + 'comment-text' + index;
-            // console.log('markup id: ' + markup_id);
-            $(markup_id).append('<b>Thanks for posting a comment! We will review your comment within the next 1-2 weeks and put it right here.');
+            $(markup_id).empty().append('<b>Thanks for posting a comment! We will review your comment within the next 1-2 weeks and put it right here.');
             // $('.featherlight-inner #feature-comment-text'+index).append(user + ': ' + comment + '<br>');
             $('.featherlight-inner ' + comment_id).val('');
             $('.featherlight-inner ' + user_id).val('');
@@ -192,7 +240,7 @@ function _postComment(resource, index, feature = false) {
     TODO: Refine selection criteria, limit duplicate Source
 */
 function _renderFeatures(search_results) {
-    console.log('rendering features');
+    // console.log('rendering features');
     feature_list = _buildFeatureList(search_results);
     // console.log('building ' + feature_list.length + ' features');
     if(feature_list.length == 0)
@@ -236,7 +284,7 @@ function _buildFeatures(features) {
 */
 function resetFilters() {
     $('#subject').val("");
-    $('#grade').val("");
+    $('#experience').val("");
     $(':checkbox').prop('checked',true);
     $('#self-led').prop('checked', false);
     $('input[type="search"]').val("");
@@ -443,8 +491,8 @@ function _addLightbox(resource, index) {
     html_template = html_template.replace('*class', 'lightbox-grid');
     html_template = html_template.replace('*link', resource["Resource Link"]);
     html_template = html_template.replace('*title', resource["Resource Name"]);
-    if(resource.Thumbnail != undefined) 
-        html_template = html_template.replace('*img','src="' + resource.Thumbnail[0].url + '"');
+    // if(resource.Thumbnail != undefined) 
+    //     html_template = html_template.replace('*img','src="' + resource.Thumbnail[0].url + '"');
     // else generic thumbnail image
     html_template = html_template.replace('*description', resource["Description"]);
     html_template = html_template.replace('*materials', resource["Materials"]);

@@ -1,10 +1,12 @@
 // When the page loads populate the table with activities and render the dropdown menus.
 // Add a graderange to each activity that JS can interpret
+
 $(document).ready(function(){
     // console.log('table length ' + resource_table.Activities.length);
     // _buildTable();
+
     _renderSelects();
-    _setupFeatures();
+    // _setupFeatures();
     _handleSearch();
 
     $(window).scroll(() => scrollTopButton());
@@ -19,25 +21,105 @@ $(document).ready(function(){
     _fixTabIndex();
     initialLoad();
 });
+$(window).load(() => console.log("Window load time: ", window.performance.timing.domComplete - window.performance.timing.navigationStart));
 
 function initialLoad() {
-    var url = "https://wmsinh.org/airtable?query=NOT({Resource Name}='')";
+    // var url = "https://wmsinh.org/airtable";
+    // var url = "https://us-central1-sigma-tractor-235320.cloudfunctions.net/http-proxy";
+    var query = "NOT({Resource Name}='')";
     var page_size = 50;
-    _displayLoading(true);
-    $('.grid-container').show();
     var search_results = [];
 
-    $.ajax({
-        type: 'GET',
-        headers: {'Access-Control-Allow-Origin': '*'},
-        url: url
-    }).done(function(data, status, jqXHR) {
-        search_results=JSON.parse(data);
+    _displayLoading(true);
+    $('.grid-container').show();
+    
+    _getResults(url, {query: query}).done(function(data, status, jqXHR) {
+        if(!_safeParse(data, search_results))
+            return _handleSearchFail();
         _manageTableLocal(search_results, page_size);
         _renderFeatures(search_results);
         _displayLoading(false);
+        console.log("Initial load time: ", Date.now() - window.performance.timing.navigationStart);
     });
 }
+
+/*
+    Manage locally stored search results. Update sorting, meta data, and buttons
+    as necessary.
+    @param {array} search_results - all results returned by the current search
+    @param {int} page_size - number of results per page
+    @param {int} page - number of the current page
+    @param {boolean} build - defaults to true, false means initial build has already happened
+    @private
+*/
+function _manageTableLocal(search_results, page_size, page=0, build=true) {
+    var start = page*page_size;
+    var end = Math.min((page+1)*page_size, search_results.length);
+    this_page = search_results.slice(start, end); // change this to default first page
+    // console.log('rendering search results from index ' + start + ' to ' + end);
+    if(build) {
+        _clearTable();
+        _buildTable(this_page);
+        _displayMetaData(this_page, page_size, page, search_results.length);
+    }
+    _createLocalButtons(search_results, page_size, page);
+    _sortResults(search_results, false);
+    $('.item-header i').click(() => {_manageTableLocal(search_results, page_size, page)});
+    $('#results-per-page').unbind('change').change(function() {changePageLengthLocal(start, search_results)});  
+}
+
+/*
+    Add 3 features to the top of the page. 
+    For now these can be any activities with thumbnails in the base.
+    @private
+    TODO: streamline Airtable query to return fewer features to choose from (e.g. filter by rating)
+    **may be DEPRECATED if we keep initalLoad()
+*/
+function _setupFeatures() {
+    var search_results = [];
+    // var url = "https://wmsinh.org/airtable?query=AND(NOT({Thumbnail} = ''), NOT(Find('incomplete', Tags)))";
+    // var url = "https://wmsinh.org/airtable?query=NOT({Resource Name}='')";
+    // var url = "https://us-central1-sigma-tractor-235320.cloudfunctions.net/http-proxy";
+    var query = "AND(NOT({Thumbnail} = ''), NOT(Find('incomplete', Tags)))";
+
+
+    $('.grid-container').show();
+
+    _getResults(url, {query: query}).done(function(data, status) {
+        if(!_safeParse(data, search_results))
+            return _handleSearchFail();
+        feature_list = _buildFeatureList(search_results);
+        // console.log('building from ' + feature_list.length + ' features');
+        _buildFeatures(feature_list);
+        console.log("Initial load time: ", Date.now() - window.performance.timing.navigationStart);
+    });
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*                        DEPRECATED                  */
 
 /*
     Render STEM Resource table based on search parameters
@@ -69,53 +151,6 @@ function renderTable() {
     });
 }
 
-/*
-    Manage locally stored search results. Update sorting, meta data, and buttons
-    as necessary.
-    @param {array} search_results - all results returned by the current search
-    @param {int} page_size - number of results per page
-    @param {int} page - number of the current page
-    @param {boolean} sort - variable to keep sort from always calling this function recursively
-    @private
-*/
-function _manageTableLocal(search_results, page_size, page=0, sort=true) {
-    var start = page*page_size;
-    var end = Math.min((page+1)*page_size, search_results.length);
-    this_page = search_results.slice(start, end); // change this to default first page
-    console.log('rendering search results from index ' + start + ' to ' + end);
-    _clearTable();
-    _buildTable(this_page);
-    _displayMetaData(this_page, page_size, page, search_results.length);
-    _createLocalButtons(search_results, page_size, page);
-    _sortResults(search_results, false);
-    $('.item-header i').click(() => {_manageTableLocal(search_results, page_size, page)});
-    $('#results-per-page').unbind('change').change(function() {changePageLengthLocal(start, search_results)});  
-}
-
-/*
-    Add 3 features to the top of the page. 
-    For now these can be any activities with thumbnails in the base.
-    @private
-    TODO: streamline Airtable query to return fewer features to choose from (e.g. filter by rating)
-*/
-function _setupFeatures() {
-    var search_results = [];
-    $('.grid-container').show();
-    var search_results = [];
-    var url = "https://wmsinh.org/airtable?query=AND(NOT({Thumbnail} = ''), NOT(Find('inomplete', Tags)))";
-    $.ajax({
-        type: 'GET',
-        headers: {'Access-Control-Allow-Origin': '*'},
-        url: url
-    }).done(function(data, status) {
-        search_results=JSON.parse(data);
-        feature_list = _buildFeatureList(search_results);
-        console.log('building from ' + feature_list.length + ' features');
-        _buildFeatures(feature_list);
-    });
-}
-
-/*                        DEPRECATED                  */
 
 // var Airtable = require('airtable');
 // Airtable.configure({
