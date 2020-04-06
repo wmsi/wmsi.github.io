@@ -275,6 +275,8 @@ function _buildFeatures(features) {
         template = template.replace('*source', resource['Source']);
         template = template.replace('*src_link', resource['Source Link']);
         $('.features').append(template);
+        if(resource["Video URL"] != undefined)
+            _addVideo(resource, '#feature' + i);
         _addFeatureComments(resource, i);
     });
 }
@@ -517,11 +519,12 @@ function _addLightbox(resource, index) {
     @private
 */
 function _addVideo(resource, id) {
-    console.log('detaching ' + id + ' img')
     // var $thumbnail = $(id + ' img').detach();
+
+    console.log('prepending video to ' + id + ' a');
     var video_template = $("#lightbox-video-template").html();
     video_template = video_template.replace('*src', 'src="' + resource["Video URL"] + '"');
-    var $video = $(id + ' a').prepend(video_template);
+    var $video = $(id + ' a').first().append(video_template);
     // $thumbnail.appendTo($video);
 
 }
