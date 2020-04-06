@@ -491,7 +491,11 @@ function _addLightbox(resource, index) {
     html_template = html_template.replace('*class', 'lightbox-grid');
     html_template = html_template.replace('*link', resource["Resource Link"]);
     html_template = html_template.replace('*title', resource["Resource Name"]);
-    if(resource.Thumbnail != undefined) 
+    // if(resouce["Video URL"] != undefined)
+    //     html_template = _addVideo(html_template, resource);
+    // else 
+
+    if(resource.Thumbnail != undefined && resource["Video URL"] == undefined) 
         html_template = html_template.replace('*img','src="' + resource.Thumbnail[0].url + '"');
     // else generic thumbnail image
     html_template = html_template.replace('*description', resource["Description"]);
@@ -500,6 +504,26 @@ function _addLightbox(resource, index) {
     if(resource["Tags"].includes("incomplete"))  
         html_template = html_template.slice(0,html_template.indexOf('</div>')) +  _adaptLightbox();
     $('#content').append(html_template);
+    if(resource["Video URL"] != undefined)
+        _addVideo(resource, '#resource' + index);
+}
+
+/*
+    Add a video streaming option if the Video URL field is defined for this resource
+    v1: embed with HTML5 <video> tag. Evaluate for compatibility
+    // @param {string} html_template - text to reformat into functional html elements
+    @param {object} resource - resource to render video for
+    @param {string} id - element ID to add video
+    @private
+*/
+function _addVideo(resource, id) {
+    console.log('detaching ' + id + ' img')
+    // var $thumbnail = $(id + ' img').detach();
+    var video_template = $("#lightbox-video-template").html();
+    video_template = video_template.replace('*src', 'src="' + resource["Video URL"] + '"');
+    var $video = $(id + ' a').prepend(video_template);
+    // $thumbnail.appendTo($video);
+
 }
 
 /*
@@ -809,7 +833,7 @@ function _applyGradeFilter(activities) {
     @private
 */
 function _renderSelects() {
-    subjects = ["Computer Science", "Social Studies", "Language Arts", "Music", "Visual Arts", "Physical Education", "Science", "Engineering"];
+    subjects = ["Science", "Engineering", "Math", "Social Studies", "Language Arts", "Computer Science",  "Music", "Visual Arts", "Physical Education"];
     _renderSelect("#subject","Subject", subjects);
     // _renderGradeSelect();
     _renderExperienceSelect();

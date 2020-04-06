@@ -40,6 +40,7 @@ function initialLoad() {
         _renderFeatures(search_results);
         _displayLoading(false);
         console.log("Initial load time: ", Date.now() - window.performance.timing.navigationStart);
+        $("html, body").animate({scrollTop: '320'}, 600);
     });
 }
 

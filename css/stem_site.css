@@ -178,14 +178,19 @@ h3, h4 {
   width: 60%;
 }
 
-.featherlight img {
+.featherlight img,
+.featherlight iframe {
   display: block;
   margin-left: auto;
   margin-right: auto;
-  max-width: 240px;
+  max-width: 400px;
   /*padding: 20px;*/
 }
 
+.featherlight iframe {
+  height: 240px;
+  width: 400px;
+}
 
 /*       header class is currently used for Adaptation activities and header text above filters       */
 .header img, .adapt {
