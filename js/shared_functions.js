@@ -2,6 +2,7 @@
 //TODO: reorder functions from most- to least-used
 var url = "https://us-central1-sigma-tractor-235320.cloudfunctions.net/http-proxy";
 var fav_sources = ["WMSI", "STEAM Discovery Lab", "NASA", "code.org"];
+var search_results = [];
 
 /*
     Obtain search results and cache them locally while displaying pages one at a time
@@ -13,7 +14,18 @@ function renderPages(page_size=50, page=0) {
     var query_string = _getQueryString();
     var page_size = parseInt($('#results-per-page').val());
     var data = {query: query_string};
-    var search_results = [];
+    // var search_results = [];
+
+    // continue to evaluate caching activities locally (pending speed test)
+    if(search_results.length > 0) {
+        _manageTableLocal(search_results, page_size);
+        _renderFeatures(search_results);
+        _displayLoading(false);
+        document.querySelector('#feature-container').scrollIntoView({ 
+          behavior: 'smooth' 
+        });
+        return;
+    }
     
     // var url = "https://wmsinh.org/airtable?query=" + query_string;
     // var url = "https://wmsinh.org/airtable";

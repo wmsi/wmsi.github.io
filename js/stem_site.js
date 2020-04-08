@@ -28,7 +28,7 @@ function initialLoad() {
     // var url = "https://us-central1-sigma-tractor-235320.cloudfunctions.net/http-proxy";
     var query = "NOT({Resource Name}='')";
     var page_size = 50;
-    var search_results = [];
+    // var search_results = [];
 
     _displayLoading(true);
     $('.grid-container').show();
