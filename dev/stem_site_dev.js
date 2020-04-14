@@ -1,10 +1,12 @@
-var final_load = false;
+// var final_load = false;
+var search_results = [];
 $(document).ready(function(){
     $('.grid-container').hide();
+    $('.lds-large').hide();
     $('.lds-ring').hide();
 
     _renderSelects();
-    _setupFeatures();
+    // _setupFeatures();    // no need for this if we do an initial load of all activities
     _handleSearch();
     setupDevMenu();
     _bindScrollClicks();
@@ -16,16 +18,19 @@ $(document).ready(function(){
     $('#reset').click(() => resetFilters());
     $('#self-led-button').click(() => renderSelfLed());
     $('#uncheck-materials').click(() => $('#materials-filter').children().prop('checked', false));
-    initialLoad();
+    renderPages();// initialLoad();
 });
 $(window).load(() => console.log("Window load time: ", window.performance.timing.domComplete - window.performance.timing.navigationStart));
 
+/*
+    Perform an initial load of activities into the table using multiPageLoad
+    Cache results locally for future searches
+    DEPRECATED: initalLoad now takes place with renderPages()
+*/
 function initialLoad() {
-    // var url = "https://wmsinh.org/airtable";
-    // var url = "https://us-central1-sigma-tractor-235320.cloudfunctions.net/http-proxy";
     var query = "NOT({Resource Name}='')";
     var page_size = 50;
-    var search_results = [];
+    // var search_results = [];
 
     _displayLoading(true);
     $('.grid-container').show();
@@ -34,13 +39,17 @@ function initialLoad() {
         if(!_safeParse(data, search_results))
             return _handleSearchFail();
         _manageTableLocal(search_results, page_size);
-        _renderFeatures(search_results);
+        _renderFeatureCarousel(search_results);
         _displayLoading(false);
-        if(final_load)
-            console.log("Initial load time: ", Date.now() - window.performance.timing.navigationStart);
-        else
-            final_load = true;
+
+        console.log("Initial load time: ", Date.now() - window.performance.timing.navigationStart);
+        // if(final_load)
+        //     console.log("Initial load time: ", Date.now() - window.performance.timing.navigationStart);
+        // else
+        //     final_load = true;
     });
+    remaining.then((data, status, xhr) => (search_results.length < num_results  ? _multiPageLoad(data, xhr, search_results) : null));
+
 }
 /*
     Obtain search results and cache them locally while displaying pages one at a time
@@ -51,40 +60,52 @@ function renderPages() {
     var timer = Date.now();
     var query_string = _getQueryString();
     var page_size = parseInt($('#results-per-page').val());
-    var search_results = [];
-    var num_results = 0;
-    var data = {query: query_string, page_size: page_size, offset: false};
-
-    // var url = "https://wmsinh.org/airtable?query=" + query_string;
-    // var url = "https://wmsinh.org/airtable";
-    // var url = "https://us-central1-sigma-tractor-235320.cloudfunctions.net/http-proxy";
-    // data = {query: query_string};
-    // var url = "http://localhost:5000/airtable";
-
+    // var search_results = [];
 
     _displayLoading(true);
     $('.grid-container').show();        // put this elsewhere?
     $('#sort-results').val('');
 
-    // Chain AJAX requests so that we load the remaining results after the first page has rendered
-    var first_page = _getResults(url, data).fail(() => _handleSearchFail());
-    first_page.then((data, status, xhr) => num_results = _multiPageLoad(data, xhr, search_results, true));
+    // continue to evaluate caching activities locally (pending speed test)
+    if(search_results.length > 0) {
+        _displayResults(search_results, page_size);
+        console.log("Render results time: ", Date.now() - timer);
+    } else {
+        var num_results = 0;
+        var data = {query: query_string, page_size: page_size, offset: false};
 
-    // offset lets the HTTP proxy know to omit the first page
-    data.offset = true;
-    var remaining = first_page.then(() => (search_results.length < num_results ? _getResults(url, data) : false));
-    first_page.done(() => console.log("Activities displayed time: ", Date.now() - timer));
-    // var remaining = first_page.then(function() {
-    //         console.log("Activities displayed time: ", Date.now() - timer);
-    //         search_results.length < num_results ? _getResults(url, data) : false;
-    //     });
-    remaining.fail(() => _handleSearchFail());
-    remaining.then((data, status, xhr) => (search_results.length < num_results  ? _multiPageLoad(data, xhr, search_results) : null));
-    remaining.then(function(data, status, xhr) {
-            // console.log("remaining.then with xhr ", xhr);
-            search_results.length < num_results  ? _multiPageLoad(data, xhr, search_results) : null;
-            console.log("Render results time: ", Date.now() - timer);
-        });
+        // Chain AJAX requests so that we load the remaining results after the first page has rendered
+        var first_page = _getResults(url, data).fail(() => _handleSearchFail());
+        first_page.then((data, status, xhr) => num_results = _multiPageLoad(data, xhr, search_results, true));
+
+        // offset lets the HTTP proxy know to omit the first page
+        data.offset = true;
+        var remaining = first_page.then(() => (search_results.length < num_results ? _getResults(url, data) : false));
+        first_page.done(() => console.log("Activities displayed time: ", Date.now() - timer));
+
+        remaining.fail(() => _handleSearchFail());
+        remaining.then(function(data, status, xhr) {
+                // console.log("remaining.then with xhr ", xhr);
+                search_results.length < num_results  ? _multiPageLoad(data, xhr, search_results) : null;
+                console.log("Initial load time: ", Date.now() - timer);
+            });
+    }
+}
+
+/*
+    Display results from search_results in Featured Activities and in the table
+    @param {object} search_results - list of activities to display
+    @param {int} page_size - number of results to display on a page.
+    TODO: Combine this with same function in shared_functions.js by 
+        integrating renderFeatures and renderFeatureCarousel
+*/
+function _displayResults(search_results, page_size) {
+    _manageTableLocal(search_results, page_size);
+    _renderFeatureCarousel(search_results);
+    _displayLoading(false);
+    document.querySelector('#feature-container').scrollIntoView({ 
+      behavior: 'smooth' 
+    });
 }
 
 /*

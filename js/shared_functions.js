@@ -1,51 +1,54 @@
 // Shared functions between different versions of the STEM Resource Table (ie master and dev branches)
 //TODO: reorder functions from most- to least-used
 var url = "https://us-central1-sigma-tractor-235320.cloudfunctions.net/http-proxy";
+// var url = "https://wmsinh.org/airtable?query=" + query_string;
+// var url = "https://wmsinh.org/airtable";
+// var url = "https://us-central1-sigma-tractor-235320.cloudfunctions.net/http-proxy";
+// var url = "http://localhost:5000/airtable";
 var fav_sources = ["WMSI", "STEAM Discovery Lab", "NASA", "code.org"];
 var search_results = [];
 
 /*
     Obtain search results and cache them locally while displaying pages one at a time
     @param {int} page_size - number of results to render per page
-    @param {int} page - page number <-- deprecated?
+    TODO: make final decision on multiPageLoad(), consider implementing here
 */
-function renderPages(page_size=50, page=0) {
+function renderPages(page_size) {
     var timer = Date.now();
     var query_string = _getQueryString();
     var page_size = parseInt($('#results-per-page').val());
     var data = {query: query_string};
     // var search_results = [];
 
-    // continue to evaluate caching activities locally (pending speed test)
-    if(search_results.length > 0) {
-        _manageTableLocal(search_results, page_size);
-        _renderFeatures(search_results);
-        _displayLoading(false);
-        document.querySelector('#feature-container').scrollIntoView({ 
-          behavior: 'smooth' 
-        });
-        return;
-    }
-    
-    // var url = "https://wmsinh.org/airtable?query=" + query_string;
-    // var url = "https://wmsinh.org/airtable";
-    // var url = "https://us-central1-sigma-tractor-235320.cloudfunctions.net/http-proxy";
-    // var url = "http://localhost:5000/airtable";
-
     _displayLoading(true);
-    $('.grid-container').show();
+    $('.grid-container').show()
 
-    _getResults(url, data).then(function(data, status, jqXHR) {
-        if(!_safeParse(data, search_results))
-            return _handleSearchFail();
-        _manageTableLocal(search_results, page_size);
-        _renderFeatures(search_results);
-        _displayLoading(false);
-        document.querySelector('#feature-container').scrollIntoView({ 
-          behavior: 'smooth' 
-        });
+    // cache activities locally (pending speed test)
+    if(search_results.length > 0) {
+        _displayResults(search_results, page_size);
         console.log("Render results time: ", Date.now() - timer);
-    }).fail(() => _handleSearchFail());
+    } else {
+        _getResults(url, data).then(function(data, status, jqXHR) {
+            if(!_safeParse(data, search_results))
+                return _handleSearchFail();
+            _displayResults(search_results, page_size);
+        console.log("Initial load time: ", Date.now() - window.performance.timing.navigationStart);
+        }).fail(() => _handleSearchFail());
+    }
+}
+
+/*
+    Display results from search_results in Featured Activities and in the table
+    @param {object} search_results - list of activities to display
+    @param {int} page_size - number of results to display on a page.
+*/
+function _displayResults(search_results, page_size) {
+    _manageTableLocal(search_results, page_size);
+    _renderFeatures(search_results);
+    _displayLoading(false);
+    document.querySelector('#feature-container').scrollIntoView({ 
+      behavior: 'smooth' 
+    });
 }
 
 /*     
@@ -287,7 +290,7 @@ function _buildFeatures(features) {
         template = template.replace('*source', resource['Source']);
         template = template.replace('*src_link', resource['Source Link']);
         $('.features').append(template);
-        if(resource["Video URL"] != undefined)
+        if(resource["Youtube URL"] != undefined)
             _addVideo(resource, '#feature' + i);
         _addFeatureComments(resource, i);
     });
@@ -505,11 +508,7 @@ function _addLightbox(resource, index) {
     html_template = html_template.replace('*class', 'lightbox-grid');
     html_template = html_template.replace('*link', resource["Resource Link"]);
     html_template = html_template.replace('*title', resource["Resource Name"]);
-    // if(resouce["Video URL"] != undefined)
-    //     html_template = _addVideo(html_template, resource);
-    // else 
-
-    if(resource.Thumbnail != undefined && resource["Video URL"] == undefined) 
+    if(resource.Thumbnail != undefined && resource["Youtube URL"] == undefined) 
         html_template = html_template.replace('*img','src="' + resource.Thumbnail[0].url + '"');
     // else generic thumbnail image
     html_template = html_template.replace('*description', resource["Description"]);
@@ -518,14 +517,13 @@ function _addLightbox(resource, index) {
     if(resource["Tags"].includes("incomplete"))  
         html_template = html_template.slice(0,html_template.indexOf('</div>')) +  _adaptLightbox();
     $('#content').append(html_template);
-    if(resource["Video URL"] != undefined)
+    if(resource["Youtube URL"] != undefined)
         _addVideo(resource, '#resource' + index);
 }
 
 /*
-    Add a video streaming option if the Video URL field is defined for this resource
+    Add a video streaming option if the Youtube URL field is defined for this resource
     v1: embed with HTML5 <video> tag. Evaluate for compatibility
-    // @param {string} html_template - text to reformat into functional html elements
     @param {object} resource - resource to render video for
     @param {string} id - element ID to add video
     @private
@@ -535,7 +533,7 @@ function _addVideo(resource, id) {
 
     console.log('prepending video to ' + id + ' a');
     var video_template = $("#lightbox-video-template").html();
-    video_template = video_template.replace('*src', 'src="' + resource["Video URL"] + '"');
+    video_template = video_template.replace('*src', 'src="' + resource["Youtube URL"] + '"');
     var $video = $(id + ' a').first().append(video_template);
     // $thumbnail.appendTo($video);
 

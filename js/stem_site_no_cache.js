@@ -1,3 +1,7 @@
+// WARNING: This version of stem_site.js is intended to be used only for speed testing
+//      for pages that don't cache search results OR initally display results on page load
+
+
 // When the page loads populate the table with activities and render the dropdown menus.
 // Add a graderange to each activity that JS can interpret
 
@@ -19,7 +23,7 @@ $(document).ready(function(){
         $('#materials-filter').children().prop('checked', false);
     });
     _fixTabIndex();
-    renderPages();
+    _setupFeatures();
     // initialLoad();
 });
 $(window).load(() => console.log("Window load time: ", window.performance.timing.domComplete - window.performance.timing.navigationStart));
@@ -36,7 +40,7 @@ function initialLoad() {
     // var search_results = [];
 
     _displayLoading(true);
-    $('.grid-container').show();
+    // $('.grid-container').show();
     
     _getResults(url, {query: query}).done(function(data, status, jqXHR) {
         if(!_safeParse(data, search_results))
@@ -83,13 +87,7 @@ function _manageTableLocal(search_results, page_size, page=0, build=true) {
 */
 function _setupFeatures() {
     var search_results = [];
-    // var url = "https://wmsinh.org/airtable?query=AND(NOT({Thumbnail} = ''), NOT(Find('incomplete', Tags)))";
-    // var url = "https://wmsinh.org/airtable?query=NOT({Resource Name}='')";
-    // var url = "https://us-central1-sigma-tractor-235320.cloudfunctions.net/http-proxy";
     var query = "AND(NOT({Thumbnail} = ''), NOT(Find('incomplete', Tags)))";
-
-
-    $('.grid-container').show();
 
     _getResults(url, {query: query}).done(function(data, status) {
         if(!_safeParse(data, search_results))
