@@ -741,16 +741,16 @@ function _createLocalButtons(search_results, page_size, page=0) {
 function _buttonCss(next_page, last_page) {
     // console.log('modifying button css with next ' + next_page + ' and last ' + last_page);
     if(next_page) {
-        $('.next-page').css({'cursor': '', 'color': ''});
+        $('.next-page').css({'cursor': '', 'color': '', 'font-weight': 'bolder'});
     } else {
         $('.next-page').unbind('click');
-        $('.next-page').css({'cursor': 'default', 'color': 'grey'});   
+        $('.next-page').css({'cursor': 'default', 'color': 'grey', 'font-weight': 'inherit'});   
     }
     if(last_page) {
-        $('.last-page').css({'cursor': '', 'color': ''});
+        $('.last-page').css({'cursor': '', 'color': '', 'font-weight': 'bolder'});
     } else {
         $('.last-page').unbind('click');
-        $('.last-page').css({'cursor': 'default', 'color': 'grey'});
+        $('.last-page').css({'cursor': 'default', 'color': 'grey', 'font-weight': 'inherit'});
     }
 }
 

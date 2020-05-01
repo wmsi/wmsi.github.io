@@ -54,7 +54,6 @@ function initialLoad() {
 /*
     Obtain search results and cache them locally while displaying pages one at a time
     DEV: prototype using serverless HTTP proxy
-    TODO: add error handling for ajax .fail(...)
 */
 function renderPages() {
     var timer = Date.now();
@@ -77,11 +76,12 @@ function renderPages() {
         // Chain AJAX requests so that we load the remaining results after the first page has rendered
         var first_page = _getResults(url, data).fail(() => _handleSearchFail());
         first_page.then((data, status, xhr) => num_results = _multiPageLoad(data, xhr, search_results, true));
+        first_page.fail(() => _handleSearchFail());
+        first_page.done(() => console.log("Activities displayed time: ", Date.now() - timer));
 
         // offset lets the HTTP proxy know to omit the first page
         data.offset = true;
         var remaining = first_page.then(() => (search_results.length < num_results ? _getResults(url, data) : false));
-        first_page.done(() => console.log("Activities displayed time: ", Date.now() - timer));
 
         remaining.fail(() => _handleSearchFail());
         remaining.then(function(data, status, xhr) {

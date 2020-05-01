@@ -1,7 +1,3 @@
-* {
-  box-sizing: border-box;
-}
-
 /*          General layout containers and spacer          */
 .page-layout {
   display: inline-grid;
@@ -30,8 +26,8 @@ h3, h4 {
   padding-top: 10px;
 }
 
-
-/*      Styling for the Filters section   */
+    
+/*                 Styling for the Filters section                */
 .filter-form {
   display: inline-grid;
   grid-column: 1 / -1;
@@ -97,26 +93,28 @@ h3, h4 {
   visibility: visible;
 }
 
+.disclaimer {
+  font-style: italic;
+  display: block;
+  margin: auto;
+  padding: 10px;
+}
 
-/*        Featured Activities         */
-#feature-container {
+/*                 Featured Activities                  */
+.feature-container {
   position: relative;
   padding-bottom: 20px;
   font-size: 16px;
+}
+
+.feature-container h3 {
+  padding: 10px;
 }
 
 .features {
   display: inline-grid;
   grid-template-columns: auto auto auto;
   width: 100%;
-}
-
-/*.featured-activity span {
-  justify-self: start;
-}*/
-
-.feature-container {
-  padding-left: 80px; 
 }
 
 .featured-activity {
@@ -133,7 +131,7 @@ h3, h4 {
 
 /*    important flags to overwrite SS rules   */
 .feature img {
-  max-height: 20vw !important;
+  height: 15vw !important;
   max-width: 30vw !important;
   object-fit: contain;
 }
@@ -152,7 +150,7 @@ h3, h4 {
 }
 
 
-/*        Grid items and headers      */
+/*                Grid items and headers              */
 .item-header {
   font-weight: bold;
   font-size: 16px;
@@ -257,7 +255,7 @@ h3, h4 {
 
 
 
-/*            Comments (icon, tooltip, lightbox)             */
+/*                   Comments (icon, tooltip, lightbox)                   */
 .comment-tooltip {
   position: relative;
   width: 100px;
@@ -322,7 +320,7 @@ textarea {
 }
 
 
-/*          Bottom Page Buttons       */
+/*                Bottom Page Buttons            */
 #bottom-page-buttons {
   justify-self: right;
   width: 200px;
@@ -407,31 +405,4 @@ textarea {
   }
 }
 
-/*        Stars for Ratings DEPRECATED        */
-.stars {
-  display: inline-block;
-  direction: rtl;
-  justify-self: center;
-}
-
-.star {
-  color: #ddd;
-  cursor: pointer;
-  font-size: 14px;
-}
-.star:hover,
-.star:hover ~ span {
-  color: #f1c40f;
-}
-
-
-
-/*hr {
-    display: block;
-    height: 1px;
-    border: 0;
-    border-top: 1px solid #ccc;
-    margin: 0;
-    padding: 0;
-}*/
 

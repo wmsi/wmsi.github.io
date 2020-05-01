@@ -46,7 +46,7 @@ function initialLoad() {
         _displayLoading(false);
         console.log("Initial load time: ", Date.now() - window.performance.timing.navigationStart);
         $("html, body").animate({scrollTop: '320'}, 600);
-    });
+    }).fail(() => _handleSearchFail());
 }
 
 /*
@@ -78,7 +78,6 @@ function _manageTableLocal(search_results, page_size, page=0, build=true) {
     Add 3 features to the top of the page. 
     For now these can be any activities with thumbnails in the base.
     @private
-    TODO: streamline Airtable query to return fewer features to choose from (e.g. filter by rating)
     **may be DEPRECATED if we keep initalLoad()
 */
 function _setupFeatures() {
@@ -98,7 +97,7 @@ function _setupFeatures() {
         // console.log('building from ' + feature_list.length + ' features');
         _buildFeatures(feature_list);
         console.log("Initial load time: ", Date.now() - window.performance.timing.navigationStart);
-    });
+    }).fail(() => _handleSearchFail());
 }
 
 
