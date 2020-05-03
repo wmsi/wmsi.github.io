@@ -673,13 +673,13 @@ function changePageLengthLocal(start, search_results) {
     @private
 */
 function _displayMetaData(search_results, page_size, page_num=0, num_results=search_results.length) {
-    // console.log('display meta for page num ' + page_num +', page size ' + page_size + ', num results ' + num_results);
+    console.log('display meta for page num ' + page_num +', page size ' + page_size + ', num results ' + num_results);
 
     $('#results-meta').empty();
     if(num_results == 0)
         $('#results-meta').html("We're sorry but your search did not return any results.");
     else if(num_results == 1)
-        $('#results-meta').html("Displaying " + search_results.length + " Result.");
+        $('#results-meta').html("Displaying 1 Result.");
     else if(search_results.length < num_results) {         // pagination in effect
         var start = page_size*page_num + 1;
         var end = page_size*(page_num + 1) < num_results ? page_size*(page_num + 1) : num_results;

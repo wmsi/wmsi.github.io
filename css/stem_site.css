@@ -101,13 +101,13 @@ h3, h4 {
 }
 
 /*                 Featured Activities                  */
-.feature-container {
+#feature-container {
   position: relative;
   padding-bottom: 20px;
   font-size: 16px;
 }
 
-.feature-container h3 {
+#feature-container h3 {
   padding: 10px;
 }
 
