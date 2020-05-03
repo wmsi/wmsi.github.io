@@ -1,40 +1,89 @@
 // Shared functions between different versions of the STEM Resource Table (ie master and dev branches)
 //TODO: reorder functions from most- to least-used
-var url = "https://us-central1-sigma-tractor-235320.cloudfunctions.net/http-proxy";
+const url = "https://us-central1-sigma-tractor-235320.cloudfunctions.net/http-proxy";
 // var url = "https://wmsinh.org/airtable?query=" + query_string;
 // var url = "https://wmsinh.org/airtable";
 // var url = "https://us-central1-sigma-tractor-235320.cloudfunctions.net/http-proxy";
 // var url = "http://localhost:5000/airtable";
-var fav_sources = ["WMSI", "STEAM Discovery Lab", "NASA", "code.org"];
-var search_results = [];
+const fav_sources = ["WMSI", "STEAM Discovery Lab", "NASA", "code.org"];
+// const search_results = [];
+const all_results = [];
 
 /*
     Obtain search results and cache them locally while displaying pages one at a time
-    @param {int} page_size - number of results to render per page
-    TODO: make final decision on multiPageLoad(), consider implementing here
+    TODO: continue looking for issues related to transition to locally cached results
 */
-function renderPages(page_size) {
-    var timer = Date.now();
-    var query_string = _getQueryString();
-    var page_size = parseInt($('#results-per-page').val());
-    var data = {query: query_string};
+function renderPages() {
+    let timer = Date.now();
+    let query_string = _getQueryString();
+    let page_size = parseInt($('#results-per-page').val());
+    let data = {query: query_string};
     // var search_results = [];
 
     _displayLoading(true);
     $('.grid-container').show()
 
     // cache activities locally (pending speed test)
-    if(search_results.length > 0) {
+    // if(search_results.length > 0) {
+    if(all_results.length > 0) {
+        let search_results = _localSearch();
         _displayResults(search_results, page_size);
         console.log("Render results time: ", Date.now() - timer);
     } else {
+        // load all_results then call renderPages again to display
         _getResults(url, data).then(function(data, status, jqXHR) {
-            if(!_safeParse(data, search_results))
+            if(!_safeParse(data))
                 return _handleSearchFail();
-            _displayResults(search_results, page_size);
+            _displayResults(all_results, page_size);
+            // renderPages(page_size);
         console.log("Initial load time: ", Date.now() - window.performance.timing.navigationStart);
         }).fail(() => _handleSearchFail());
     }
+}
+
+/*
+    Search locally cached results (all_results) based on filter criteria
+    @returns {array} - all resources that match the current search criteria
+    @private
+*/
+const _localSearch = () => {
+    let subject = $('#subject').val() != "" ? $('#subject').val() : null;
+    let experience = $('#experience').val() != "" ? $('#experience').val() : null;
+    let self_led = $('#self-led').is(':checked') ? true : false;
+    let search_string = $('input[type="search"]').val() != "" ? $('input[type="search"]').val() : null;
+    // let search_text = $('input[type="search"]').val() != "" ? $('input[type="search"]').val().split(' ') : null;
+    // console.log(search_text);
+    let materials = [];
+    _getMaterialsLocal(materials);
+
+    // TODO: search text behavior, AND vs OR
+    return all_results.filter(resource => {
+        return((experience ? resource.Experience.split(', ').includes(experience) : true) &&
+            (self_led ? resource.Tags.includes('self-led') : true) &&
+            (subject ? resource.Subject.split(', ').includes(subject) : true) &&
+            (materials.includes(resource.Materials.split(', ')[0])) &&
+            (search_string ? resource["Search Text"].includes(search_string) : true)
+            // (search_text ? search_text.filter(string => {
+            //     resource["Search Text"].includes(string) 
+            // }) : true)
+        );
+    });
+}
+
+// TODO: make this work using html labels instead of assigning strings here
+const _getMaterialsLocal = (materials) => {
+    if($('#browser').is(':checked'))
+        materials.push('Computer w/ Browser');
+    if($('#pen-paper').is(':checked'))
+        materials.push('Pen and Paper');
+    if($('#craft').is(':checked'))
+        materials.push('Crafting Materials');
+    if($('#tablet').is(':checked'))
+        materials.push('Tablet');
+    if($('#robotics').is(':checked'))
+        materials.push('Robotics');
+    if($('#lab-materials').is(':checked'))
+        materials.push('Lab Materials');
 }
 
 /*
@@ -73,14 +122,13 @@ function _getResults(url, data) {
     @private
     TODO: expand exception handling to include other cases.
 */
-function _safeParse(data, search_results) {
+function _safeParse(data) {
     try {
-        // var new_results=JSON.parse(data);
-        Array.prototype.push.apply(search_results, JSON.parse(data));
+        Array.prototype.push.apply(all_results, JSON.parse(data));
     } catch (err) {
         // console.log('parse failed, attempting push', err);
         try {
-            Array.prototype.push.apply(search_results, data);
+            Array.prototype.push.apply(all_results, data);
         } catch {
             // console.log('cannot parse search results', err);
             return false;
@@ -285,6 +333,7 @@ function _buildFeatures(features) {
         template = template.replace('*link', resource["Resource Link"]);
         template = template.replace('*img', 'src="'+resource.Thumbnail[0].url+'"');
         template = template.replace('*description', resource['Description']);
+        template = template.replace('*experience', resource['Experience']);
         template = template.replace('*subjects', resource['Subject']);//(Array.isArray(item["Subject"]) ? item["Subject"].join(", ") : item["Subject"]));
         template = template.replace('*materials', resource['Materials']);
         template = template.replace('*source', resource['Source']);
@@ -362,6 +411,7 @@ function _buildFeatureList(search_results, max=100) {
     and the text-based search.
     @private
 
+    DEPRECATED with local caching
     TODO: Do we want to require at least one search criteria?
 */
 function _getQueryString() {
@@ -399,6 +449,7 @@ function _getQueryString() {
     Compile all the materials checkboxes into part of the Airtable query
     @private
 
+    DEPRECATED with local caching
     TODO: handle if user doesn't check any boxes, ask them to check at least one
 */
 function _getMaterialsQuery() {

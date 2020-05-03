@@ -1,5 +1,5 @@
 // var final_load = false;
-var search_results = [];
+search_results = [];
 $(document).ready(function(){
     $('.grid-container').hide();
     $('.lds-large').hide();
@@ -66,10 +66,13 @@ function renderPages() {
     $('#sort-results').val('');
 
     // continue to evaluate caching activities locally (pending speed test)
-    if(search_results.length > 0) {
-        _displayResults(search_results, page_size);
-        console.log("Render results time: ", Date.now() - timer);
-    } else {
+    // if(search_results.length > 0) {
+    //     _displayResults(search_results, page_size);
+    //     console.log("Render results time: ", Date.now() - timer);
+    // } else {
+
+        // setup for testing vs local cache
+        search_results = [];
         var num_results = 0;
         var data = {query: query_string, page_size: page_size, offset: false};
 
@@ -89,7 +92,7 @@ function renderPages() {
                 search_results.length < num_results  ? _multiPageLoad(data, xhr, search_results) : null;
                 console.log("Initial load time: ", Date.now() - timer);
             });
-    }
+    // }
 }
 
 /*
@@ -100,6 +103,7 @@ function renderPages() {
         integrating renderFeatures and renderFeatureCarousel
 */
 function _displayResults(search_results, page_size) {
+    console.log('display results with page_size ' + page_size + ' and length ' + search_results.length);
     _manageTableLocal(search_results, page_size);
     _renderFeatureCarousel(search_results);
     _displayLoading(false);
@@ -138,6 +142,29 @@ function _multiPageLoad(data, xhr, search_results, first=false) {
         _manageTableLocal(search_results, page_size, 0, !first);
     }
     return num_results;
+}
+
+
+/*
+    Parse the response data or push it directly if it is an array
+    @param {object} data - response data from http proxy
+    @param {array} search_results - array to append search results onto
+    @private
+    TODO: expand exception handling to include other cases.
+*/
+function _safeParse(data, search_results) {
+    try {
+        Array.prototype.push.apply(search_results, JSON.parse(data));
+    } catch (err) {
+        // console.log('parse failed, attempting push', err);
+        try {
+            Array.prototype.push.apply(search_results, data);
+        } catch {
+            // console.log('cannot parse search results', err);
+            return false;
+        }
+    }
+    return true;
 }
 
 /*

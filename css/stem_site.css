@@ -65,19 +65,6 @@ h3, h4 {
 }
 
 
-  /* Position the experience tooltip */
-.experience {
-  top: -100px;
-  right: 105%;
-}
-
-
-/* position the self-led tooltip (button and checkbox) */
-.self-led {
-  left: -5px;
-  top: 20px;
-}
-
 #self-led-checkbox {
   padding-top: 20px;
 }
@@ -87,10 +74,6 @@ h3, h4 {
   /*left: -5px;*/
   top: 0px;
   left: -240px; /*-130%;*/
-}
-
-.tooltip:hover .tooltiptext {
-  visibility: visible;
 }
 
 .disclaimer {
@@ -181,7 +164,8 @@ h3, h4 {
   display: block;
   margin-left: auto;
   margin-right: auto;
-  max-width: 400px;
+  max-height: 30vh;
+  /*max-width: 400px;*/
   /*padding: 20px;*/
 }
 
@@ -254,6 +238,27 @@ h3, h4 {
 }
 
 
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+}
+
+  /* Position the experience tooltip */
+.experience {
+  top: -100px;
+  right: 105%;
+}
+
+/* position the self-led tooltip (button and checkbox) */
+.self-led {
+  left: -5px;
+  top: 20px;
+}
+
+  /* Position the keyword tooltip */
+.keyword {
+  top: -100px;
+  left: 105%;
+}
 
 /*                   Comments (icon, tooltip, lightbox)                   */
 .comment-tooltip {
@@ -335,8 +340,9 @@ textarea {
   position: fixed;
   bottom: 40px;
   right: 20px;
-  background: teal;
+  background: hsl(0, 0%, 80%);
   border-radius: 10px;
+  border-color: black;
   display: none;
 }
 .scroll-top i {
