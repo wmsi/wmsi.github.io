@@ -5,6 +5,13 @@
   width: 100%;
 }
 
+#canvas {
+  margin-top: 10px !important;
+  margin: 30px !important;
+  max-width: 1500px !important;
+
+}
+
 .grid-container {
   display: grid;
   grid-column: 1 / -1;
